@@ -9,8 +9,8 @@ package com.whizzosoftware.hobson.rest.v1;
 
 import com.whizzosoftware.hobson.api.HobsonRuntimeException;
 import com.whizzosoftware.hobson.api.action.HobsonAction;
-import com.whizzosoftware.hobson.api.action.meta.ActionMeta;
-import com.whizzosoftware.hobson.api.action.meta.ActionMetaEnumValue;
+import com.whizzosoftware.hobson.api.action.meta.ActionMetaData;
+import com.whizzosoftware.hobson.api.action.meta.ActionMetaDataEnumValue;
 import com.whizzosoftware.hobson.api.config.Configuration;
 import com.whizzosoftware.hobson.api.config.ConfigurationProperty;
 import com.whizzosoftware.hobson.api.config.ConfigurationPropertyMetaData;
@@ -395,14 +395,14 @@ public class JSONMarshaller {
         // add detail data
         if (details) {
             JSONObject metas = new JSONObject();
-            for (ActionMeta ham : action.getMeta()) {
+            for (ActionMetaData ham : action.getMetaData()) {
                 JSONObject meta = new JSONObject();
                 meta.put("name", ham.getName());
                 meta.put("description", ham.getDescription());
                 meta.put("type", ham.getType());
-                if (ham.getType() == ActionMeta.Type.ENUMERATION) {
+                if (ham.getType() == ActionMetaData.Type.ENUMERATION) {
                     JSONObject enumValues = new JSONObject();
-                    for (ActionMetaEnumValue eval : ham.getEnumValues()) {
+                    for (ActionMetaDataEnumValue eval : ham.getEnumValues()) {
                         JSONObject enumValue = new JSONObject();
                         enumValue.put("name", eval.getName());
                         if (eval.getParam() != null) {
