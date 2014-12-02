@@ -1,0 +1,9 @@
+{
+    "name": "Hobson REST API",
+    "version": "0.1.7",
+    "title": "Hobson REST API",
+    "description": "The Hobson REST API is published by both the Hobson Hub and Hobson CloudLink service.",
+    "footer": {
+        "filename": "footer.md"
+    }
+}
