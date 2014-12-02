@@ -18,6 +18,7 @@ import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.EmptyRepresentation;
 import org.restlet.representation.Representation;
+import org.restlet.routing.Template;
 
 import javax.inject.Inject;
 
@@ -82,8 +83,11 @@ public class DeviceVariableResource extends SelfInjectingServerResource {
 
         // TODO: is there a better way to do this? The Restlet request reference scheme is always HTTP for some reason...
         Reference requestRef = getRequest().getResourceRef();
-        getResponse().setLocationRef(requestRef);
-//        getResponse().setLocationRef(new Reference("https", requestRef.getHostDomain(), requestRef.getHostPort(), ctx.getApiRoot() + new Template(DeviceVariableResource.PATH).format(JSONMarshaller.createTripleEntryMap(ctx, "pluginId", pluginId, "deviceId" , deviceId, "variableName", variableName)), null, null));
+        if (Boolean.getBoolean(System.getProperty("useSSL"))) {
+            getResponse().setLocationRef(new Reference("https", requestRef.getHostDomain(), requestRef.getHostPort(), ctx.getApiRoot() + new Template(DeviceVariableResource.PATH).format(JSONMarshaller.createTripleEntryMap(ctx, "pluginId", pluginId, "deviceId" , deviceId, "variableName", variableName)), null, null));
+        } else {
+            getResponse().setLocationRef(requestRef);
+        }
 
         return new EmptyRepresentation();
     }
