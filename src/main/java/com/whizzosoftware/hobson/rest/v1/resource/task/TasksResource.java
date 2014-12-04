@@ -5,9 +5,9 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
-package com.whizzosoftware.hobson.rest.v1.resource.trigger;
+package com.whizzosoftware.hobson.rest.v1.resource.task;
 
-import com.whizzosoftware.hobson.api.trigger.TriggerManager;
+import com.whizzosoftware.hobson.api.task.TaskManager;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.JSONMarshaller;
 import org.json.JSONObject;
@@ -20,31 +20,31 @@ import org.restlet.representation.Representation;
 import javax.inject.Inject;
 
 /**
- * A REST resource for retrieving a list of all triggers.
+ * A REST resource for retrieving a list of all tasks.
  *
  * @author Dan Noguerol
  */
-public class TriggersResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/triggers";
-    public static final String REL = "triggers";
+public class TasksResource extends SelfInjectingServerResource {
+    public static final String PATH = "/users/{userId}/hubs/{hubId}/tasks";
+    public static final String REL = "tasks";
 
     @Inject
-    TriggerManager triggerManager;
+    TaskManager taskManager;
 
     /**
-     * @api {get} /api/v1/users/:userId/hubs/:hubId/triggers Get all triggers
+     * @api {get} /api/v1/users/:userId/hubs/:hubId/tasks Get all tasks
      * @apiVersion 0.1.3
-     * @apiParam {Boolean} properties If true, include any properties associated with the trigger
-     * @apiName GetAllTriggers
-     * @apiDescription Retrieves a list of all triggers (regardless of provider).
-     * @apiGroup Triggers
+     * @apiParam {Boolean} properties If true, include any properties associated with the task
+     * @apiName GetAllTasks
+     * @apiDescription Retrieves a list of all tasks (regardless of provider).
+     * @apiGroup Tasks
      * @apiSuccessExample {json} Success Response:
      * [
      *   {
-     *     "name": "My Trigger",
+     *     "name": "My Task",
      *     "type": "EVENT",
      *     "links": {
-     *       "self": "/api/v1/users/local/hubs/local/triggers/com.whizzosoftware.hobson.server-rules/efc02d7a-d0e0-46fb-9cc3-2ca70a66dc05"
+     *       "self": "/api/v1/users/local/hubs/local/tasks/com.whizzosoftware.hobson.server-rules/efc02d7a-d0e0-46fb-9cc3-2ca70a66dc05"
      *     },
      *   }
      * ]
@@ -52,39 +52,60 @@ public class TriggersResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        return new JsonRepresentation(JSONMarshaller.createTriggerListJSON(ctx, triggerManager.getAllTriggers(ctx.getUserId(), ctx.getHubId()), Boolean.parseBoolean(getQueryValue("properties"))));
+        return new JsonRepresentation(JSONMarshaller.createTaskListJSON(ctx, taskManager.getAllTasks(ctx.getUserId(), ctx.getHubId()), Boolean.parseBoolean(getQueryValue("properties"))));
     }
 
     /**
-     * @api {post} /api/v1/users/:userId/hubs/:hubId/triggers Create trigger
+     * @api {post} /api/v1/users/:userId/hubs/:hubId/tasks Create task
      * @apiVersion 0.1.3
-     * @apiName AddTrigger
-     * @apiDescription Creates a new trigger.
-     * @apiGroup Triggers
-     * @apiExample Example Request (event trigger):
+     * @apiName AddTask
+     * @apiDescription Creates a new task.
+     * @apiGroup Tasks
+     * @apiExample Example Request (simple event task):
      * {
-     *   "name": "My Event Trigger",
+     *   "name": "My Event Task",
      *   "provider": "com.whizzosoftware.hobson.hub.hobson-hub-rules",
      *   "conditions": [{
      *     "event": "variableUpdate",
      *     "pluginId": "com.whizzosoftware.hobson.hub.hobson-hub-zwave",
      *     "deviceId": "zwave-32",
-     *     "name": "on",
-     *     "comparator": "eq",
-     *     "value": true
+     *     "changeId": "turnOff"
      *   }],
      *   "actions": [{
      *     "pluginId": "com.whizzosoftware.hobson.hub.hobson-hub-actions",
      *     "actionId": "log",
      *     "name": "My Action 1",
      *     "properties": {
-     *       "message": "Event trigger fired"
+     *       "message": "Event task fired"
      *     }
      *   }]
      * }
-     * @apiExample Example Request (scheduled trigger):
+     * @apiExample Example Request (advanced event task):
      * {
-     *   "name": "My Scheduled Trigger",
+     *   "name": "My Event Task",
+     *   "provider": "com.whizzosoftware.hobson.hub.hobson-hub-rules",
+     *   "conditions": [{
+     *     "event": "variableUpdate",
+     *     "pluginId": "com.whizzosoftware.hobson.hub.hobson-hub-zwave",
+     *     "deviceId": "zwave-32",
+     *     "variable": {
+     *       "name": "on",
+     *       "comparator": "eq",
+     *       "value": true
+     *     }
+     *   }],
+     *   "actions": [{
+     *     "pluginId": "com.whizzosoftware.hobson.hub.hobson-hub-actions",
+     *     "actionId": "log",
+     *     "name": "My Action 1",
+     *     "properties": {
+     *       "message": "Event task fired"
+     *     }
+     *   }]
+     * }
+     * @apiExample Example Request (scheduled task):
+     * {
+     *   "name": "My Scheduled Task",
      *   "provider": "com.whizzosoftware.hobson.hub.hobson-hub-scheduler",
      *   "conditions": [{
      *     "start": "20140701T100000",
@@ -106,7 +127,7 @@ public class TriggersResource extends SelfInjectingServerResource {
     protected Representation post(Representation entity) {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
         JSONObject json = JSONMarshaller.createJSONFromRepresentation(entity);
-        triggerManager.addTrigger(ctx.getUserId(), ctx.getHubId(), json.getString("provider"), json);
+        taskManager.addTask(ctx.getUserId(), ctx.getHubId(), json.getString("provider"), json);
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();
     }

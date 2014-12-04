@@ -42,18 +42,19 @@ public class DeviceResource extends SelfInjectingServerResource {
      * {
      *   "name": "RadioRa Zone 1",
      *   "type": "LIGHTBULB",
+     *   "pluginId": "com.whizzosoftware.hobson.hub.hobson-hub-radiora",
      *   "preferredVariable": {
      *     "name": "on",
      *     "value": false,
      *     "links": {
-     *       "self": "/api/plugins/com.whizzosoftware.hobson.server-radiora/devices/1/variables/on"
+     *       "self": "/api/plugins/com.whizzosoftware.hobson.hub.hobson-hub-radiora/devices/1/variables/on"
      *     }
      *   },
      *   "links": {
-     *     "self": "/api/plugins/com.whizzosoftware.hobson.server-radiora/devices/1",
-     *     "config": "/api/plugins/com.whizzosoftware.hobson.server-radiora/devices/1/config",
-     *     "set-name": "/api/plugins/com.whizzosoftware.hobson.server-radiora/devices/1/name",
-     *     "variables": "/api/plugins/com.whizzosoftware.hobson.server-radiora/devices/1/variables"
+     *     "self": "/api/plugins/com.whizzosoftware.hobson.hub.hobson-hub-radiora/devices/1",
+     *     "config": "/api/plugins/com.whizzosoftware.hobson.hub.hobson-hub-radiora/devices/1/config",
+     *     "set-name": "/api/plugins/com.whizzosoftware.hobson.hub.hobson-hub-radiora/devices/1/name",
+     *     "variables": "/api/plugins/com.whizzosoftware.hobson.hub.hobson-hub-radiora/devices/1/variables"
      *   }
      * }
      */

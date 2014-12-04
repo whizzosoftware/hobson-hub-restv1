@@ -43,6 +43,7 @@ public class DevicesResource extends SelfInjectingServerResource {
      * [
      *   {
      *     "name": "RadioRa Zone 1",
+     *     "pluginId": "com.whizzosoftware.hobson.hub.hobson-hub-radiora",
      *     "type": "LIGHTBULB",
      *     "preferredVariable": {
      *       "name": "on",
@@ -59,6 +60,7 @@ public class DevicesResource extends SelfInjectingServerResource {
      *   },
      *   {
      *     "name": "RadioRa Zone 2",
+     *     "pluginId": "com.whizzosoftware.hobson.hub.hobson-hub-radiora",
      *     "type": "LIGHTBULB",
      *     "preferredVariable": {
      *       "name": "on",

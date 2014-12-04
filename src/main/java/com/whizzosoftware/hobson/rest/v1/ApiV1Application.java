@@ -18,9 +18,9 @@ import com.whizzosoftware.hobson.rest.v1.resource.device.*;
 import com.whizzosoftware.hobson.rest.v1.resource.disco.DeviceBridgesResource;
 import com.whizzosoftware.hobson.rest.v1.resource.plugin.*;
 import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceEntitiesResource;
-import com.whizzosoftware.hobson.rest.v1.resource.trigger.ExecuteTriggerResource;
-import com.whizzosoftware.hobson.rest.v1.resource.trigger.TriggerResource;
-import com.whizzosoftware.hobson.rest.v1.resource.trigger.TriggersResource;
+import com.whizzosoftware.hobson.rest.v1.resource.task.ExecuteTaskResource;
+import com.whizzosoftware.hobson.rest.v1.resource.task.TaskResource;
+import com.whizzosoftware.hobson.rest.v1.resource.task.TasksResource;
 import com.whizzosoftware.hobson.rest.v1.resource.variable.GlobalVariableResource;
 import com.whizzosoftware.hobson.rest.v1.resource.variable.GlobalVariablesResource;
 import org.restlet.Restlet;
@@ -51,10 +51,11 @@ public class ApiV1Application extends ResourceInjectingApplication implements Ho
         router.attach(DeviceResource.PATH, DeviceResource.class);
         router.attach(DeviceBridgesResource.PATH, DeviceBridgesResource.class);
         router.attach(DeviceConfigurationResource.PATH, DeviceConfigurationResource.class);
+        router.attach(DeviceVariableChangeIdsResource.PATH, DeviceVariableChangeIdsResource.class);
         router.attach(DevicesResource.PATH, DevicesResource.class);
         router.attach(DeviceVariableResource.PATH, DeviceVariableResource.class);
         router.attach(DeviceVariablesResource.PATH, DeviceVariablesResource.class);
-        router.attach(ExecuteTriggerResource.PATH, ExecuteTriggerResource.class);
+        router.attach(ExecuteTaskResource.PATH, ExecuteTaskResource.class);
         router.attach(GlobalVariableResource.PATH, GlobalVariableResource.class);
         router.attach(GlobalVariablesResource.PATH, GlobalVariablesResource.class);
         router.attach(HubConfigurationResource.PATH, HubConfigurationResource.class);
@@ -70,8 +71,8 @@ public class ApiV1Application extends ResourceInjectingApplication implements Ho
         router.attach(PluginsResource.PATH, PluginsResource.class);
         router.attach(PresenceEntitiesResource.PATH, PresenceEntitiesResource.class);
         router.attach(ShutdownResource.PATH, ShutdownResource.class);
-        router.attach(TriggerResource.PATH, TriggerResource.class);
-        router.attach(TriggersResource.PATH, TriggersResource.class);
+        router.attach(TaskResource.PATH, TaskResource.class);
+        router.attach(TasksResource.PATH, TasksResource.class);
 
         authenticator.setNext(router);
 

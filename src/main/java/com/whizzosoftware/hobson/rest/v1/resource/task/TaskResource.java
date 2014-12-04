@@ -5,9 +5,9 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
-package com.whizzosoftware.hobson.rest.v1.resource.trigger;
+package com.whizzosoftware.hobson.rest.v1.resource.task;
 
-import com.whizzosoftware.hobson.api.trigger.TriggerManager;
+import com.whizzosoftware.hobson.api.task.TaskManager;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.JSONMarshaller;
 import org.restlet.data.Status;
@@ -19,26 +19,26 @@ import org.restlet.representation.Representation;
 import javax.inject.Inject;
 
 /**
- * A REST resource for managing a particular trigger.
+ * A REST resource for managing a particular task.
  *
  * @author Dan Noguerol
  */
-public class TriggerResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/triggers/{providerId}/{triggerId}";
+public class TaskResource extends SelfInjectingServerResource {
+    public static final String PATH = "/users/{userId}/hubs/{hubId}/tasks/{providerId}/{taskId}";
 
     @Inject
-    TriggerManager triggerManager;
+    TaskManager taskManager;
 
     /**
-     * @api {get} /api/v1/users/:userId/hubs/:hubId/triggers/:providerId/:triggerId Get trigger details
+     * @api {get} /api/v1/users/:userId/hubs/:hubId/tasks/:providerId/:taskId Get task details
      * @apiVersion 0.1.3
-     * @apiName GetTrigger
-     * @apiDescription Retrieves details about a specific trigger.
-     * @apiGroup Triggers
+     * @apiName GetTask
+     * @apiDescription Retrieves details about a specific task.
+     * @apiGroup Tasks
      * @apiSuccessExample {json} Success Response:
      * [
      *   {
-     *     "name": "My Trigger",
+     *     "name": "My Task",
      *     "type": "EVENT",
      *     "provider": "com.whizzosoftware.hobson.hub-rules",
      *     "conditions": [{
@@ -55,7 +55,7 @@ public class TriggerResource extends SelfInjectingServerResource {
      *       }
      *     }],
      *     "links": {
-     *       "self": "/api/triggers/com.whizzosoftware.hobson.server-rules/efc02d7a-d0e0-46fb-9cc3-2ca70a66dc05"
+     *       "self": "/api/tasks/com.whizzosoftware.hobson.server-rules/efc02d7a-d0e0-46fb-9cc3-2ca70a66dc05"
      *     },
      *   }
      * ]
@@ -63,22 +63,22 @@ public class TriggerResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        return new JsonRepresentation(JSONMarshaller.createTriggerJSON(ctx, triggerManager.getTrigger(ctx.getUserId(), ctx.getHubId(), getAttribute("providerId"), getAttribute("triggerId")), true, true));
+        return new JsonRepresentation(JSONMarshaller.createTaskJSON(ctx, taskManager.getTask(ctx.getUserId(), ctx.getHubId(), getAttribute("providerId"), getAttribute("taskId")), true, true));
     }
 
     /**
-     * @api {delete} /api/v1/users/:userId/hubs/:hubId/triggers/:providerId/:triggerId Delete trigger
+     * @api {delete} /api/v1/users/:userId/hubs/:hubId/tasks/:providerId/:taskId Delete task
      * @apiVersion 0.1.3
-     * @apiName DeleteTrigger
-     * @apiDescription Deletes a specific trigger.
-     * @apiGroup Triggers
+     * @apiName DeleteTask
+     * @apiDescription Deletes a specific task.
+     * @apiGroup Tasks
      * @apiSuccessExample {json} Success Response:
      * HTTP/1.1 202 Accepted
      */
     @Override
     protected Representation delete() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        triggerManager.deleteTrigger(ctx.getUserId(), ctx.getHubId(), getAttribute("providerId"), getAttribute("triggerId"));
+        taskManager.deleteTask(ctx.getUserId(), ctx.getHubId(), getAttribute("providerId"), getAttribute("taskId"));
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();
     }

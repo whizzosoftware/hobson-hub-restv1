@@ -24,7 +24,7 @@ import com.whizzosoftware.hobson.api.plugin.PluginDescriptor;
 import com.whizzosoftware.hobson.api.plugin.PluginStatus;
 import com.whizzosoftware.hobson.api.plugin.PluginType;
 import com.whizzosoftware.hobson.api.presence.PresenceEntity;
-import com.whizzosoftware.hobson.api.trigger.HobsonTrigger;
+import com.whizzosoftware.hobson.api.task.HobsonTask;
 import com.whizzosoftware.hobson.api.util.VersionUtil;
 import com.whizzosoftware.hobson.api.variable.DeviceVariableNotFoundException;
 import com.whizzosoftware.hobson.api.variable.HobsonVariable;
@@ -40,8 +40,8 @@ import com.whizzosoftware.hobson.rest.v1.resource.device.*;
 import com.whizzosoftware.hobson.rest.v1.resource.plugin.*;
 import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceEntitiesResource;
 import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceEntityResource;
-import com.whizzosoftware.hobson.rest.v1.resource.trigger.TriggerResource;
-import com.whizzosoftware.hobson.rest.v1.resource.trigger.TriggersResource;
+import com.whizzosoftware.hobson.rest.v1.resource.task.TaskResource;
+import com.whizzosoftware.hobson.rest.v1.resource.task.TasksResource;
 import com.whizzosoftware.hobson.rest.v1.resource.variable.GlobalVariableResource;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -89,7 +89,7 @@ public class JSONMarshaller {
         links.put(PluginsResource.REL, apiRoot + new Template(PluginsResource.PATH).format(createEmptyMap(ctx)));
         links.put(PresenceEntitiesResource.REL, apiRoot + new Template(PresenceEntitiesResource.PATH).format(createEmptyMap(ctx)));
         links.put(ShutdownResource.REL, apiRoot + new Template(ShutdownResource.PATH).format(createEmptyMap(ctx)));
-        links.put(TriggersResource.REL, apiRoot + new Template(TriggersResource.PATH).format(createEmptyMap(ctx)));
+        links.put(TasksResource.REL, apiRoot + new Template(TasksResource.PATH).format(createEmptyMap(ctx)));
         json.put("links", links);
 
         return json;
@@ -232,6 +232,7 @@ public class JSONMarshaller {
         JSONObject json = new JSONObject();
         json.put("id", device.getId());
         json.put("name", device.getName());
+        json.put("pluginId", device.getPluginId());
         json.put("type", device.getType().toString());
 
         // set the preferred variable if specified
@@ -263,6 +264,7 @@ public class JSONMarshaller {
         if (details) {
             links.put("config", ctx.getApiRoot() + new Template(DeviceConfigurationResource.PATH).format(createDoubleEntryMap(ctx, "pluginId", device.getPluginId(), "deviceId", device.getId())));
             links.put("variables", ctx.getApiRoot() + new Template(DeviceVariablesResource.PATH).format(createDoubleEntryMap(ctx, "pluginId", device.getPluginId(), "deviceId", device.getId())));
+            links.put("variableEvents", ctx.getApiRoot() + new Template(DeviceVariableChangeIdsResource.PATH).format(createDoubleEntryMap(ctx, "pluginId", device.getPluginId(), "deviceId", device.getId())));
         }
 
         return json;
@@ -471,22 +473,22 @@ public class JSONMarshaller {
 
     }
 
-    public static JSONObject createTriggerJSON(HobsonRestContext ctx, HobsonTrigger trigger, boolean details, boolean properties) {
+    public static JSONObject createTaskJSON(HobsonRestContext ctx, HobsonTask task, boolean details, boolean properties) {
         JSONObject json = new JSONObject();
-        json.put("name", trigger.getName());
-        json.put("type", trigger.getType().toString());
+        json.put("name", task.getName());
+        json.put("type", task.getType().toString());
         JSONObject links = new JSONObject();
-        links.put("self", ctx.getApiRoot() + new Template(TriggerResource.PATH).format(createDoubleEntryMap(ctx, "providerId", trigger.getProviderId(), "triggerId", trigger.getId())));
+        links.put("self", ctx.getApiRoot() + new Template(TaskResource.PATH).format(createDoubleEntryMap(ctx, "providerId", task.getProviderId(), "taskId", task.getId())));
         json.put("links", links);
 
         if (details) {
-            json.put("provider", trigger.getProviderId());
-            json.put("conditions", trigger.getConditions());
-            json.put("actions", trigger.getActions());
+            json.put("provider", task.getProviderId());
+            json.put("conditions", task.getConditions());
+            json.put("actions", task.getActions());
         }
 
         if (properties) {
-            Properties p = trigger.getProperties();
+            Properties p = task.getProperties();
             if (p != null && p.size() > 0) {
                 JSONObject props = new JSONObject();
                 for (Object o : p.keySet()) {
@@ -500,10 +502,10 @@ public class JSONMarshaller {
         return json;
     }
 
-    public static JSONArray createTriggerListJSON(HobsonRestContext ctx, Collection<HobsonTrigger> triggers, boolean properties) {
+    public static JSONArray createTaskListJSON(HobsonRestContext ctx, Collection<HobsonTask> tasks, boolean properties) {
         JSONArray results = new JSONArray();
-        for (HobsonTrigger t : triggers) {
-            results.put(createTriggerJSON(ctx, t, false, properties));
+        for (HobsonTask t : tasks) {
+            results.put(createTaskJSON(ctx, t, false, properties));
         }
         return results;
     }
@@ -543,6 +545,14 @@ public class JSONMarshaller {
             results.put(createDeviceBridgeJSON(ctx, bridge));
         }
         return results;
+    }
+
+    public static JSONArray createVariableEventIdJSON(Collection<String> deviceVariableEventIds) {
+        JSONArray json = new JSONArray();
+        for (String eventId : deviceVariableEventIds) {
+            json.put(eventId);
+        }
+        return json;
     }
 
     public static Map<String,Object> createEmptyMap(HobsonRestContext ctx) {

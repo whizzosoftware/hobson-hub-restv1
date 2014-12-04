@@ -50,7 +50,7 @@ public class HubInfoResource extends SelfInjectingServerResource {
      *     "presenceEntities": "/api/v1/users/local/hubs/local/presence/entities",
      *     "plugins": "/api/v1/users/local/hubs/local/plugins",
      *     "shutdown": "/api/v1/users/local/hubs/local/shutdown",
-     *     "triggers": "/api/v1/users/local/hubs/local/triggers"
+     *     "tasks": "/api/v1/users/local/hubs/local/tasks"
      *   }
      * }
      */
