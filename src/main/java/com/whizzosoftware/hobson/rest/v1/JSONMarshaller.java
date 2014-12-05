@@ -15,7 +15,6 @@ import com.whizzosoftware.hobson.api.config.Configuration;
 import com.whizzosoftware.hobson.api.config.ConfigurationProperty;
 import com.whizzosoftware.hobson.api.config.ConfigurationPropertyMetaData;
 import com.whizzosoftware.hobson.api.device.HobsonDevice;
-import com.whizzosoftware.hobson.api.disco.DeviceBridge;
 import com.whizzosoftware.hobson.api.hub.EmailConfiguration;
 import com.whizzosoftware.hobson.api.hub.HubLocation;
 import com.whizzosoftware.hobson.api.hub.HubManager;
@@ -527,22 +526,6 @@ public class JSONMarshaller {
         JSONArray results = new JSONArray();
         for (PresenceEntity e : entities) {
             results.put(createPresenceEntityJSON(ctx, e, false));
-        }
-        return results;
-    }
-
-    public static JSONObject createDeviceBridgeJSON(HobsonRestContext ctx, DeviceBridge bridge) {
-        JSONObject json = new JSONObject();
-        json.put("type", bridge.getType());
-        json.put("name", bridge.getName());
-        json.put("value", bridge.getValue());
-        return json;
-    }
-
-    public static JSONArray getDeviceBridgeListJSON(HobsonRestContext ctx, Collection<DeviceBridge> bridges) {
-        JSONArray results = new JSONArray();
-        for (DeviceBridge bridge : bridges) {
-            results.put(createDeviceBridgeJSON(ctx, bridge));
         }
         return results;
     }

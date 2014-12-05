@@ -15,7 +15,6 @@ import com.whizzosoftware.hobson.rest.v1.resource.action.ActionsResource;
 import com.whizzosoftware.hobson.rest.v1.resource.config.HubConfigurationResource;
 import com.whizzosoftware.hobson.rest.v1.resource.config.HubPasswordResource;
 import com.whizzosoftware.hobson.rest.v1.resource.device.*;
-import com.whizzosoftware.hobson.rest.v1.resource.disco.DeviceBridgesResource;
 import com.whizzosoftware.hobson.rest.v1.resource.plugin.*;
 import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceEntitiesResource;
 import com.whizzosoftware.hobson.rest.v1.resource.task.ExecuteTaskResource;
@@ -49,7 +48,6 @@ public class ApiV1Application extends ResourceInjectingApplication implements Ho
         router.attach(ActionsResource.PATH, ActionsResource.class);
         router.attach(HubInfoResource.PATH, HubInfoResource.class);
         router.attach(DeviceResource.PATH, DeviceResource.class);
-        router.attach(DeviceBridgesResource.PATH, DeviceBridgesResource.class);
         router.attach(DeviceConfigurationResource.PATH, DeviceConfigurationResource.class);
         router.attach(DeviceVariableChangeIdsResource.PATH, DeviceVariableChangeIdsResource.class);
         router.attach(DevicesResource.PATH, DevicesResource.class);
