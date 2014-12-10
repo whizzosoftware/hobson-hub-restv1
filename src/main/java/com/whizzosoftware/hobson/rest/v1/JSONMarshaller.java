@@ -538,6 +538,12 @@ public class JSONMarshaller {
         return json;
     }
 
+    public static JSONObject createErrorJSON(Throwable t) {
+        JSONObject json = new JSONObject();
+        json.put("message", t.getLocalizedMessage());
+        return json;
+    }
+
     public static Map<String,Object> createEmptyMap(HobsonRestContext ctx) {
         Map<String,Object> map = new HashMap<>();
         map.put("userId", ctx.getUserId());

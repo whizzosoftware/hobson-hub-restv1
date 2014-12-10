@@ -39,6 +39,7 @@ public class ApiV1Application extends ResourceInjectingApplication implements Ho
     public ApiV1Application(String apiRoot, Authenticator authenticator) {
         this.apiRoot = apiRoot;
         this.authenticator = authenticator;
+        setStatusService(new HobsonStatusService());
     }
 
     @Override
