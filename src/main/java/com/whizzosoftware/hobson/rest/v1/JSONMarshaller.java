@@ -539,8 +539,12 @@ public class JSONMarshaller {
     }
 
     public static JSONObject createErrorJSON(Throwable t) {
+        return createErrorJSON(t.getLocalizedMessage());
+    }
+
+    public static JSONObject createErrorJSON(String message) {
         JSONObject json = new JSONObject();
-        json.put("message", t.getLocalizedMessage());
+        json.put("message", message);
         return json;
     }
 
