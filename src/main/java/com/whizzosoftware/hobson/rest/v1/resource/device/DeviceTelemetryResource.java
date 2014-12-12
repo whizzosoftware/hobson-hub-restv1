@@ -8,12 +8,10 @@
 package com.whizzosoftware.hobson.rest.v1.resource.device;
 
 import com.whizzosoftware.hobson.api.device.DeviceManager;
-import com.whizzosoftware.hobson.api.device.HobsonDevice;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
 import com.whizzosoftware.hobson.api.variable.telemetry.TelemetryInterval;
 import com.whizzosoftware.hobson.api.variable.telemetry.TemporalValue;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -21,6 +19,7 @@ import org.restlet.representation.Representation;
 
 import javax.inject.Inject;
 import java.util.Collection;
+import java.util.Map;
 
 /**
  * A REST resource that returns device telemetry data.
@@ -43,20 +42,14 @@ public class DeviceTelemetryResource extends SelfInjectingServerResource {
      * @apiGroup Devices
      * @apiSuccessExample {json} Success Response:
      * {
-     *   "tempF": [
-     *     {
-     *       "time": 1408390215763,
-     *       "value": 72.0
-     *     }
-     *   ]
+     *   "tempF": {
+     *     "1408390215763": 72.0
+     *   }
      * },
      * {
-     *   "targetTempF": [
-     *     {
-     *       "time": 1408390215763,
-     *       "value": 73.0
-     *     }
-     *   ]
+     *   "targetTempF": {
+     *     "1408390215763": 73.0
+     *   }
      * }
      */
     @Override
@@ -64,31 +57,30 @@ public class DeviceTelemetryResource extends SelfInjectingServerResource {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
         String pluginId = getAttribute("pluginId");
         String deviceId = getAttribute("deviceId");
+        long endTime = System.currentTimeMillis() / 1000; // TODO: should be pulled from request
+        TelemetryInterval interval = TelemetryInterval.HOURS_24; // TODO: should be pulled from request
 
-        HobsonDevice device = deviceManager.getDevice(ctx.getUserId(), ctx.getHubId(), pluginId, deviceId);
-        String[] varNames = device.getTelemetryVariableNames();
+        Map<String,Collection<TemporalValue>> telemetry = deviceManager.getDeviceTelemetry(
+            ctx.getUserId(),
+            ctx.getHubId(),
+            pluginId,
+            deviceId,
+            endTime,
+            interval
+        );
+
         JSONObject results = new JSONObject();
 
-        if (varNames != null) {
-            for (String varName : varNames) {
-                Collection<TemporalValue> telemetry = variableManager.getDeviceVariableTelemetry(
-                    ctx.getUserId(),
-                    ctx.getHubId(),
-                    pluginId,
-                    deviceId,
-                    varName,
-                    System.currentTimeMillis() - 86400000, // TODO: should be pulled from request
-                    TelemetryInterval.HOURS_24 // TODO: should be pulled from request
-                );
+        for (String varName : telemetry.keySet()) {
+            Collection<TemporalValue> varTm = telemetry.get(varName);
 
-                JSONArray seriesArray = new JSONArray();
-                results.put(varName, seriesArray);
+            JSONObject seriesJSON = new JSONObject();
+            results.put(varName, seriesJSON);
 
-                for (TemporalValue value : telemetry) {
-                    JSONObject json = new JSONObject();
-                    json.put("time", value.getTime());
-                    json.put("value", value.getValue());
-                    seriesArray.put(json);
+            for (TemporalValue value : varTm) {
+                Double d = (Double)value.getValue();
+                if (d != null && !d.equals(Double.NaN)) {
+                    seriesJSON.put(Long.toString(value.getTime()), d);
                 }
             }
         }

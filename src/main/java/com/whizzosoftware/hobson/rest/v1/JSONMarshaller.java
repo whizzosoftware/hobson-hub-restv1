@@ -227,7 +227,7 @@ public class JSONMarshaller {
         return json;
     }
 
-    static public JSONObject createDeviceJSON(HobsonRestContext ctx, VariableManager variableManager, HobsonDevice device, boolean details, boolean variables) {
+    static public JSONObject createDeviceJSON(HobsonRestContext ctx, VariableManager variableManager, HobsonDevice device, Boolean telemetryEnabled, boolean details, boolean variables) {
         JSONObject json = new JSONObject();
         json.put("id", device.getId());
         json.put("name", device.getName());
@@ -235,15 +235,20 @@ public class JSONMarshaller {
         json.put("type", device.getType().toString());
 
         // set the preferred variable if specified
-        if (details && device.getPreferredVariableName() != null) {
-            String pvName = device.getPreferredVariableName();
-            try {
-                HobsonVariable var = variableManager.getDeviceVariable(ctx.getUserId(), ctx.getHubId(), device.getPluginId(), device.getId(), pvName);
-                JSONObject vjson = createDeviceVariableJSON(ctx, device.getPluginId(), device.getId(), var, false);
-                vjson.put("name", pvName);
-                json.put("preferredVariable", vjson);
-            } catch (DeviceVariableNotFoundException e) {
-                logger.error("Error obtaining preferred variable for " + device.getPluginId() + "." + device.getId(), e);
+        if (details) {
+            if (telemetryEnabled != null) {
+                json.put("telemetryEnabled", telemetryEnabled);
+            }
+            if (device.getPreferredVariableName() != null) {
+                String pvName = device.getPreferredVariableName();
+                try {
+                    HobsonVariable var = variableManager.getDeviceVariable(ctx.getUserId(), ctx.getHubId(), device.getPluginId(), device.getId(), pvName);
+                    JSONObject vjson = createDeviceVariableJSON(ctx, device.getPluginId(), device.getId(), var, false);
+                    vjson.put("name", pvName);
+                    json.put("preferredVariable", vjson);
+                } catch (DeviceVariableNotFoundException e) {
+                    logger.error("Error obtaining preferred variable for " + device.getPluginId() + "." + device.getId(), e);
+                }
             }
         }
 
@@ -265,7 +270,7 @@ public class JSONMarshaller {
             links.put("config", ctx.getApiRoot() + new Template(DeviceConfigurationResource.PATH).format(propMap));
             links.put("variables", ctx.getApiRoot() + new Template(DeviceVariablesResource.PATH).format(propMap));
             links.put("variableEvents", ctx.getApiRoot() + new Template(DeviceVariableChangeIdsResource.PATH).format(propMap));
-            if (device.getTelemetryVariableNames() != null) {
+            if (device.hasTelemetry()) {
                 links.put("enableTelemetry", ctx.getApiRoot() + new Template(EnableDeviceTelemetryResource.PATH).format(propMap));
                 links.put("telemetry", ctx.getApiRoot() + new Template(DeviceTelemetryResource.PATH).format(propMap));
             }
@@ -277,7 +282,7 @@ public class JSONMarshaller {
     static public JSONArray createDeviceListJSON(HobsonRestContext ctx, VariableManager variableManager, Collection<HobsonDevice> devices, boolean details) {
         JSONArray results = new JSONArray();
         for (HobsonDevice device : devices) {
-            results.put(createDeviceJSON(ctx, variableManager, device, details, false));
+            results.put(createDeviceJSON(ctx, variableManager, device, null, details, false));
         }
         return results;
     }

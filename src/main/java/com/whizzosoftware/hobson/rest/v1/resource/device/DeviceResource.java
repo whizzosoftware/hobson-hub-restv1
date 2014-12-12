@@ -8,6 +8,7 @@
 package com.whizzosoftware.hobson.rest.v1.resource.device;
 
 import com.whizzosoftware.hobson.api.device.DeviceManager;
+import com.whizzosoftware.hobson.api.device.HobsonDevice;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.JSONMarshaller;
@@ -43,6 +44,7 @@ public class DeviceResource extends SelfInjectingServerResource {
      *   "name": "RadioRa Zone 1",
      *   "type": "LIGHTBULB",
      *   "pluginId": "com.whizzosoftware.hobson.hub.hobson-hub-radiora",
+     *   "telemetryEnabled": false,
      *   "preferredVariable": {
      *     "name": "on",
      *     "value": false,
@@ -53,7 +55,6 @@ public class DeviceResource extends SelfInjectingServerResource {
      *   "links": {
      *     "self": "/api/plugins/com.whizzosoftware.hobson.hub.hobson-hub-radiora/devices/1",
      *     "config": "/api/plugins/com.whizzosoftware.hobson.hub.hobson-hub-radiora/devices/1/config",
-     *     "set-name": "/api/plugins/com.whizzosoftware.hobson.hub.hobson-hub-radiora/devices/1/name",
      *     "variables": "/api/plugins/com.whizzosoftware.hobson.hub.hobson-hub-radiora/devices/1/variables"
      *   }
      * }
@@ -61,6 +62,19 @@ public class DeviceResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        return new JsonRepresentation(JSONMarshaller.createDeviceJSON(ctx, variableManager, deviceManager.getDevice(ctx.getUserId(), ctx.getHubId(), getAttribute("pluginId"), getAttribute("deviceId")), true, Boolean.parseBoolean(getQueryValue("variables"))));
+        String pluginId = getAttribute("pluginId");
+        String deviceId = getAttribute("deviceId");
+        HobsonDevice device = deviceManager.getDevice(ctx.getUserId(), ctx.getHubId(), pluginId, deviceId);
+        boolean telemetryEnabled = deviceManager.isDeviceTelemetryEnabled(ctx.getUserId(), ctx.getHubId(), pluginId, deviceId);
+        return new JsonRepresentation(
+            JSONMarshaller.createDeviceJSON(
+                ctx,
+                variableManager,
+                device,
+                telemetryEnabled,
+                true,
+                Boolean.parseBoolean(getQueryValue("variables"))
+            )
+        );
     }
 }

@@ -8,7 +8,6 @@
 package com.whizzosoftware.hobson.rest.v1.resource.device;
 
 import com.whizzosoftware.hobson.api.device.DeviceManager;
-import com.whizzosoftware.hobson.api.device.HobsonDevice;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.JSONMarshaller;
@@ -52,29 +51,11 @@ public class EnableDeviceTelemetryResource extends SelfInjectingServerResource {
         String pluginId = getAttribute("pluginId");
         String deviceId = getAttribute("deviceId");
 
-        HobsonDevice device = deviceManager.getDevice(ctx.getUserId(), ctx.getHubId(), pluginId, deviceId);
+        JSONObject json = JSONMarshaller.createJSONFromRepresentation(entity);
 
-        String[] varNames = device.getTelemetryVariableNames();
+        deviceManager.enableDeviceTelemetry(ctx.getUserId(), ctx.getHubId(), pluginId, deviceId, json.getBoolean("value"));
 
-        if (varNames != null) {
-            JSONObject json = JSONMarshaller.createJSONFromRepresentation(entity);
-            boolean value = json.getBoolean("value");
-
-            for (String varName : varNames) {
-                variableManager.enableDeviceVariableTelemetry(
-                    ctx.getUserId(),
-                    ctx.getHubId(),
-                    pluginId,
-                    deviceId,
-                    varName,
-                    value
-                );
-            }
-            getResponse().setStatus(Status.SUCCESS_ACCEPTED);
-        } else {
-            getResponse().setStatus(Status.CLIENT_ERROR_FORBIDDEN);
-        }
-
+        getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();
     }
 }
