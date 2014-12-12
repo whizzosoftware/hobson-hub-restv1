@@ -50,10 +50,12 @@ public class ApiV1Application extends ResourceInjectingApplication implements Ho
         router.attach(HubInfoResource.PATH, HubInfoResource.class);
         router.attach(DeviceResource.PATH, DeviceResource.class);
         router.attach(DeviceConfigurationResource.PATH, DeviceConfigurationResource.class);
+        router.attach(DeviceTelemetryResource.PATH, DeviceTelemetryResource.class);
         router.attach(DeviceVariableChangeIdsResource.PATH, DeviceVariableChangeIdsResource.class);
         router.attach(DevicesResource.PATH, DevicesResource.class);
         router.attach(DeviceVariableResource.PATH, DeviceVariableResource.class);
         router.attach(DeviceVariablesResource.PATH, DeviceVariablesResource.class);
+        router.attach(EnableDeviceTelemetryResource.PATH, EnableDeviceTelemetryResource.class);
         router.attach(ExecuteTaskResource.PATH, ExecuteTaskResource.class);
         router.attach(GlobalVariableResource.PATH, GlobalVariableResource.class);
         router.attach(GlobalVariablesResource.PATH, GlobalVariablesResource.class);

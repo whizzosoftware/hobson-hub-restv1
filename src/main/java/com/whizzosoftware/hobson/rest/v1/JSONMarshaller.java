@@ -261,9 +261,14 @@ public class JSONMarshaller {
 
         links.put("self", ctx.getApiRoot() + new Template(DeviceResource.PATH).format(createDoubleEntryMap(ctx, "pluginId", device.getPluginId(), "deviceId", device.getId())));
         if (details) {
-            links.put("config", ctx.getApiRoot() + new Template(DeviceConfigurationResource.PATH).format(createDoubleEntryMap(ctx, "pluginId", device.getPluginId(), "deviceId", device.getId())));
-            links.put("variables", ctx.getApiRoot() + new Template(DeviceVariablesResource.PATH).format(createDoubleEntryMap(ctx, "pluginId", device.getPluginId(), "deviceId", device.getId())));
-            links.put("variableEvents", ctx.getApiRoot() + new Template(DeviceVariableChangeIdsResource.PATH).format(createDoubleEntryMap(ctx, "pluginId", device.getPluginId(), "deviceId", device.getId())));
+            Map<String,Object> propMap = createDoubleEntryMap(ctx, "pluginId", device.getPluginId(), "deviceId", device.getId());
+            links.put("config", ctx.getApiRoot() + new Template(DeviceConfigurationResource.PATH).format(propMap));
+            links.put("variables", ctx.getApiRoot() + new Template(DeviceVariablesResource.PATH).format(propMap));
+            links.put("variableEvents", ctx.getApiRoot() + new Template(DeviceVariableChangeIdsResource.PATH).format(propMap));
+            if (device.getTelemetryVariableNames() != null) {
+                links.put("enableTelemetry", ctx.getApiRoot() + new Template(EnableDeviceTelemetryResource.PATH).format(propMap));
+                links.put("telemetry", ctx.getApiRoot() + new Template(DeviceTelemetryResource.PATH).format(propMap));
+            }
         }
 
         return json;
