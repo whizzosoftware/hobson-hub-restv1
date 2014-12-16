@@ -37,7 +37,9 @@ public class HobsonStatusService extends StatusService {
     }
 
     public Representation getRepresentation(Status status, Request request, Response response) {
-        if (status != null && status.getThrowable() != null) {
+        if (status != null && status.getDescription() != null) {
+            return new JsonRepresentation(JSONMarshaller.createErrorJSON(status.getDescription()));
+        } else if (status != null && status.getThrowable() != null) {
             return new JsonRepresentation(JSONMarshaller.createErrorJSON(status.getThrowable()));
         } else {
             logger.error("Unknown error servicing request: " + request.getOriginalRef());
