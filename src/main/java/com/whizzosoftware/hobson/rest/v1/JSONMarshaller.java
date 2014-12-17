@@ -42,6 +42,7 @@ import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceEntityResourc
 import com.whizzosoftware.hobson.rest.v1.resource.task.TaskResource;
 import com.whizzosoftware.hobson.rest.v1.resource.task.TasksResource;
 import com.whizzosoftware.hobson.rest.v1.resource.variable.GlobalVariableResource;
+import com.whizzosoftware.hobson.rest.v1.resource.variable.GlobalVariablesResource;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -79,16 +80,19 @@ public class JSONMarshaller {
 
         String apiRoot = ctx.getApiRoot();
 
+        Map<String,Object> emptyMap = createEmptyMap(ctx);
+
         JSONObject links = new JSONObject();
-        links.put(ActionsResource.REL, apiRoot + new Template(ActionsResource.PATH).format(createEmptyMap(ctx)));
-        links.put(DevicesResource.REL, apiRoot + new Template(DevicesResource.PATH).format(createEmptyMap(ctx)));
-        links.put(HubConfigurationResource.REL, apiRoot + new Template(HubConfigurationResource.PATH).format(createEmptyMap(ctx)));
-        links.put(HubPasswordResource.REL, apiRoot + new Template(HubPasswordResource.PATH).format(createEmptyMap(ctx)));
-        links.put(LogResource.REL, apiRoot + new Template(LogResource.PATH).format(createEmptyMap(ctx)));
-        links.put(PluginsResource.REL, apiRoot + new Template(PluginsResource.PATH).format(createEmptyMap(ctx)));
-        links.put(PresenceEntitiesResource.REL, apiRoot + new Template(PresenceEntitiesResource.PATH).format(createEmptyMap(ctx)));
-        links.put(ShutdownResource.REL, apiRoot + new Template(ShutdownResource.PATH).format(createEmptyMap(ctx)));
-        links.put(TasksResource.REL, apiRoot + new Template(TasksResource.PATH).format(createEmptyMap(ctx)));
+        links.put(ActionsResource.REL, apiRoot + new Template(ActionsResource.PATH).format(emptyMap));
+        links.put(DevicesResource.REL, apiRoot + new Template(DevicesResource.PATH).format(emptyMap));
+        links.put(GlobalVariablesResource.REL, apiRoot + new Template(GlobalVariablesResource.PATH).format(emptyMap));
+        links.put(HubConfigurationResource.REL, apiRoot + new Template(HubConfigurationResource.PATH).format(emptyMap));
+        links.put(HubPasswordResource.REL, apiRoot + new Template(HubPasswordResource.PATH).format(emptyMap));
+        links.put(LogResource.REL, apiRoot + new Template(LogResource.PATH).format(emptyMap));
+        links.put(PluginsResource.REL, apiRoot + new Template(PluginsResource.PATH).format(emptyMap));
+        links.put(PresenceEntitiesResource.REL, apiRoot + new Template(PresenceEntitiesResource.PATH).format(emptyMap));
+        links.put(ShutdownResource.REL, apiRoot + new Template(ShutdownResource.PATH).format(emptyMap));
+        links.put(TasksResource.REL, apiRoot + new Template(TasksResource.PATH).format(emptyMap));
         json.put("links", links);
 
         return json;

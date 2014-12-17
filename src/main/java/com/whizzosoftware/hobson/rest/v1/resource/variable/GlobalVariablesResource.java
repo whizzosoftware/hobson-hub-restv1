@@ -18,6 +18,7 @@ import javax.inject.Inject;
 
 public class GlobalVariablesResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/globalVariables";
+    public static final String REL = "globalVariables";
 
     @Inject
     VariableManager variableManager;
