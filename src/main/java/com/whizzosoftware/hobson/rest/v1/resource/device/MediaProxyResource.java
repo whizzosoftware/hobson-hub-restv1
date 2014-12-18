@@ -11,10 +11,12 @@ import com.whizzosoftware.hobson.api.HobsonRuntimeException;
 import com.whizzosoftware.hobson.api.variable.HobsonVariable;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.SimpleHttpConnectionManager;
-import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -42,7 +44,7 @@ public class MediaProxyResource extends SelfInjectingServerResource {
     @Inject
     VariableManager variableManager;
 
-    private HttpClient httpClient = new HttpClient(new SimpleHttpConnectionManager());
+    private CloseableHttpClient httpClient = HttpClients.createDefault();
 
     @Override
     public Representation get() {
@@ -51,16 +53,18 @@ public class MediaProxyResource extends SelfInjectingServerResource {
             HobsonVariable hvar = variableManager.getDeviceVariable(ctx.getUserId(), ctx.getHubId(), getAttribute("pluginId"), getAttribute("deviceId"), getAttribute("mediaId"));
             if (hvar != null && hvar.getValue() != null) {
                 String imageUri = hvar.getValue().toString();
-                final GetMethod get = new GetMethod(imageUri);
-                int statusCode = httpClient.executeMethod(get);
+                HttpGet get = new HttpGet(imageUri);
+                final CloseableHttpResponse response = httpClient.execute(get);
+                int statusCode = response.getStatusLine().getStatusCode();
                 if (statusCode == 200) {
                     String contentType = null;
-                    Header header = get.getResponseHeader("Content-Type");
+                    HttpEntity entity = response.getEntity();
+                    Header header = entity.getContentType();
                     if (header != null) {
                         contentType = header.getValue();
                     }
                     if (contentType != null) {
-                        final InputStream inputStream = get.getResponseBodyAsStream();
+                        final InputStream inputStream = entity.getContent();
                         return new StreamRepresentation(new MediaType(contentType)) {
                             @Override
                             public InputStream getStream() throws IOException {
@@ -80,20 +84,20 @@ public class MediaProxyResource extends SelfInjectingServerResource {
                                 } catch (IOException ioe) {
                                     logger.debug("IOException occurred while streaming media", ioe);
                                 } finally {
-                                    get.releaseConnection();
+                                    response.close();
                                 }
                             }
                         };
                     } else {
-                        get.releaseConnection();
+                        response.close();
                         throw new HobsonRuntimeException("Unable to determine proxy content type");
                     }
                 } else if (statusCode == 401) {
-                    get.releaseConnection();
+                    response.close();
                     getResponse().setStatus(Status.CLIENT_ERROR_FORBIDDEN);
                     return new EmptyRepresentation();
                 } else {
-                    get.releaseConnection();
+                    response.close();
                     throw new HobsonRuntimeException("Received " + statusCode + " response while retrieving image from camera");
                 }
             } else {
