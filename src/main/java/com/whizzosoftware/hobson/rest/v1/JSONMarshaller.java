@@ -350,14 +350,14 @@ public class JSONMarshaller {
     }
 
     static public Configuration createConfigurationFromConfigJSON(JSONObject json) {
-        List<ConfigurationProperty> props = new ArrayList<>();
+        Configuration config = new Configuration();
         JSONObject jsonProps = json.getJSONObject("properties");
         for (Object o : jsonProps.keySet()) {
             String configKey = o.toString();
             JSONObject configJson = jsonProps.getJSONObject(configKey);
-            props.add(new ConfigurationProperty(new ConfigurationPropertyMetaData(configKey), configJson.get("value")));
+            config.addProperty(new ConfigurationProperty(new ConfigurationPropertyMetaData(configKey), configJson.get("value")));
         }
-        return new Configuration(props);
+        return config;
     }
 
     public static JSONObject createJSONFromRepresentation(Representation r) {
