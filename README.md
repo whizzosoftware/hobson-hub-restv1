@@ -12,4 +12,6 @@ To find out more and download ready-to-run installers, please visit the
 
 ### hobson-hub-restv1
 
-The application and resources for the Hobson REST API.
+The Restlet application and associated resources for the Hobson REST API.
+
+[![Build Status](https://api.travis-ci.org/whizzosoftware/hobson-hub-restv1.png)](https://api.travis-ci.org/whizzosoftware/hobson-hub-restv1.png)
