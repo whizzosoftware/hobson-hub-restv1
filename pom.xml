@@ -137,6 +137,11 @@
         <tag>HEAD</tag>
     </scm>
     <distributionManagement>
+        <snapshotRepository>
+            <id>oss-jfrog-artifactory</id>
+            <name>oss-jfrog-artifactory-snapshots</name>
+            <url>http://oss.jfrog.org/artifactory/oss-snapshot-local</url>
+        </snapshotRepository>
         <repository>
             <id>bintray</id>
             <url>https://api.bintray.com/maven/whizzosoftware/maven/hobson-hub-restv1</url>
