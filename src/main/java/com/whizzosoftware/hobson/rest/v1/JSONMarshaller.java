@@ -236,7 +236,9 @@ public class JSONMarshaller {
         json.put("id", device.getId());
         json.put("name", device.getName());
         json.put("pluginId", device.getPluginId());
-        json.put("type", device.getType().toString());
+        if (device.getType() != null) {
+            json.put("type", device.getType().toString());
+        }
 
         // set the preferred variable if specified
         if (details) {
