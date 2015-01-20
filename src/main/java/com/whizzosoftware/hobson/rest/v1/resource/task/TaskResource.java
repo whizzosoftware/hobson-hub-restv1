@@ -10,6 +10,7 @@ package com.whizzosoftware.hobson.rest.v1.resource.task;
 import com.whizzosoftware.hobson.api.task.TaskManager;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.JSONMarshaller;
+import org.json.JSONObject;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -64,6 +65,83 @@ public class TaskResource extends SelfInjectingServerResource {
     protected Representation get() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
         return new JsonRepresentation(JSONMarshaller.createTaskJSON(ctx, taskManager.getTask(ctx.getUserId(), ctx.getHubId(), getAttribute("providerId"), getAttribute("taskId")), true, true));
+    }
+
+    /**
+     * @api {put} /api/v1/users/:userId/hubs/:hubId/tasks/:providerId/:taskId Update task
+     * @apiVersion 0.1.3
+     * @apiName UpdateTask
+     * @apiDescription Updated an existing task.
+     * @apiGroup Tasks
+     * @apiExample Example Request (simple event task):
+     * {
+     *   "name": "My Event Task",
+     *   "provider": "com.whizzosoftware.hobson.hub.hobson-hub-rules",
+     *   "conditions": [{
+     *     "event": "variableUpdate",
+     *     "pluginId": "com.whizzosoftware.hobson.hub.hobson-hub-zwave",
+     *     "deviceId": "zwave-32",
+     *     "changeId": "turnOff"
+     *   }],
+     *   "actions": [{
+     *     "pluginId": "com.whizzosoftware.hobson.hub.hobson-hub-actions",
+     *     "actionId": "log",
+     *     "name": "My Action 1",
+     *     "properties": {
+     *       "message": "Event task fired"
+     *     }
+     *   }]
+     * }
+     * @apiExample Example Request (advanced event task):
+     * {
+     *   "name": "My Event Task",
+     *   "provider": "com.whizzosoftware.hobson.hub.hobson-hub-rules",
+     *   "conditions": [{
+     *     "event": "variableUpdate",
+     *     "pluginId": "com.whizzosoftware.hobson.hub.hobson-hub-zwave",
+     *     "deviceId": "zwave-32",
+     *     "variable": {
+     *       "name": "on",
+     *       "comparator": "eq",
+     *       "value": true
+     *     }
+     *   }],
+     *   "actions": [{
+     *     "pluginId": "com.whizzosoftware.hobson.hub.hobson-hub-actions",
+     *     "actionId": "log",
+     *     "name": "My Action 1",
+     *     "properties": {
+     *       "message": "Event task fired"
+     *     }
+     *   }]
+     * }
+     * @apiExample Example Request (scheduled task):
+     * {
+     *   "name": "My Scheduled Task",
+     *   "provider": "com.whizzosoftware.hobson.hub.hobson-hub-scheduler",
+     *   "conditions": [{
+     *     "start": "20140701T100000",
+     *     "recurrence": "FREQ=MINUTELY;INTERVAL=1"
+     *   }],
+     *   "actions": [{
+     *     "pluginId": "com.whizzosoftware.hobson.hub.hobson-hub-actions",
+     *     "actionId": "log",
+     *     "name": "My Action 2",
+     *   }],
+     *   "properties": {
+     *     "nextRunTime": 1234567890
+     *   }
+     * }
+     * @apiSuccessExample Success Response:
+     * HTTP/1.1 202 Accepted
+     */
+    @Override
+    protected Representation put(Representation entity) {
+        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        JSONObject json = JSONMarshaller.createJSONFromRepresentation(entity);
+        taskManager.updateTask(ctx.getUserId(), ctx.getHubId(), getAttribute("providerId"), getAttribute("taskId"), json);
+        getResponse().setStatus(Status.SUCCESS_ACCEPTED);
+        return new EmptyRepresentation();
     }
 
     /**
