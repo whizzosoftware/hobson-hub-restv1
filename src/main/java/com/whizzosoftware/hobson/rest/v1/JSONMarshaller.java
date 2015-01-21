@@ -412,8 +412,10 @@ public class JSONMarshaller {
         // add detail data
         if (details) {
             JSONObject metas = new JSONObject();
+            JSONArray metaOrder = new JSONArray();
             for (ActionMetaData ham : action.getMetaData()) {
                 JSONObject meta = new JSONObject();
+                metaOrder.put(ham.getId());
                 meta.put("name", ham.getName());
                 meta.put("description", ham.getDescription());
                 meta.put("type", ham.getType());
@@ -439,6 +441,7 @@ public class JSONMarshaller {
                 metas.put(ham.getId(), meta);
             }
             json.put("meta", metas);
+            json.put("metaOrder", metaOrder);
         }
 
         JSONObject links = new JSONObject();

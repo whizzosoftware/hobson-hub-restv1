@@ -37,6 +37,9 @@ public class ActionResource extends SelfInjectingServerResource {
      * {
      *   "name": "Log Message",
      *   "pluginId": "com.whizzosoftware.hobson.hub.hobson-hub-api",
+     *   "metaOrder": [
+     *      "message"
+     *   ],
      *   "meta": {
      *     "message": {
      *       "name": "Message",
