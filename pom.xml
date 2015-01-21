@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
 	<groupId>com.whizzosoftware.hobson.hub</groupId>
     <artifactId>hobson-hub-restv1</artifactId>
-    <version>0.4.0</version>
+    <version>0.4.1-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>REST API v1 Plugin</name>
     <description>Provides a RESTful API that can be used to manage the Hobson Hub</description>
@@ -134,7 +134,7 @@
     <scm>
         <connection>scm:git:ssh://git@github.com/whizzosoftware/hobson-hub-restv1.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/whizzosoftware/hobson-hub-restv1.git</developerConnection>
-        <tag>hobson-hub-restv1-0.4.0</tag>
+        <tag>HEAD</tag>
     </scm>
     <distributionManagement>
         <snapshotRepository>
