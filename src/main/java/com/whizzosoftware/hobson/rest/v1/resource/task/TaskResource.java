@@ -43,9 +43,13 @@ public class TaskResource extends SelfInjectingServerResource {
      *     "type": "EVENT",
      *     "provider": "com.whizzosoftware.hobson.hub-rules",
      *     "conditions": [{
-     *       "leftTerm": "foo",
-     *       "op": "eq",
-     *       "rightTerm": "bar"
+     *       "event": "variableUpdate",
+     *       "pluginId": "com.whizzosoftware.hobson.hub.hobson-hub-sample",
+     *       "deviceId": "switch",
+     *       "name": "on",
+     *       "comparator": "=",
+     *       "value": true,
+     *       "changeId": "turnOn"
      *     }],
      *     "actions": [{
      *       "pluginId": "com.whizzosoftware.hobson.hub-actions",
