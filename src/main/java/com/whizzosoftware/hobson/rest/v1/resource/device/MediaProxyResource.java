@@ -21,6 +21,7 @@ import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpHead;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -59,46 +60,47 @@ public class MediaProxyResource extends SelfInjectingServerResource {
     VariableManager variableManager;
 
     @Override
+    public Representation head() {
+        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        HobsonVariable hvar = variableManager.getDeviceVariable(ctx.getUserId(), ctx.getHubId(), getAttribute("pluginId"), getAttribute("deviceId"), getAttribute("mediaId"));
+        if (hvar != null && hvar.getValue() != null) {
+            try {
+                final HttpProps httpProps = createHttpGet(hvar.getValue().toString());
+
+                try {
+                    final CloseableHttpResponse response = httpProps.client.execute(httpProps.httpGet);
+                    getResponse().setStatus(new Status(response.getStatusLine().getStatusCode()));
+                    response.close();
+                    return new EmptyRepresentation();
+                } catch (IOException e) {
+                    throw new HobsonRuntimeException(e.getLocalizedMessage(), e);
+                } finally {
+                    try {
+                        httpProps.client.close();
+                    } catch (IOException e) {
+                        logger.warn("Error closing HttpClient", e);
+                    }
+                }
+            } catch (ParseException|URISyntaxException e) {
+                logger.error("Error obtaining media stream from device", e);
+                throw new HobsonRuntimeException(e.getLocalizedMessage(), e);
+            }
+        }
+
+        getResponse().setStatus(Status.CLIENT_ERROR_NOT_FOUND);
+        return new EmptyRepresentation();
+    }
+
+    @Override
     public Representation get() {
         try {
             HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
             HobsonVariable hvar = variableManager.getDeviceVariable(ctx.getUserId(), ctx.getHubId(), getAttribute("pluginId"), getAttribute("deviceId"), getAttribute("mediaId"));
             if (hvar != null && hvar.getValue() != null) {
-                URIInfo uriInfo = URLVariableParser.parse(hvar.getValue().toString());
-
-                HttpGet get = new HttpGet(uriInfo.getURI());
-
-                // populate the GET request with headers if specified
-                if (uriInfo.hasHeaders()) {
-                    Map<String,String> headers = uriInfo.getHeaders();
-                    for (String name : headers.keySet()) {
-                        uriInfo.addHeader(name, headers.get(name));
-                    }
-                }
-
-                final CloseableHttpClient httpClient;
-
-                // populate the GET request with auth information if specified
-                if (uriInfo.hasAuthInfo()) {
-                    URI uri = uriInfo.getURI();
-                    CredentialsProvider credsProvider = new BasicCredentialsProvider();
-                    credsProvider.setCredentials(
-                        new AuthScope(
-                            uri.getHost(),
-                            (uri.getPort() > 0) ? uri.getPort() : DEFAULT_REALM_PORT
-                        ),
-                        new UsernamePasswordCredentials(
-                            uriInfo.getAuthInfo().getUsername(),
-                            uriInfo.getAuthInfo().getPassword()
-                        )
-                    );
-                    httpClient = HttpClients.custom().setDefaultCredentialsProvider(credsProvider).build();
-                } else {
-                    httpClient = HttpClients.createDefault();
-                }
+                final HttpProps httpProps = createHttpGet(hvar.getValue().toString());
 
                 try {
-                    final CloseableHttpResponse response = httpClient.execute(get);
+                    final CloseableHttpResponse response = httpProps.client.execute(httpProps.httpGet);
 
                     // make sure we got a valid 2xx response
                     int statusCode = response.getStatusLine().getStatusCode();
@@ -132,30 +134,30 @@ public class MediaProxyResource extends SelfInjectingServerResource {
                                         logger.debug("IOException occurred while streaming media", ioe);
                                     } finally {
                                         response.close();
-                                        httpClient.close();
+                                        httpProps.client.close();
                                     }
                                 }
                             };
                         } else {
                             response.close();
-                            httpClient.close();
+                            httpProps.client.close();
                             throw new HobsonRuntimeException("Unable to determine proxy content type");
                         }
                     // explicitly handle the 401 code
                     } else if (statusCode == HttpStatus.SC_UNAUTHORIZED) {
                         getResponse().setStatus(Status.CLIENT_ERROR_FORBIDDEN);
                         response.close();
-                        httpClient.close();
+                        httpProps.client.close();
                         return new EmptyRepresentation();
                     // otherwise, its a general failure
                     } else {
                         response.close();
-                        httpClient.close();
+                        httpProps.client.close();
                         throw new HobsonRuntimeException("Received " + statusCode + " response while retrieving image from camera");
                     }
                 } catch (IOException e) {
                     try {
-                        httpClient.close();
+                        httpProps.client.close();
                     } catch (IOException ioe) {
                         logger.warn("Error closing HttpClient", ioe);
                     }
@@ -166,8 +168,54 @@ public class MediaProxyResource extends SelfInjectingServerResource {
                 return new EmptyRepresentation();
             }
         } catch (ParseException|URISyntaxException e) {
-            logger.error("Error obtaining image", e);
+            logger.error("Error obtaining media stream from device", e);
             throw new HobsonRuntimeException(e.getLocalizedMessage(), e);
+        }
+    }
+
+    protected HttpProps createHttpGet(String varValue) throws ParseException, URISyntaxException {
+        URIInfo uriInfo = URLVariableParser.parse(varValue);
+        HttpGet get = new HttpGet(uriInfo.getURI());
+
+        // populate the GET request with headers if specified
+        if (uriInfo.hasHeaders()) {
+            Map<String,String> headers = uriInfo.getHeaders();
+            for (String name : headers.keySet()) {
+                uriInfo.addHeader(name, headers.get(name));
+            }
+        }
+
+        CloseableHttpClient httpClient;
+
+        // populate the GET request with auth information if specified
+        if (uriInfo.hasAuthInfo()) {
+            URI uri = uriInfo.getURI();
+            CredentialsProvider credsProvider = new BasicCredentialsProvider();
+            credsProvider.setCredentials(
+                    new AuthScope(
+                        uri.getHost(),
+                        (uri.getPort() > 0) ? uri.getPort() : DEFAULT_REALM_PORT
+                    ),
+                    new UsernamePasswordCredentials(
+                        uriInfo.getAuthInfo().getUsername(),
+                        uriInfo.getAuthInfo().getPassword()
+                    )
+            );
+            httpClient = HttpClients.custom().setDefaultCredentialsProvider(credsProvider).build();
+        } else {
+            httpClient = HttpClients.createDefault();
+        }
+
+        return new HttpProps(httpClient, get);
+    }
+
+    private class HttpProps {
+        public CloseableHttpClient client;
+        public HttpGet httpGet;
+
+        public HttpProps(CloseableHttpClient client, HttpGet httpGet) {
+            this.client = client;
+            this.httpGet = httpGet;
         }
     }
 }
