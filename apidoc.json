@@ -1,6 +1,6 @@
 {
     "name": "Hobson REST API",
-    "version": "0.1.9",
+    "version": "0.4.3",
     "title": "Hobson REST API",
     "description": "The Hobson REST API is published by both the Hobson Hub and Hobson CloudLink service.",
     "footer": {
