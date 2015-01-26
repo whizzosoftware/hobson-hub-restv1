@@ -12,6 +12,7 @@ import com.whizzosoftware.hobson.api.action.HobsonAction;
 import com.whizzosoftware.hobson.api.action.meta.ActionMetaData;
 import com.whizzosoftware.hobson.api.action.meta.ActionMetaDataEnumValue;
 import com.whizzosoftware.hobson.api.config.Configuration;
+import com.whizzosoftware.hobson.api.config.ConfigurationEnumValue;
 import com.whizzosoftware.hobson.api.config.ConfigurationProperty;
 import com.whizzosoftware.hobson.api.config.ConfigurationPropertyMetaData;
 import com.whizzosoftware.hobson.api.device.HobsonDevice;
@@ -183,13 +184,7 @@ public class JSONMarshaller {
         JSONObject configProps = new JSONObject();
         results.put("properties", configProps);
         for (ConfigurationProperty pcp : config.getProperties()) {
-            JSONObject j = new JSONObject();
-            j.put("name", pcp.getName());
-            j.put("description", pcp.getDescription());
-            j.put("type", pcp.getType());
-            if (pcp.hasValue()) {
-                j.put("value", pcp.getValue());
-            }
+            JSONObject j = createConfigurationPropertyJSON(pcp);
             configProps.put(pcp.getId(), j);
         }
         JSONObject links = new JSONObject();
@@ -484,11 +479,19 @@ public class JSONMarshaller {
         json.put("name", cp.getName());
         json.put("description", cp.getDescription());
         json.put("type", cp.getType());
+        if (cp.hasEnumValues()) {
+            JSONObject vals = new JSONObject();
+            for (ConfigurationEnumValue cev : cp.getEnumValues()) {
+                JSONObject jcev = new JSONObject();
+                jcev.put("name", cev.getName());
+                vals.put(cev.getId(), jcev);
+            }
+            json.put("enumValues", vals);
+        }
         if (cp.hasValue()) {
             json.put("value", cp.getValue());
         }
         return json;
-
     }
 
     public static JSONObject createTaskJSON(HobsonRestContext ctx, HobsonTask task, boolean details, boolean properties) {
