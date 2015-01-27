@@ -37,6 +37,7 @@ import com.whizzosoftware.hobson.rest.v1.resource.action.ActionsResource;
 import com.whizzosoftware.hobson.rest.v1.resource.config.HubConfigurationResource;
 import com.whizzosoftware.hobson.rest.v1.resource.config.HubPasswordResource;
 import com.whizzosoftware.hobson.rest.v1.resource.device.*;
+import com.whizzosoftware.hobson.rest.v1.resource.image.HubImageResource;
 import com.whizzosoftware.hobson.rest.v1.resource.plugin.*;
 import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceEntitiesResource;
 import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceEntityResource;
@@ -66,15 +67,7 @@ import java.util.*;
 public class JSONMarshaller {
     private static final Logger logger = LoggerFactory.getLogger(JSONMarshaller.class);
 
-    /**
-     * Create JSON representation of API version information.
-     *
-     * @param version the current API version
-     * @param isSetupWizardComplete boolean indicating whether the setup wizard has been completed
-     *
-     * @return a JSONObject instance
-     */
-    static public JSONObject createApiVersionJSON(HobsonRestContext ctx, String version, boolean isSetupWizardComplete) {
+    static public JSONObject createHubInfoJSON(HobsonRestContext ctx, String version, boolean isSetupWizardComplete) {
         JSONObject json = new JSONObject();
         json.put("version", version);
         json.put("setupComplete", isSetupWizardComplete);
@@ -88,6 +81,7 @@ public class JSONMarshaller {
         links.put(DevicesResource.REL, apiRoot + new Template(DevicesResource.PATH).format(emptyMap));
         links.put(GlobalVariablesResource.REL, apiRoot + new Template(GlobalVariablesResource.PATH).format(emptyMap));
         links.put(HubConfigurationResource.REL, apiRoot + new Template(HubConfigurationResource.PATH).format(emptyMap));
+        links.put(HubImageResource.REL, apiRoot + new Template(HubImageResource.PATH).format(emptyMap));
         links.put(HubPasswordResource.REL, apiRoot + new Template(HubPasswordResource.PATH).format(emptyMap));
         links.put(LogResource.REL, apiRoot + new Template(LogResource.PATH).format(emptyMap));
         links.put(PluginsResource.REL, apiRoot + new Template(PluginsResource.PATH).format(emptyMap));
@@ -99,14 +93,6 @@ public class JSONMarshaller {
         return json;
     }
 
-    /**
-     * Create JSON representation of a PluginDescriptor.
-     *
-     * @param pd the PluginDescriptor
-     * @param details should the JSON include plugin details?
-     *
-     * @return a JSONObject instance
-     */
     static public JSONObject createPluginDescriptorJSON(HobsonRestContext ctx, PluginDescriptor pd, Boolean details) {
         if (pd != null && pd.getId() != null) {
             // attempt to URL encode the plugin ID

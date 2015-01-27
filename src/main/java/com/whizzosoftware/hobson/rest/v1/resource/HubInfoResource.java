@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 /**
- * A REST resource for retriving hub information.
+ * A REST resource for retrieving hub information.
  *
  * @author Dan Noguerol
  */
@@ -65,7 +65,7 @@ public class HubInfoResource extends SelfInjectingServerResource {
 
             // return the JSON response
             return new JsonRepresentation(
-                JSONMarshaller.createApiVersionJSON(
+                JSONMarshaller.createHubInfoJSON(
                         context,
                         (String) p.get("version"),
                         hubManager.isSetupWizardComplete(context.getUserId(), context.getHubId())
