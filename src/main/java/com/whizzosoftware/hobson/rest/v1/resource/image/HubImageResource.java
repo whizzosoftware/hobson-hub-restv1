@@ -10,6 +10,7 @@ package com.whizzosoftware.hobson.rest.v1.resource.image;
 import com.whizzosoftware.hobson.api.HobsonRuntimeException;
 import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.api.image.ImageInputStream;
+import com.whizzosoftware.hobson.api.image.ImageManager;
 import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -31,7 +32,7 @@ public class HubImageResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/image";
 
     @Inject
-    HubManager hubManager;
+    ImageManager imageManager;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/image Get Hub image
@@ -46,7 +47,7 @@ public class HubImageResource extends SelfInjectingServerResource {
      */
     @Override
     protected Representation get() throws ResourceException {
-        ImageInputStream iis = hubManager.getHubImage();
+        ImageInputStream iis = imageManager.getHubImage();
         return new InputRepresentation(iis.getInputStream(), MediaType.valueOf(iis.getMediaType()));
     }
 
@@ -62,7 +63,7 @@ public class HubImageResource extends SelfInjectingServerResource {
     @Override
     protected Representation put(Representation entity) throws ResourceException {
         try {
-            hubManager.setHubImage(new ImageInputStream(entity.getMediaType().toString(), entity.getStream()));
+            imageManager.setHubImage(new ImageInputStream(entity.getMediaType().toString(), entity.getStream()));
             getResponse().setStatus(Status.SUCCESS_ACCEPTED);
             return new EmptyRepresentation();
         } catch (IOException e) {

@@ -20,6 +20,7 @@ import com.whizzosoftware.hobson.api.hub.EmailConfiguration;
 import com.whizzosoftware.hobson.api.hub.HubLocation;
 import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.api.hub.PasswordChange;
+import com.whizzosoftware.hobson.api.image.ImageGroup;
 import com.whizzosoftware.hobson.api.plugin.PluginDescriptor;
 import com.whizzosoftware.hobson.api.plugin.PluginStatus;
 import com.whizzosoftware.hobson.api.plugin.PluginType;
@@ -38,6 +39,8 @@ import com.whizzosoftware.hobson.rest.v1.resource.config.HubConfigurationResourc
 import com.whizzosoftware.hobson.rest.v1.resource.config.HubPasswordResource;
 import com.whizzosoftware.hobson.rest.v1.resource.device.*;
 import com.whizzosoftware.hobson.rest.v1.resource.image.HubImageResource;
+import com.whizzosoftware.hobson.rest.v1.resource.image.ImageLibraryGroupResource;
+import com.whizzosoftware.hobson.rest.v1.resource.image.ImageLibraryImageResource;
 import com.whizzosoftware.hobson.rest.v1.resource.plugin.*;
 import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceEntitiesResource;
 import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceEntityResource;
@@ -544,6 +547,33 @@ public class JSONMarshaller {
             json.put(eventId);
         }
         return json;
+    }
+
+    public static JSONArray createImageLibraryGroupListJSON(HobsonRestContext ctx, List<ImageGroup> groups) {
+        JSONArray results = new JSONArray();
+
+        for (ImageGroup group : groups) {
+            JSONObject groupSummary = new JSONObject();
+            groupSummary.put("name", group.getName());
+            JSONObject groupLinks = new JSONObject();
+            groupLinks.put("self", ctx.getApiRoot() + new Template(ImageLibraryGroupResource.PATH).format(createSingleEntryMap(ctx, "groupId", group.getId())));
+            groupSummary.put("links", groupLinks);
+            results.put(groupSummary);
+        }
+
+        return results;
+    }
+
+    public static JSONArray createImageLibraryImageIdListJSON(HobsonRestContext ctx, List<String> imageIds) {
+        JSONArray results = new JSONArray();
+        for (String id : imageIds) {
+            JSONObject json = new JSONObject();
+            JSONObject links = new JSONObject();
+            links.put("self", ctx.getApiRoot() + new Template(ImageLibraryImageResource.PATH).format(createSingleEntryMap(ctx, "imageId", id)));
+            json.put("links", links);
+            results.put(json);
+        }
+        return results;
     }
 
     public static JSONObject createErrorJSON(Throwable t) {

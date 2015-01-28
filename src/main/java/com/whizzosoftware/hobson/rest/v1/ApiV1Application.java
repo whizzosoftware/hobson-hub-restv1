@@ -16,6 +16,9 @@ import com.whizzosoftware.hobson.rest.v1.resource.config.HubConfigurationResourc
 import com.whizzosoftware.hobson.rest.v1.resource.config.HubPasswordResource;
 import com.whizzosoftware.hobson.rest.v1.resource.device.*;
 import com.whizzosoftware.hobson.rest.v1.resource.image.HubImageResource;
+import com.whizzosoftware.hobson.rest.v1.resource.image.ImageLibraryGroupResource;
+import com.whizzosoftware.hobson.rest.v1.resource.image.ImageLibraryImageResource;
+import com.whizzosoftware.hobson.rest.v1.resource.image.ImageLibraryRootResource;
 import com.whizzosoftware.hobson.rest.v1.resource.plugin.*;
 import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceEntitiesResource;
 import com.whizzosoftware.hobson.rest.v1.resource.task.ExecuteTaskResource;
@@ -71,6 +74,9 @@ public class ApiV1Application extends ResourceInjectingApplication implements Ho
         router.attach(HubConfigurationResource.PATH, HubConfigurationResource.class);
         router.attach(HubImageResource.PATH, HubImageResource.class);
         router.attach(HubPasswordResource.PATH, HubPasswordResource.class);
+        router.attach(ImageLibraryGroupResource.PATH, ImageLibraryGroupResource.class);
+        router.attach(ImageLibraryImageResource.PATH, ImageLibraryImageResource.class);
+        router.attach(ImageLibraryRootResource.PATH, ImageLibraryRootResource.class);
         router.attach(LogResource.PATH, LogResource.class);
         router.attach(MediaProxyResource.PATH, MediaProxyResource.class);
         router.attach(PluginConfigurationResource.PATH, PluginConfigurationResource.class);
