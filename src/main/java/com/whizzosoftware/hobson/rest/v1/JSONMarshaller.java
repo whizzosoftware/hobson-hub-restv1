@@ -182,10 +182,9 @@ public class JSONMarshaller {
         return results;
     }
 
-    static public JSONObject createHubConfigurationJSON(HobsonRestContext ctx, HubManager hubManager) {
+    static public JSONObject createHubConfigurationJSON(HobsonRestContext ctx, String hubName, EmailConfiguration email, HubLocation loc, String logLevel, boolean setupComplete) {
         JSONObject json = new JSONObject();
 
-        EmailConfiguration email = hubManager.getHubEmailConfiguration(ctx.getUserId(), ctx.getHubId());
         if (email != null && email.getMailServer() != null) {
             JSONObject jmail = new JSONObject();
             jmail.put("server", email.getMailServer());
@@ -195,22 +194,25 @@ public class JSONMarshaller {
             json.put("email", jmail);
         }
 
-        HubLocation loc = hubManager.getHubLocation(ctx.getUserId(), ctx.getHubId());
-        if (loc != null && loc.getText() != null) {
+        if (loc != null) {
             JSONObject jloc = new JSONObject();
-            jloc.put("text", loc.getText());
+            if (loc.getText() != null) {
+                jloc.put("text", loc.getText());
+            }
             if (loc.hasLatitude()) {
                 jloc.put("latitude", loc.getLatitude());
             }
             if (loc.hasLongitude()) {
                 jloc.put("longitude", loc.getLongitude());
             }
-            json.put("location", jloc);
+            if (jloc.has("text") || jloc.has("latitude") || jloc.has("longitude")) {
+                json.put("location", jloc);
+            }
         }
 
-        json.put("logLevel", hubManager.getLogLevel(ctx.getUserId(), ctx.getHubId()));
-        json.put("name", hubManager.getHubName(ctx.getUserId(), ctx.getHubId()));
-        json.put("setupComplete", hubManager.isSetupWizardComplete(ctx.getUserId(), ctx.getHubId()));
+        json.put("logLevel", logLevel);
+        json.put("name", hubName);
+        json.put("setupComplete", setupComplete);
 
         return json;
     }
@@ -359,14 +361,18 @@ public class JSONMarshaller {
     }
 
     public static HubLocation createHubLocation(JSONObject json) {
+        String address = null;
         Double latitude = null, longitude = null;
+        if (json.has("text")) {
+            address = json.getString("text");
+        }
         if (json.has("latitude")) {
             latitude = json.getDouble("latitude");
         }
         if (json.has("longitude")) {
             longitude = json.getDouble("longitude");
         }
-        return new HubLocation(json.getString("text"), latitude, longitude);
+        return new HubLocation(address, latitude, longitude);
     }
 
     public static JSONObject createCurrentVersionJSON(String currentVersion) {

@@ -32,8 +32,10 @@ public class HobsonRestContext {
         return new HobsonRestContext(resource, userId, hubId);
     }
 
-    private HobsonRestContext(Resource resource, String userId, String hubId) {
-        this.apiRoot = ((HobsonApiApplication)resource.getApplication()).getApiRoot();
+    protected HobsonRestContext(Resource resource, String userId, String hubId) {
+        if (resource != null) {
+            this.apiRoot = ((HobsonApiApplication) resource.getApplication()).getApiRoot();
+        }
         this.userId = userId;
         this.hubId = hubId;
     }

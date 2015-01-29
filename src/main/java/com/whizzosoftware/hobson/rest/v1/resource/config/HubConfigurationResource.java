@@ -8,6 +8,7 @@
 package com.whizzosoftware.hobson.rest.v1.resource.config;
 
 import com.whizzosoftware.hobson.api.hub.HubManager;
+import com.whizzosoftware.hobson.api.util.UserUtil;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.JSONMarshaller;
 import org.json.JSONObject;
@@ -58,7 +59,16 @@ public class HubConfigurationResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        return new JsonRepresentation(JSONMarshaller.createHubConfigurationJSON(ctx, hubManager));
+        return new JsonRepresentation(
+            JSONMarshaller.createHubConfigurationJSON(
+                ctx,
+                hubManager.getHubName(UserUtil.DEFAULT_USER, UserUtil.DEFAULT_HUB),
+                hubManager.getHubEmailConfiguration(UserUtil.DEFAULT_USER, UserUtil.DEFAULT_HUB),
+                hubManager.getHubLocation(UserUtil.DEFAULT_USER, UserUtil.DEFAULT_HUB),
+                hubManager.getLogLevel(UserUtil.DEFAULT_USER, UserUtil.DEFAULT_HUB),
+                hubManager.isSetupWizardComplete(UserUtil.DEFAULT_USER, UserUtil.DEFAULT_HUB)
+            )
+        );
     }
 
     /**
