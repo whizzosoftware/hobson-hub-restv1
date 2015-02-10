@@ -133,6 +133,8 @@ public class JSONMarshaller {
                 String currentVersionString = pd.getCurrentVersionString();
                 String latestVersionString = pd.getLatestVersionString();
 
+                Map<String,Object> pluginIdMap = createSingleEntryMap(ctx, "pluginId", encodedId);
+
                 boolean hasCurrentVersion = (currentVersionString != null);
                 boolean hasNewerVersion = (VersionUtil.versionCompare(latestVersionString, currentVersionString) == 1);
 
@@ -157,10 +159,11 @@ public class JSONMarshaller {
                     links.put(rel, ctx.getApiRoot() + new Template(PluginInstallResource.PATH).format(createDoubleEntryMap(ctx, "pluginId", encodedId, "pluginVersion", latestVersionString)));
                 }
                 if (hasCurrentVersion) {
-                    links.put("reload", ctx.getApiRoot() + new Template(PluginReloadResource.PATH).format(createSingleEntryMap(ctx, "pluginId", encodedId)));
+                    links.put("reload", ctx.getApiRoot() + new Template(PluginReloadResource.PATH).format(pluginIdMap));
                 }
+                links.put("icon", ctx.getApiRoot() + new Template(PluginIconResource.PATH).format(pluginIdMap));
                 if (pd.getStatus().getStatus() != PluginStatus.Status.NOT_INSTALLED && pd.isConfigurable()) {
-                    links.put("configuration", ctx.getApiRoot() + new Template(PluginConfigurationResource.PATH).format(createSingleEntryMap(ctx, "pluginId", encodedId)));
+                    links.put("configuration", ctx.getApiRoot() + new Template(PluginConfigurationResource.PATH).format(pluginIdMap));
                 }
             }
 

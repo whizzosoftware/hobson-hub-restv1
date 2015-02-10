@@ -82,6 +82,7 @@ public class ApiV1Application extends ResourceInjectingApplication implements Ho
         router.attach(PluginConfigurationResource.PATH, PluginConfigurationResource.class);
         router.attach(PluginCurrentVersionResource.PATH, PluginCurrentVersionResource.class);
         router.attach(PluginDevicesResource.PATH, PluginDevicesResource.class);
+        router.attach(PluginIconResource.PATH, PluginIconResource.class);
         router.attach(PluginInstallResource.PATH, PluginInstallResource.class);
         router.attach(PluginReloadResource.PATH, PluginReloadResource.class);
         router.attach(PluginResource.PATH, PluginResource.class);

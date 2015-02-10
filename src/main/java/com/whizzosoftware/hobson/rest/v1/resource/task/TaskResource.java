@@ -143,7 +143,7 @@ public class TaskResource extends SelfInjectingServerResource {
     protected Representation put(Representation entity) {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
         JSONObject json = JSONMarshaller.createJSONFromRepresentation(entity);
-        taskManager.updateTask(ctx.getUserId(), ctx.getHubId(), getAttribute("providerId"), getAttribute("taskId"), json);
+        taskManager.getPublisher().updateTask(ctx.getUserId(), ctx.getHubId(), getAttribute("providerId"), getAttribute("taskId"), json);
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();
     }
@@ -160,7 +160,7 @@ public class TaskResource extends SelfInjectingServerResource {
     @Override
     protected Representation delete() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        taskManager.deleteTask(ctx.getUserId(), ctx.getHubId(), getAttribute("providerId"), getAttribute("taskId"));
+        taskManager.getPublisher().deleteTask(ctx.getUserId(), ctx.getHubId(), getAttribute("providerId"), getAttribute("taskId"));
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();
     }
