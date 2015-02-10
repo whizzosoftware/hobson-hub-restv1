@@ -18,7 +18,7 @@ public class ImageLibraryImageResource extends SelfInjectingServerResource {
     ImageManager imageManager;
 
     /**
-     * @api {get} /api/v1/users/:userId/hubs/:hubId/imageLibrary/images/:imageId Get library image data
+     * @api {get} /api/v1/users/:userId/hubs/:hubId/imageLibrary/images/:imageId Get library image
      * @apiVersion 0.4.4
      * @apiName GetImageLibraryImage
      * @apiDescription Retrieves binary data for an image library image.

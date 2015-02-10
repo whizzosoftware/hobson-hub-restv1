@@ -24,7 +24,7 @@ public class ImageLibraryGroupResource extends SelfInjectingServerResource {
     ImageManager imageManager;
 
     /**
-     * @api {get} /api/v1/users/:userId/hubs/:hubId/imageLibrary/groups/{groupId} Get library group index
+     * @api {get} /api/v1/users/:userId/hubs/:hubId/imageLibrary/groups/{groupId} Get library group
      * @apiVersion 0.4.4
      * @apiName GetImageLibraryGroup
      * @apiDescription Retrieves a list of all images in an image library group.

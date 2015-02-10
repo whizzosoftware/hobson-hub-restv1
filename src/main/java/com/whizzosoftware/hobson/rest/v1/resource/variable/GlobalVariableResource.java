@@ -23,7 +23,7 @@ public class GlobalVariableResource extends SelfInjectingServerResource {
     VariableManager variableManager;
 
     /**
-     * @api {get} /api/v1/users/:userId/hubs/:hubId/globalVariables/:name Get all global variables
+     * @api {get} /api/v1/users/:userId/hubs/:hubId/globalVariables/:name Get global variable
      * @apiVersion 0.1.7
      * @apiName GetGlobalVariable
      * @apiDescription Retrieves a global variable (i.e. a variable not associated with a particular device).
