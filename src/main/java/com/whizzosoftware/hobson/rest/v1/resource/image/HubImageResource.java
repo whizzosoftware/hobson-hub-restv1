@@ -8,9 +8,11 @@
 package com.whizzosoftware.hobson.rest.v1.resource.image;
 
 import com.whizzosoftware.hobson.api.HobsonRuntimeException;
-import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.api.image.ImageInputStream;
 import com.whizzosoftware.hobson.api.image.ImageManager;
+import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.v1.JSONMarshaller;
+import org.json.JSONObject;
 import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -55,16 +57,39 @@ public class HubImageResource extends SelfInjectingServerResource {
      * @api {put} /api/v1/users/:userId/hubs/:hubId/image Set Hub image
      * @apiVersion 0.4.4
      * @apiName SetHubImage
-     * @apiDescription Sets the binary image data associated with the hub. The PUT entity should be raw binary data with an appropriate Content-Type header (image/jpeg or image/png).
+     * @apiDescription Sets the image associated with the hub. The PUT request should specify a Content-Type header and can be either a JSON image library reference (application/json) or raw binary data (image/jpeg or image/png).
      * @apiGroup Hub
+     * @apiParamExample {json} Example Request:
+     * {
+     *   "image": "/api/v1/users/local/hubs/local/imageLibrary/images/light7.png"
+     * }
      * @apiSuccessExample Success Response:
      *   HTTP/1.1 202 Accepted
      */
     @Override
     protected Representation put(Representation entity) throws ResourceException {
+        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
         try {
-            imageManager.setHubImage(new ImageInputStream(entity.getMediaType().toString(), entity.getStream()));
-            getResponse().setStatus(Status.SUCCESS_ACCEPTED);
+            if (entity.getMediaType().equals(MediaType.APPLICATION_JSON)) {
+                JSONObject json = JSONMarshaller.createJSONFromRepresentation(entity);
+                String path = json.getString("image");
+                if (path != null) {
+                    String imageId = path.substring(path.lastIndexOf('/') + 1, path.length());
+                    System.out.println(imageId);
+                    ImageInputStream iis = imageManager.getImageLibraryImage(ctx.getUserId(), ctx.getHubId(), imageId);
+                    try {
+                        imageManager.setHubImage(new ImageInputStream(MediaType.IMAGE_PNG.toString(), iis.getInputStream()));
+                        getResponse().setStatus(Status.SUCCESS_ACCEPTED);
+                    } finally {
+                        iis.close();
+                    }
+                } else {
+                    throw new HobsonRuntimeException("No image reference was passed");
+                }
+            } else {
+                imageManager.setHubImage(new ImageInputStream(entity.getMediaType().toString(), entity.getStream()));
+                getResponse().setStatus(Status.SUCCESS_ACCEPTED);
+            }
             return new EmptyRepresentation();
         } catch (IOException e) {
             throw new HobsonRuntimeException("Error reading image stream", e);

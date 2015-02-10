@@ -39,12 +39,15 @@ public class HubInfoResource extends SelfInjectingServerResource {
      * @apiGroup Hub
      * @apiSuccessExample Success Response:
      * {
-     *   "version": "0.1.6",
+     *   "version": "0.5.0",
      *   "setupComplete": true,
      *   "links": {
      *     "actions": "/api/v1/users/local/hubs/local/configuration/actions",
      *     "configuration": "/api/v1/users/local/hubs/local/configuration/configuration",
      *     "devices": "/api/v1/users/local/hubs/local/devices",
+     *     "globalVariables": "/api/v1/users/local/hubs/local/globalVariables",
+     *     "image": "/api/v1/users/local/hubs/local/image",
+     *     "imageLibrary": "/api/v1/users/local/hubs/local/imageLibrary",
      *     "log": "/api/v1/users/local/hubs/local/log",
      *     "password": "/api/v1/users/local/hubs/local/configuration/password",
      *     "presenceEntities": "/api/v1/users/local/hubs/local/presence/entities",

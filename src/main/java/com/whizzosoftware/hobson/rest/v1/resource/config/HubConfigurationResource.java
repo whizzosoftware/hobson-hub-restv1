@@ -79,6 +79,13 @@ public class HubConfigurationResource extends SelfInjectingServerResource {
      * @apiGroup Hub
      * @apiParamExample {json} Example Request:
      * {
+     *   "email": {
+     *     "server": "smtp.mydomain.com",
+     *     "secure": true,
+     *     "senderAddress": "foo@bar.com",
+     *     "username": "user",
+     *     "password": "password"
+     *   },
      *   "location": {
      *     "text": "555 Some St, New York, NY 10021",
      *     "latitude": 0.1234,

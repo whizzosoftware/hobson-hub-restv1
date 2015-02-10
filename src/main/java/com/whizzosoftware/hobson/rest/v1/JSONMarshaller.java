@@ -41,6 +41,7 @@ import com.whizzosoftware.hobson.rest.v1.resource.device.*;
 import com.whizzosoftware.hobson.rest.v1.resource.image.HubImageResource;
 import com.whizzosoftware.hobson.rest.v1.resource.image.ImageLibraryGroupResource;
 import com.whizzosoftware.hobson.rest.v1.resource.image.ImageLibraryImageResource;
+import com.whizzosoftware.hobson.rest.v1.resource.image.ImageLibraryRootResource;
 import com.whizzosoftware.hobson.rest.v1.resource.plugin.*;
 import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceEntitiesResource;
 import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceEntityResource;
@@ -86,6 +87,7 @@ public class JSONMarshaller {
         links.put(HubConfigurationResource.REL, apiRoot + new Template(HubConfigurationResource.PATH).format(emptyMap));
         links.put(HubImageResource.REL, apiRoot + new Template(HubImageResource.PATH).format(emptyMap));
         links.put(HubPasswordResource.REL, apiRoot + new Template(HubPasswordResource.PATH).format(emptyMap));
+        links.put(ImageLibraryRootResource.REL, apiRoot + new Template(ImageLibraryRootResource.PATH).format(emptyMap));
         links.put(LogResource.REL, apiRoot + new Template(LogResource.PATH).format(emptyMap));
         links.put(PluginsResource.REL, apiRoot + new Template(PluginsResource.PATH).format(emptyMap));
         links.put(PresenceEntitiesResource.REL, apiRoot + new Template(PresenceEntitiesResource.PATH).format(emptyMap));

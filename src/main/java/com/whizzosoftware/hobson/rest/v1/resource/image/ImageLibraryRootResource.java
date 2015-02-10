@@ -21,6 +21,7 @@ import java.util.List;
 
 public class ImageLibraryRootResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/imageLibrary";
+    public static final String REL = "imageLibrary";
 
     @Inject
     ImageManager imageManager;
