@@ -26,10 +26,10 @@ public class ImageLibraryRootResource extends SelfInjectingServerResource {
     ImageManager imageManager;
 
     /**
-     * @api {get} /api/v1/users/:userId/hubs/:hubId/imageLibrary Get library index
+     * @api {get} /api/v1/users/:userId/hubs/:hubId/imageLibrary Get library groups
      * @apiVersion 0.4.4
-     * @apiName GetImageLibrary
-     * @apiDescription Retrieves the image library index.
+     * @apiName GetImageLibraryGroups
+     * @apiDescription Retrieves all image library groups.
      * @apiGroup Images
      * @apiSuccessExample {json} Success Response:
      * [
