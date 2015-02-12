@@ -108,6 +108,7 @@ public class ApiV1Application extends ResourceInjectingApplication implements Ho
                     if (response.getStatus().equals(Status.SUCCESS_OK)) {
                         response.setCacheDirectives(new ArrayList<CacheDirective>());
                         response.getCacheDirectives().add(CacheDirective.noCache());
+                        response.getCacheDirectives().add(CacheDirective.noStore());
                     }
                 }
             }
