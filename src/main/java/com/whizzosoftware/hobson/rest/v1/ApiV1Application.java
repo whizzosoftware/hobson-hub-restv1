@@ -26,10 +26,17 @@ import com.whizzosoftware.hobson.rest.v1.resource.task.TaskResource;
 import com.whizzosoftware.hobson.rest.v1.resource.task.TasksResource;
 import com.whizzosoftware.hobson.rest.v1.resource.variable.GlobalVariableResource;
 import com.whizzosoftware.hobson.rest.v1.resource.variable.GlobalVariablesResource;
+import org.restlet.Request;
+import org.restlet.Response;
 import org.restlet.Restlet;
+import org.restlet.data.CacheDirective;
+import org.restlet.data.Status;
 import org.restlet.ext.guice.ResourceInjectingApplication;
+import org.restlet.routing.Filter;
 import org.restlet.routing.Router;
 import org.restlet.security.Authenticator;
+
+import java.util.ArrayList;
 
 /**
  * The Hobson REST API v1.
@@ -56,6 +63,7 @@ public class ApiV1Application extends ResourceInjectingApplication implements Ho
 
     @Override
     public Restlet createInboundRoot() {
+        // create the router with all of our resource classes attached
         Router router = newRouter();
         router.attach(ActionResource.PATH, ActionResource.class);
         router.attach(ActionsResource.PATH, ActionsResource.class);
@@ -92,8 +100,22 @@ public class ApiV1Application extends ResourceInjectingApplication implements Ho
         router.attach(TaskResource.PATH, TaskResource.class);
         router.attach(TasksResource.PATH, TasksResource.class);
 
-        authenticator.setNext(router);
+        // create a filter that prevents caching of API responses
+        Filter cache = new Filter(getContext(), router) {
+            protected void afterHandle(Request request, Response response) {
+                super.afterHandle(request, response);
+                if (response != null && response.getEntity() != null) {
+                    if (response.getStatus().equals(Status.SUCCESS_OK)) {
+                        response.setCacheDirectives(new ArrayList<CacheDirective>());
+                        response.getCacheDirectives().add(CacheDirective.noCache());
+                    }
+                }
+            }
+        };
 
+        authenticator.setNext(cache);
+
+        // make the authenticator the first restlet in the chain
         return authenticator;
     }
 
