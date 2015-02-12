@@ -8,7 +8,10 @@
 package com.whizzosoftware.hobson.rest.v1.resource;
 
 import com.whizzosoftware.hobson.api.hub.HubManager;
+import com.whizzosoftware.hobson.api.hub.LogContent;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
+import org.restlet.data.Range;
+import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.representation.ByteArrayRepresentation;
 import org.restlet.representation.Representation;
@@ -46,9 +49,22 @@ public class LogResource extends SelfInjectingServerResource {
      */
     @Override
     protected Representation get() throws ResourceException {
-        int startIndex = 0;
-        int endIndex = 40000;
+        long startIndex = 0;
+        long endIndex = 40000;
+
+        if (getRequest().getRanges() != null && getRequest().getRanges().size() == 1) {
+            Range range = getRequest().getRanges().get(0);
+            startIndex = range.getIndex();
+            endIndex = range.getSize() > -1 ? range.getIndex() + range.getSize() : range.getSize();
+        }
+
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        return new ByteArrayRepresentation(hubManager.getLog(ctx.getUserId(), ctx.getHubId(), startIndex, endIndex).getBytes());
+
+        LogContent logContent = hubManager.getLog(ctx.getUserId(), ctx.getHubId(), startIndex, endIndex);
+        getResponse().setStatus(Status.SUCCESS_PARTIAL_CONTENT);
+        ByteArrayRepresentation bar = new ByteArrayRepresentation(logContent.getBytes());
+        bar.setRange(new Range(logContent.getStartIndex(), logContent.getEndIndex()));
+
+        return bar;
     }
 }
