@@ -34,7 +34,7 @@ public class HubPasswordResource extends SelfInjectingServerResource {
      * @api {post} /api/v1/users/:userId/hubs/:hubId/configuration/password Set Hub password
      * @apiVersion 0.1.6
      * @apiName SetPassword
-     * @apiDescription Sets the Hub password.
+     * @apiDescription Sets the Hub password. The complexity requirements for the new password are: 1. Between 8 and 14 characters long, 2. At least one upper and lower case letter, 3. At least one number, 4. At least one special character.
      * @apiGroup Hub
      * @apiParamExample {json} Example Request:
      * {
@@ -46,7 +46,7 @@ public class HubPasswordResource extends SelfInjectingServerResource {
      * @apiErrorExample {json} Error Response:
      * HTTP/1.1 400 Bad Request
      * Content-Type: application/json; charset=UTF-8
-     * 
+     *
      * {"message":"New password does not meet complexity requirements"}
      */
     @Override
