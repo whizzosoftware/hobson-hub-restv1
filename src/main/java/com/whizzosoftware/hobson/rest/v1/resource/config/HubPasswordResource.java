@@ -43,6 +43,11 @@ public class HubPasswordResource extends SelfInjectingServerResource {
      * }
      * @apiSuccessExample {json} Success Response:
      * HTTP/1.1 202 Accepted
+     * @apiErrorExample {json} Error Response:
+     * HTTP/1.1 400 Bad Request
+     * Content-Type: application/json; charset=UTF-8
+     * 
+     * {"message":"New password does not meet complexity requirements"}
      */
     @Override
     protected Representation post(Representation entity) throws ResourceException {
