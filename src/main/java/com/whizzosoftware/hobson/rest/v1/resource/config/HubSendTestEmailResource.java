@@ -1,5 +1,7 @@
 package com.whizzosoftware.hobson.rest.v1.resource.config;
 
+import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
+import com.whizzosoftware.hobson.api.HobsonRuntimeException;
 import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.JSONMarshaller;
@@ -41,9 +43,13 @@ public class HubSendTestEmailResource extends SelfInjectingServerResource {
      */
     @Override
     protected Representation post(Representation entity) throws ResourceException {
-        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        hubManager.sendTestEmail(ctx.getUserId(), ctx.getHubId(), JSONMarshaller.createEmailConfiguration(JSONMarshaller.createJSONFromRepresentation(entity)));
-        getResponse().setStatus(Status.SUCCESS_ACCEPTED);
-        return new EmptyRepresentation();
+        try {
+            HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+            hubManager.sendTestEmail(ctx.getUserId(), ctx.getHubId(), JSONMarshaller.createEmailConfiguration(JSONMarshaller.createJSONFromRepresentation(entity)));
+            getResponse().setStatus(Status.SUCCESS_ACCEPTED);
+            return new EmptyRepresentation();
+        } catch (HobsonRuntimeException e) {
+            throw new HobsonInvalidRequestException("Unable to send test e-mail with provided configuration", e);
+        }
     }
 }
