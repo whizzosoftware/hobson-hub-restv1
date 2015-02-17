@@ -9,6 +9,7 @@ package com.whizzosoftware.hobson.rest.v1;
 
 import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
 import com.whizzosoftware.hobson.api.HobsonNotFoundException;
+import com.whizzosoftware.hobson.api.HobsonRuntimeException;
 import org.json.JSONException;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -29,9 +30,15 @@ public class HobsonStatusService extends StatusService {
 
     public Status getStatus(Throwable t, Request request, Response response) {
         if (t instanceof HobsonNotFoundException) {
-            return new Status(Status.CLIENT_ERROR_NOT_FOUND, t);
+            if (t.getLocalizedMessage() != null) {
+                return new Status(Status.CLIENT_ERROR_NOT_FOUND, t.getLocalizedMessage());
+            } else {
+                return new Status(Status.CLIENT_ERROR_NOT_FOUND, t);
+            }
         } else if (t instanceof HobsonInvalidRequestException) {
             return new Status(Status.CLIENT_ERROR_BAD_REQUEST, t.getLocalizedMessage());
+        } else if (t instanceof HobsonRuntimeException) {
+            return new Status(Status.SERVER_ERROR_INTERNAL, t, t.getLocalizedMessage());
         } else if (t instanceof JSONException) {
             return new Status(Status.CLIENT_ERROR_BAD_REQUEST, t);
         } else {

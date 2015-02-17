@@ -31,11 +31,15 @@ import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.CacheDirective;
+import org.restlet.data.ChallengeScheme;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.ResourceInjectingApplication;
 import org.restlet.routing.Filter;
 import org.restlet.routing.Router;
-import org.restlet.security.Authenticator;
+import org.restlet.security.ChallengeAuthenticator;
+import org.restlet.security.Verifier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 
@@ -45,20 +49,44 @@ import java.util.ArrayList;
  * @author Dan Noguerol
  */
 public class ApiV1Application extends ResourceInjectingApplication implements HobsonApiApplication {
-    private String apiRoot;
-    private Authenticator authenticator;
+    private static final Logger logger = LoggerFactory.getLogger(ApiV1Application.class);
+    private static final String PROP_VERIFIER = "hobson.rest.verifier";
 
+    public static final String PATH = "/api/v1";
+
+    private ChallengeAuthenticator authenticator;
+
+    /**
+     * Constructor that creates an challenge-based authenticator using the fully-qualified class name specified in
+     * the "hobson.rest.verifier" system property to instantiate a verifier.
+     */
     public ApiV1Application() {
         super();
-        System.out.println("ApiV1Application()");
-        this.apiRoot = "/api/v1";
+
+        String verifierClassName = System.getProperty(PROP_VERIFIER);
+        if (verifierClassName != null) {
+            try {
+                this.authenticator = new ChallengeAuthenticator(getContext(), ChallengeScheme.HTTP_BASIC, "Hobson (default is admin/admin)");
+                this.authenticator.setVerifier((Verifier)Class.forName(verifierClassName).newInstance());
+            } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+                logger.error("Error creating REST API authenticator", e);
+            }
+        } else {
+            logger.warn("No REST API authenticator has been configured!");
+        }
+
         setStatusService(new HobsonStatusService());
     }
 
-    public ApiV1Application(String apiRoot, Authenticator authenticator) {
+    /**
+     * Constructor.
+     *
+     * @param verifier the authenticator verifier to use
+     */
+    public ApiV1Application(Verifier verifier) {
         super();
-        this.apiRoot = apiRoot;
-        this.authenticator = authenticator;
+        this.authenticator = new ChallengeAuthenticator(getContext(), ChallengeScheme.HTTP_BASIC, "Hobson (default is admin/admin)");
+        this.authenticator.setVerifier(verifier);
         setStatusService(new HobsonStatusService());
     }
 
@@ -123,6 +151,6 @@ public class ApiV1Application extends ResourceInjectingApplication implements Ho
     }
 
     public String getApiRoot() {
-        return apiRoot;
+        return PATH;
     }
 }

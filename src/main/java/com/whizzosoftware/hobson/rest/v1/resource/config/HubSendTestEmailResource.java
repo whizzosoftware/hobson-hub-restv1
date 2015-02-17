@@ -49,7 +49,7 @@ public class HubSendTestEmailResource extends SelfInjectingServerResource {
             getResponse().setStatus(Status.SUCCESS_ACCEPTED);
             return new EmptyRepresentation();
         } catch (HobsonRuntimeException e) {
-            throw new HobsonInvalidRequestException("Unable to send test e-mail with provided configuration", e);
+            throw new HobsonInvalidRequestException("Unable to send test e-mail with provided account information", e);
         }
     }
 }

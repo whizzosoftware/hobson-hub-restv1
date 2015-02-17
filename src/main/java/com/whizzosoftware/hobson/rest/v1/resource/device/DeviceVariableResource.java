@@ -10,6 +10,7 @@ package com.whizzosoftware.hobson.rest.v1.resource.device;
 import com.whizzosoftware.hobson.api.event.EventManager;
 import com.whizzosoftware.hobson.api.event.VariableUpdateRequestEvent;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
+import com.whizzosoftware.hobson.api.variable.VariableUpdate;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.JSONMarshaller;
 import org.restlet.data.Reference;
@@ -78,7 +79,7 @@ public class DeviceVariableResource extends SelfInjectingServerResource {
         String pluginId = getAttribute("pluginId");
         String deviceId = getAttribute("deviceId");
         String variableName = getAttribute("variableName");
-        eventManager.postEvent(ctx.getUserId(), ctx.getHubId(), new VariableUpdateRequestEvent(pluginId, deviceId, variableName, value));
+        eventManager.postEvent(ctx.getUserId(), ctx.getHubId(), new VariableUpdateRequestEvent(new VariableUpdate(pluginId, deviceId, variableName, value)));
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
 
         // TODO: is there a better way to do this? The Restlet request reference scheme is always HTTP for some reason...
