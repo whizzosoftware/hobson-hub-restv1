@@ -57,7 +57,7 @@ public class HubImageResource extends SelfInjectingServerResource {
      * @api {put} /api/v1/users/:userId/hubs/:hubId/image Set Hub image
      * @apiVersion 0.5.0
      * @apiName SetHubImage
-     * @apiDescription Sets the image associated with the hub. The PUT request should specify a Content-Type header and can be either a JSON image library reference (application/json) or raw binary data (image/jpeg or image/png).
+     * @apiDescription Sets the image associated with the hub. The request JSON can specify an "imageLibRef" property or an "image" property as shown in the examples below.
      * @apiGroup Hub
      * @apiParamExample {json} Example Request (Image library reference):
      * {
