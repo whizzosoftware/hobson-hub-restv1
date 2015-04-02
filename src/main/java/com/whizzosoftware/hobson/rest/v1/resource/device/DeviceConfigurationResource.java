@@ -9,8 +9,9 @@ package com.whizzosoftware.hobson.rest.v1.resource.device;
 
 import com.whizzosoftware.hobson.api.HobsonRuntimeException;
 import com.whizzosoftware.hobson.api.device.DeviceManager;
+import com.whizzosoftware.hobson.json.JSONSerializationHelper;
+import com.whizzosoftware.hobson.rest.v1.Authorizer;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.JSONMarshaller;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.restlet.data.Status;
@@ -18,7 +19,6 @@ import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.EmptyRepresentation;
 import org.restlet.representation.Representation;
-import org.restlet.resource.ResourceException;
 
 import javax.inject.Inject;
 import java.io.IOException;
@@ -32,6 +32,8 @@ import java.util.Map;
 public class DeviceConfigurationResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/{pluginId}/devices/{deviceId}/configuration";
 
+    @Inject
+    Authorizer authorizer;
     @Inject
     DeviceManager deviceManager;
 
@@ -59,7 +61,8 @@ public class DeviceConfigurationResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        return new JsonRepresentation(JSONMarshaller.createDeviceConfigurationJSON(ctx, deviceManager.getDeviceConfiguration(ctx.getUserId(), ctx.getHubId(), getAttribute("pluginId"), getAttribute("deviceId"))));
+        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+        return new JsonRepresentation(JSONSerializationHelper.createDeviceConfigurationJSON(deviceManager.getDeviceConfiguration(ctx.getUserId(), ctx.getHubId(), getAttribute("pluginId"), getAttribute("deviceId"))));
     }
 
     /**
@@ -84,7 +87,8 @@ public class DeviceConfigurationResource extends SelfInjectingServerResource {
     protected Representation put(Representation entity) {
         try {
             HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-            Map<String,Object> props = JSONMarshaller.createConfigurationPropertyMap(new JSONObject(new JSONTokener(entity.getStream())));
+            authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+            Map<String,Object> props = JSONSerializationHelper.createConfigurationPropertyMap(new JSONObject(new JSONTokener(entity.getStream())));
             for (String name : props.keySet()) {
                 deviceManager.setDeviceConfigurationProperty(ctx.getUserId(), ctx.getHubId(), getAttribute("pluginId"), getAttribute("deviceId"), name, props.get(name), true);
             }

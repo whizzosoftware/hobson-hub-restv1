@@ -10,8 +10,10 @@ package com.whizzosoftware.hobson.rest.v1.resource.device;
 import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.api.device.HobsonDevice;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
+import com.whizzosoftware.hobson.json.JSONSerializationHelper;
+import com.whizzosoftware.hobson.rest.v1.Authorizer;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.JSONMarshaller;
+import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkHelper;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -28,9 +30,13 @@ public class DeviceResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/{pluginId}/devices/{deviceId}";
 
     @Inject
+    Authorizer authorizer;
+    @Inject
     DeviceManager deviceManager;
     @Inject
     VariableManager variableManager;
+    @Inject
+    HATEOASLinkHelper linkHelper;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/devices/:deviceId Get device details
@@ -62,18 +68,25 @@ public class DeviceResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
         String pluginId = getAttribute("pluginId");
         String deviceId = getAttribute("deviceId");
         HobsonDevice device = deviceManager.getDevice(ctx.getUserId(), ctx.getHubId(), pluginId, deviceId);
         boolean telemetryEnabled = deviceManager.isDeviceTelemetryEnabled(ctx.getUserId(), ctx.getHubId(), pluginId, deviceId);
         return new JsonRepresentation(
-            JSONMarshaller.createDeviceJSON(
+            linkHelper.addDeviceLinks(
                 ctx,
-                variableManager,
+                JSONSerializationHelper.createDeviceJSON(
+                    ctx.getUserId(),
+                    ctx.getHubId(),
+                    variableManager,
+                    device,
+                    telemetryEnabled,
+                    true,
+                    Boolean.parseBoolean(getQueryValue("variables"))
+                ),
                 device,
-                telemetryEnabled,
-                true,
-                Boolean.parseBoolean(getQueryValue("variables"))
+                true
             )
         );
     }

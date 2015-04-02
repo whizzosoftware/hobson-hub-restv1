@@ -8,6 +8,7 @@
 package com.whizzosoftware.hobson.rest.v1.resource.plugin;
 
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
+import com.whizzosoftware.hobson.rest.v1.Authorizer;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -25,6 +26,8 @@ public class PluginReloadResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/{pluginId}/reload";
 
     @Inject
+    Authorizer authorizer;
+    @Inject
     PluginManager pluginManager;
 
     /**
@@ -39,6 +42,7 @@ public class PluginReloadResource extends SelfInjectingServerResource {
     @Override
     protected Representation post(Representation entity) {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
         String pluginId = getAttribute("pluginId");
 
         pluginManager.reloadPlugin(ctx.getUserId(), ctx.getHubId(), pluginId);

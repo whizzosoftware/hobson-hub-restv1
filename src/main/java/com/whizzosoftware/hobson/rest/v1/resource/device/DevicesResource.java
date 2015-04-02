@@ -8,9 +8,13 @@
 package com.whizzosoftware.hobson.rest.v1.resource.device;
 
 import com.whizzosoftware.hobson.api.device.DeviceManager;
+import com.whizzosoftware.hobson.api.device.HobsonDevice;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
+import com.whizzosoftware.hobson.json.JSONSerializationHelper;
+import com.whizzosoftware.hobson.rest.v1.Authorizer;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.JSONMarshaller;
+import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkHelper;
+import org.json.JSONArray;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -28,9 +32,13 @@ public class DevicesResource extends SelfInjectingServerResource {
     public static final String REL = "devices";
 
     @Inject
+    Authorizer authorizer;
+    @Inject
     DeviceManager deviceManager;
     @Inject
     VariableManager variableManager;
+    @Inject
+    HATEOASLinkHelper linkHelper;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/devices Get all devices
@@ -80,6 +88,25 @@ public class DevicesResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        return new JsonRepresentation(JSONMarshaller.createDeviceListJSON(ctx, variableManager, deviceManager.getAllDevices(ctx.getUserId(), ctx.getHubId()), Boolean.parseBoolean(getQueryValue("details"))));
+        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+        JSONArray results = new JSONArray();
+        boolean details = Boolean.parseBoolean(getQueryValue("details"));
+        for (HobsonDevice device : deviceManager.getAllDevices(ctx.getUserId(), ctx.getHubId())) {
+            results.put(linkHelper.addDeviceLinks(
+                ctx,
+                JSONSerializationHelper.createDeviceJSON(
+                    ctx.getUserId(),
+                    ctx.getHubId(),
+                    variableManager,
+                    device,
+                    null,
+                    details,
+                    false
+                ),
+                device,
+                details
+            ));
+        }
+        return new JsonRepresentation(results);
     }
 }

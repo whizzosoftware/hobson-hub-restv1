@@ -7,9 +7,13 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.variable;
 
+import com.whizzosoftware.hobson.api.variable.HobsonVariable;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
+import com.whizzosoftware.hobson.json.JSONSerializationHelper;
+import com.whizzosoftware.hobson.rest.v1.Authorizer;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.JSONMarshaller;
+import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkHelper;
+import org.json.JSONObject;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -21,7 +25,11 @@ public class GlobalVariablesResource extends SelfInjectingServerResource {
     public static final String REL = "globalVariables";
 
     @Inject
+    Authorizer authorizer;
+    @Inject
     VariableManager variableManager;
+    @Inject
+    HATEOASLinkHelper linkHelper;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/globalVariables Get all global variables
@@ -42,6 +50,18 @@ public class GlobalVariablesResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        return new JsonRepresentation(JSONMarshaller.createGlobalVariablesListJSON(ctx, variableManager.getGlobalVariables(ctx.getUserId(), ctx.getHubId())));
+        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+        JSONObject results = new JSONObject();
+        for (HobsonVariable v : variableManager.getGlobalVariables(ctx.getUserId(), ctx.getHubId())) {
+            results.put(
+                v.getName(),
+                linkHelper.addGlobalVariableLinks(
+                    ctx,
+                    JSONSerializationHelper.createGlobalVariableJSON(v),
+                    v.getName()
+                )
+            );
+        }
+        return new JsonRepresentation(results);
     }
 }

@@ -8,8 +8,9 @@
 package com.whizzosoftware.hobson.rest.v1.resource.plugin;
 
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
+import com.whizzosoftware.hobson.json.JSONSerializationHelper;
+import com.whizzosoftware.hobson.rest.v1.Authorizer;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.JSONMarshaller;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -25,6 +26,8 @@ import javax.inject.Inject;
 public class PluginCurrentVersionResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/{pluginId}/currentVersion";
 
+    @Inject
+    Authorizer authorizer;
     @Inject
     PluginManager pluginManager;
 
@@ -46,7 +49,8 @@ public class PluginCurrentVersionResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
         String pluginId = getAttribute("pluginId");
-        return new JsonRepresentation(JSONMarshaller.createCurrentVersionJSON(pluginManager.getPluginCurrentVersion(ctx.getUserId(), ctx.getHubId(), pluginId)));
+        return new JsonRepresentation(JSONSerializationHelper.createCurrentVersionJSON(pluginManager.getPluginCurrentVersion(ctx.getUserId(), ctx.getHubId(), pluginId)));
     }
 }

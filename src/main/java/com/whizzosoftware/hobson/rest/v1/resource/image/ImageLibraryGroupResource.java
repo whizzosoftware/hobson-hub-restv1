@@ -8,20 +8,28 @@
 package com.whizzosoftware.hobson.rest.v1.resource.image;
 
 import com.whizzosoftware.hobson.api.image.ImageManager;
+import com.whizzosoftware.hobson.json.JSONSerializationHelper;
+import com.whizzosoftware.hobson.rest.v1.Authorizer;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.JSONMarshaller;
+import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkHelper;
+import org.json.JSONArray;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
 
 import javax.inject.Inject;
+import java.util.List;
 
 public class ImageLibraryGroupResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/imageLibrary/groups/{groupId}";
 
     @Inject
+    Authorizer authorizer;
+    @Inject
     ImageManager imageManager;
+    @Inject
+    HATEOASLinkHelper linkHelper;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/imageLibrary/groups/{groupId} Get library group
@@ -46,11 +54,12 @@ public class ImageLibraryGroupResource extends SelfInjectingServerResource {
     @Override
     public Representation get() throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        return new JsonRepresentation(
-            JSONMarshaller.createImageLibraryImageIdListJSON(
-                ctx,
-                imageManager.getImageLibraryImageIds(ctx.getUserId(), ctx.getHubId(), getAttribute("groupId"))
-            )
-        );
+        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+        JSONArray results = new JSONArray();
+        List<String> ids = imageManager.getImageLibraryImageIds(ctx.getUserId(), ctx.getHubId(), getAttribute("groupId"));
+        for (String id : ids) {
+            results.put(linkHelper.addImageLibraryImageLinks(ctx, JSONSerializationHelper.createImageLibraryImageJSON(id), id));
+        }
+        return new JsonRepresentation(results);
     }
 }

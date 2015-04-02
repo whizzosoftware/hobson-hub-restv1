@@ -7,10 +7,14 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.plugin;
 
+import com.whizzosoftware.hobson.api.plugin.PluginDescriptor;
 import com.whizzosoftware.hobson.api.plugin.PluginList;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
+import com.whizzosoftware.hobson.json.JSONSerializationHelper;
+import com.whizzosoftware.hobson.rest.v1.Authorizer;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.JSONMarshaller;
+import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkHelper;
+import org.json.JSONArray;
 import org.restlet.data.Form;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -29,7 +33,11 @@ public class PluginsResource extends SelfInjectingServerResource {
     public static final String REL = "plugins";
 
     @Inject
+    Authorizer authorizer;
+    @Inject
     PluginManager pluginManager;
+    @Inject
+    HATEOASLinkHelper linkHelper;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins Get plugins
@@ -104,15 +112,28 @@ public class PluginsResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
         Form queryParams = getQuery();
         Boolean remote = getBooleanParam(queryParams.getFirstValue("remote"));
         Boolean details = getBooleanParam(queryParams.getFirstValue("details"));
 
         // generate a plugin list
-        PluginList bl = pluginManager.getPlugins(ctx.getUserId(), ctx.getHubId(), remote);
+        PluginList bl = pluginManager.getPluginDescriptors(ctx.getUserId(), ctx.getHubId(), remote);
 
         // return a 200 with the JSON
-        return new JsonRepresentation(JSONMarshaller.createPluginDescriptorListJSON(ctx, bl.getPlugins(), details));
+        JSONArray results = new JSONArray();
+        for (PluginDescriptor pd : bl.getPlugins()) {
+            results.put(linkHelper.addPluginDescriptorLinks(
+                ctx,
+                JSONSerializationHelper.createPluginDescriptorJSON(
+                    pd,
+                    details
+                ),
+                pd,
+                details
+            ));
+        }
+        return new JsonRepresentation(results);
     }
 
     private Boolean getBooleanParam(String param) {

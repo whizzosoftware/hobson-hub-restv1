@@ -8,16 +8,20 @@
 package com.whizzosoftware.hobson.rest.v1.resource;
 
 import com.whizzosoftware.hobson.api.hub.HubManager;
-import com.whizzosoftware.hobson.api.hub.LogContent;
+import com.whizzosoftware.hobson.api.hub.LineRange;
+import com.whizzosoftware.hobson.rest.v1.Authorizer;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
-import org.restlet.data.Range;
+import org.restlet.data.MediaType;
 import org.restlet.data.Status;
+import org.restlet.engine.header.Header;
 import org.restlet.ext.guice.SelfInjectingServerResource;
-import org.restlet.representation.ByteArrayRepresentation;
+import org.restlet.representation.AppendableRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
+import org.restlet.util.Series;
 
 import javax.inject.Inject;
+import java.util.Map;
 
 /**
  * A REST resource for retrieving content from the Hub log.
@@ -25,9 +29,13 @@ import javax.inject.Inject;
  * @author Dan Noguerol
  */
 public class LogResource extends SelfInjectingServerResource {
+    private final static String HEADERS = "org.restlet.http.headers";
+
     public static final String PATH = "/users/{userId}/hubs/{hubId}/log";
     public static final String REL = "log";
 
+    @Inject
+    Authorizer authorizer;
     @Inject
     HubManager hubManager;
 
@@ -39,32 +47,44 @@ public class LogResource extends SelfInjectingServerResource {
      * @apiDescription Retrieves content from the Hub log file.
      * @apiGroup Logging
      * @apiExample Example request:
-     * GET /api/v1/log HTTP/1.1
-     * Range: bytes=0-100
+     * GET /api/v1/users/local/hubs/local/log HTTP/1.1
+     * Range: lines=0-100
      * @apiSuccessExample Success Response:
      * HTTP/1.1 206 Partial Content
-     * Content-Range: bytes 0-100/65000
-     * Content-Length: 101
+     * Content-Range: lines 0-100/5280
      * ... Log data ...
      */
     @Override
     protected Representation get() throws ResourceException {
-        long startIndex = 0;
-        long endIndex = 40000;
+        long startLine = 0;
+        long endLine = 24;
 
-        if (getRequest().getRanges() != null && getRequest().getRanges().size() == 1) {
-            Range range = getRequest().getRanges().get(0);
-            startIndex = range.getIndex();
-            endIndex = range.getSize() > -1 ? range.getIndex() + range.getSize() : range.getSize();
+        // since we are using a custom range, we can't use the standard Restlet range mechanism
+        Series<Header> headers = (Series<Header>)getRequest().getAttributes().get(HEADERS);
+        String rangeStr = headers.getFirstValue("Range");
+        if (rangeStr != null) {
+            LineRange range = new LineRange(rangeStr);
+            startLine = range.hasStartLine() ? range.getStartLine(): 0;
+            endLine = range.hasEndLine() ? range.getEndLine() : Long.MAX_VALUE - 1;
         }
 
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
 
-        LogContent logContent = hubManager.getLog(ctx.getUserId(), ctx.getHubId(), startIndex, endIndex);
+        AppendableRepresentation ar = new AppendableRepresentation();
+        ar.setMediaType(MediaType.APPLICATION_JSON);
+        LineRange lineRange = hubManager.getLog(ctx.getUserId(), ctx.getHubId(), startLine, endLine, ar);
+
+        Map<String,Object> attrs = getResponse().getAttributes();
+        headers = (Series<Header>)attrs.get(HEADERS);
+        if (headers == null) {
+            headers = new Series<>(Header.class);
+            attrs.put(HEADERS, headers);
+        }
+        headers.add(new Header("Range", lineRange.toString()));
+
         getResponse().setStatus(Status.SUCCESS_PARTIAL_CONTENT);
-        ByteArrayRepresentation bar = new ByteArrayRepresentation(logContent.getBytes());
-        bar.setRange(new Range(logContent.getStartIndex(), logContent.getEndIndex()));
 
-        return bar;
+        return ar;
     }
 }

@@ -8,9 +8,13 @@
 package com.whizzosoftware.hobson.rest.v1.resource.device;
 
 import com.whizzosoftware.hobson.api.device.DeviceManager;
+import com.whizzosoftware.hobson.api.device.HobsonDevice;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
+import com.whizzosoftware.hobson.json.JSONSerializationHelper;
+import com.whizzosoftware.hobson.rest.v1.Authorizer;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.JSONMarshaller;
+import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkHelper;
+import org.json.JSONArray;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -26,9 +30,13 @@ public class PluginDevicesResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/{pluginId}/devices";
 
     @Inject
+    Authorizer authorizer;
+    @Inject
     DeviceManager deviceManager;
     @Inject
     VariableManager variableManager;
+    @Inject
+    HATEOASLinkHelper linkHelper;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/devices Get all plugin devices
@@ -60,6 +68,27 @@ public class PluginDevicesResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        return new JsonRepresentation(JSONMarshaller.createDeviceListJSON(ctx, variableManager, deviceManager.getAllPluginDevices(ctx.getUserId(), ctx.getHubId(), getAttribute("pluginId")), Boolean.parseBoolean(getQueryValue("details"))));
+        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+        JSONArray results = new JSONArray();
+        boolean details = Boolean.parseBoolean(getQueryValue("details"));
+        for (HobsonDevice device : deviceManager.getAllPluginDevices(ctx.getUserId(), ctx.getHubId(), getAttribute("pluginId"))) {
+            results.put(
+                linkHelper.addDeviceLinks(
+                    ctx,
+                    JSONSerializationHelper.createDeviceJSON(
+                        ctx.getUserId(),
+                        ctx.getHubId(),
+                        variableManager,
+                        device,
+                        null,
+                        details,
+                        false
+                    ),
+                    device,
+                    details
+                )
+            );
+        }
+        return new JsonRepresentation(results);
     }
 }

@@ -10,6 +10,7 @@ package com.whizzosoftware.hobson.rest.v1.resource.device;
 import com.whizzosoftware.hobson.api.HobsonRuntimeException;
 import com.whizzosoftware.hobson.api.variable.HobsonVariable;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
+import com.whizzosoftware.hobson.rest.v1.Authorizer;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.URIInfo;
 import com.whizzosoftware.hobson.rest.v1.util.URLVariableParser;
@@ -21,7 +22,6 @@ import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpHead;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -57,11 +57,14 @@ public class MediaProxyResource extends SelfInjectingServerResource {
     private static final int DEFAULT_REALM_PORT = 80;
 
     @Inject
+    Authorizer authorizer;
+    @Inject
     VariableManager variableManager;
 
     @Override
     public Representation head() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
         HobsonVariable hvar = variableManager.getDeviceVariable(ctx.getUserId(), ctx.getHubId(), getAttribute("pluginId"), getAttribute("deviceId"), getAttribute("mediaId"));
         if (hvar != null && hvar.getValue() != null) {
             try {
@@ -95,6 +98,7 @@ public class MediaProxyResource extends SelfInjectingServerResource {
     public Representation get() {
         try {
             HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+            authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
             HobsonVariable hvar = variableManager.getDeviceVariable(ctx.getUserId(), ctx.getHubId(), getAttribute("pluginId"), getAttribute("deviceId"), getAttribute("mediaId"));
             if (hvar != null && hvar.getValue() != null) {
                 final HttpProps httpProps = createHttpGet(hvar.getValue().toString());

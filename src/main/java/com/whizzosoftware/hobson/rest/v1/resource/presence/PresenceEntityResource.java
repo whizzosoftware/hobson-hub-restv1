@@ -8,8 +8,10 @@
 package com.whizzosoftware.hobson.rest.v1.resource.presence;
 
 import com.whizzosoftware.hobson.api.presence.PresenceManager;
+import com.whizzosoftware.hobson.json.JSONSerializationHelper;
+import com.whizzosoftware.hobson.rest.v1.Authorizer;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.JSONMarshaller;
+import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkHelper;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -25,7 +27,11 @@ public class PresenceEntityResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/presence/entities/{entityId}";
 
     @Inject
+    Authorizer authorizer;
+    @Inject
     PresenceManager presenceManager;
+    @Inject
+    HATEOASLinkHelper linkHelper;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/presence/entities/:entityId Get presence entity
@@ -44,6 +50,17 @@ public class PresenceEntityResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        return new JsonRepresentation(JSONMarshaller.createPresenceEntityJSON(ctx, presenceManager.getEntity(ctx.getUserId(), ctx.getHubId(), getAttribute("entityId")), true));
+        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+        String entityId = getAttribute("entityId");
+        return new JsonRepresentation(
+            linkHelper.addPresenceEntityLinks(
+                ctx,
+                JSONSerializationHelper.createPresenceEntityJSON(
+                    presenceManager.getEntity(ctx.getUserId(), ctx.getHubId(), entityId),
+                    true
+                ),
+                entityId
+            )
+        );
     }
 }

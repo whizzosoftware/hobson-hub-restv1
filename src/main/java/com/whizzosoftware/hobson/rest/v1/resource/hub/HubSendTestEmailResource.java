@@ -1,10 +1,19 @@
-package com.whizzosoftware.hobson.rest.v1.resource.config;
+/*******************************************************************************
+ * Copyright (c) 2015 Whizzo Software, LLC.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *******************************************************************************/
+package com.whizzosoftware.hobson.rest.v1.resource.hub;
 
 import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
 import com.whizzosoftware.hobson.api.HobsonRuntimeException;
 import com.whizzosoftware.hobson.api.hub.HubManager;
+import com.whizzosoftware.hobson.json.JSONSerializationHelper;
+import com.whizzosoftware.hobson.rest.v1.Authorizer;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.JSONMarshaller;
+import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.representation.EmptyRepresentation;
@@ -13,9 +22,16 @@ import org.restlet.resource.ResourceException;
 
 import javax.inject.Inject;
 
+/**
+ * A resource that sends test e-mails.
+ *
+ * @author Dan Noguerol
+ */
 public class HubSendTestEmailResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/configuration/sendTestEmail";
 
+    @Inject
+    Authorizer authorizer;
     @Inject
     HubManager hubManager;
 
@@ -45,7 +61,8 @@ public class HubSendTestEmailResource extends SelfInjectingServerResource {
     protected Representation post(Representation entity) throws ResourceException {
         try {
             HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-            hubManager.sendTestEmail(ctx.getUserId(), ctx.getHubId(), JSONMarshaller.createEmailConfiguration(JSONMarshaller.createJSONFromRepresentation(entity)));
+            authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+            hubManager.sendTestEmail(ctx.getUserId(), ctx.getHubId(), JSONSerializationHelper.createEmailConfiguration(JSONHelper.createJSONFromRepresentation(entity)));
             getResponse().setStatus(Status.SUCCESS_ACCEPTED);
             return new EmptyRepresentation();
         } catch (HobsonRuntimeException e) {

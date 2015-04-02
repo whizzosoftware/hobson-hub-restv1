@@ -10,9 +10,15 @@ package com.whizzosoftware.hobson.rest.v1;
 import org.restlet.Request;
 import org.restlet.Restlet;
 import org.restlet.resource.Resource;
+import org.restlet.security.User;
 
 import java.util.Map;
 
+/**
+ * A class that captures information about a REST request.
+ *
+ * @author Dan Noguerol
+ */
 public class HobsonRestContext {
     private String apiRoot;
     private String userId;
@@ -21,9 +27,10 @@ public class HobsonRestContext {
     public static HobsonRestContext createContext(Resource resource, Request request) {
         Map<String,Object> atts = request.getAttributes();
 
-        String userId = (String)atts.get("userId");
-        if (userId == null) {
-            userId = "local";
+        String userId = "local";
+        User user = request.getClientInfo().getUser();
+        if (user != null) {
+            userId = user.getIdentifier();
         }
         String hubId = (String)atts.get("hubId");
         if (hubId == null) {

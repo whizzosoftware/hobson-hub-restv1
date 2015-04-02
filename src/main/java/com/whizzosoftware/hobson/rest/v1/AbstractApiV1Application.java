@@ -7,15 +7,12 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1;
 
-import com.whizzosoftware.hobson.rest.v1.resource.HubInfoResource;
 import com.whizzosoftware.hobson.rest.v1.resource.LogResource;
 import com.whizzosoftware.hobson.rest.v1.resource.ShutdownResource;
 import com.whizzosoftware.hobson.rest.v1.resource.action.ActionResource;
 import com.whizzosoftware.hobson.rest.v1.resource.action.ActionsResource;
-import com.whizzosoftware.hobson.rest.v1.resource.config.HubConfigurationResource;
-import com.whizzosoftware.hobson.rest.v1.resource.config.HubPasswordResource;
-import com.whizzosoftware.hobson.rest.v1.resource.config.HubSendTestEmailResource;
 import com.whizzosoftware.hobson.rest.v1.resource.device.*;
+import com.whizzosoftware.hobson.rest.v1.resource.hub.*;
 import com.whizzosoftware.hobson.rest.v1.resource.image.HubImageResource;
 import com.whizzosoftware.hobson.rest.v1.resource.image.ImageLibraryGroupResource;
 import com.whizzosoftware.hobson.rest.v1.resource.image.ImageLibraryImageResource;
@@ -25,6 +22,7 @@ import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceEntitiesResou
 import com.whizzosoftware.hobson.rest.v1.resource.task.ExecuteTaskResource;
 import com.whizzosoftware.hobson.rest.v1.resource.task.TaskResource;
 import com.whizzosoftware.hobson.rest.v1.resource.task.TasksResource;
+import com.whizzosoftware.hobson.rest.v1.resource.user.UserResource;
 import com.whizzosoftware.hobson.rest.v1.resource.variable.GlobalVariableResource;
 import com.whizzosoftware.hobson.rest.v1.resource.variable.GlobalVariablesResource;
 import org.restlet.Request;
@@ -36,10 +34,10 @@ import org.restlet.data.Status;
 import org.restlet.ext.guice.ResourceInjectingApplication;
 import org.restlet.routing.Filter;
 import org.restlet.routing.Router;
+import org.restlet.security.Authenticator;
+import org.restlet.security.Authorizer;
 import org.restlet.security.ChallengeAuthenticator;
 import org.restlet.security.Verifier;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 
@@ -48,45 +46,18 @@ import java.util.ArrayList;
  *
  * @author Dan Noguerol
  */
-public class ApiV1Application extends ResourceInjectingApplication implements HobsonApiApplication {
-    private static final Logger logger = LoggerFactory.getLogger(ApiV1Application.class);
-    private static final String PROP_VERIFIER = "hobson.rest.verifier";
-
+abstract public class AbstractApiV1Application extends ResourceInjectingApplication implements HobsonApiApplication {
     public static final String PATH = "/api/v1";
 
-    private ChallengeAuthenticator authenticator;
+    private Authenticator authenticator;
 
     /**
      * Constructor that creates an challenge-based authenticator using the fully-qualified class name specified in
      * the "hobson.rest.verifier" system property to instantiate a verifier.
      */
-    public ApiV1Application() {
+    public AbstractApiV1Application() {
         super();
-
-        String verifierClassName = System.getProperty(PROP_VERIFIER);
-        if (verifierClassName != null) {
-            try {
-                this.authenticator = new ChallengeAuthenticator(getContext(), ChallengeScheme.HTTP_BASIC, "Hobson (default is admin/admin)");
-                this.authenticator.setVerifier((Verifier)Class.forName(verifierClassName).newInstance());
-            } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-                logger.error("Error creating REST API authenticator", e);
-            }
-        } else {
-            logger.warn("No REST API authenticator has been configured!");
-        }
-
-        setStatusService(new HobsonStatusService());
-    }
-
-    /**
-     * Constructor.
-     *
-     * @param verifier the authenticator verifier to use
-     */
-    public ApiV1Application(Verifier verifier) {
-        super();
-        this.authenticator = new ChallengeAuthenticator(getContext(), ChallengeScheme.HTTP_BASIC, "Hobson (default is admin/admin)");
-        this.authenticator.setVerifier(verifier);
+        this.authenticator = createAuthenticator();
         setStatusService(new HobsonStatusService());
     }
 
@@ -96,7 +67,6 @@ public class ApiV1Application extends ResourceInjectingApplication implements Ho
         Router router = newRouter();
         router.attach(ActionResource.PATH, ActionResource.class);
         router.attach(ActionsResource.PATH, ActionsResource.class);
-        router.attach(HubInfoResource.PATH, HubInfoResource.class);
         router.attach(DeviceResource.PATH, DeviceResource.class);
         router.attach(DeviceConfigurationResource.PATH, DeviceConfigurationResource.class);
         router.attach(DeviceTelemetryResource.PATH, DeviceTelemetryResource.class);
@@ -108,10 +78,11 @@ public class ApiV1Application extends ResourceInjectingApplication implements Ho
         router.attach(ExecuteTaskResource.PATH, ExecuteTaskResource.class);
         router.attach(GlobalVariableResource.PATH, GlobalVariableResource.class);
         router.attach(GlobalVariablesResource.PATH, GlobalVariablesResource.class);
-        router.attach(HubConfigurationResource.PATH, HubConfigurationResource.class);
         router.attach(HubImageResource.PATH, HubImageResource.class);
+        router.attach(HubResource.PATH, HubResource.class);
         router.attach(HubPasswordResource.PATH, HubPasswordResource.class);
         router.attach(HubSendTestEmailResource.PATH, HubSendTestEmailResource.class);
+        router.attach(HubsResource.PATH, HubsResource.class);
         router.attach(ImageLibraryGroupResource.PATH, ImageLibraryGroupResource.class);
         router.attach(ImageLibraryImageResource.PATH, ImageLibraryImageResource.class);
         router.attach(ImageLibraryRootResource.PATH, ImageLibraryRootResource.class);
@@ -129,6 +100,9 @@ public class ApiV1Application extends ResourceInjectingApplication implements Ho
         router.attach(ShutdownResource.PATH, ShutdownResource.class);
         router.attach(TaskResource.PATH, TaskResource.class);
         router.attach(TasksResource.PATH, TasksResource.class);
+        router.attach(UserResource.PATH, UserResource.class);
+
+        createAdditionalResources(router);
 
         // create a filter that prevents caching of API responses
         Filter cache = new Filter(getContext(), router) {
@@ -153,4 +127,7 @@ public class ApiV1Application extends ResourceInjectingApplication implements Ho
     public String getApiRoot() {
         return PATH;
     }
+
+    abstract protected Authenticator createAuthenticator();
+    abstract protected void createAdditionalResources(Router router);
 }

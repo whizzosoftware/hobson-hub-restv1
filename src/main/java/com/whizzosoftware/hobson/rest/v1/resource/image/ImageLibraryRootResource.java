@@ -9,8 +9,11 @@ package com.whizzosoftware.hobson.rest.v1.resource.image;
 
 import com.whizzosoftware.hobson.api.image.ImageGroup;
 import com.whizzosoftware.hobson.api.image.ImageManager;
+import com.whizzosoftware.hobson.json.JSONSerializationHelper;
+import com.whizzosoftware.hobson.rest.v1.Authorizer;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.JSONMarshaller;
+import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkHelper;
+import org.json.JSONArray;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -24,7 +27,11 @@ public class ImageLibraryRootResource extends SelfInjectingServerResource {
     public static final String REL = "imageLibrary";
 
     @Inject
+    Authorizer authorizer;
+    @Inject
     ImageManager imageManager;
+    @Inject
+    HATEOASLinkHelper linkHelper;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/imageLibrary Get library groups
@@ -51,7 +58,16 @@ public class ImageLibraryRootResource extends SelfInjectingServerResource {
     @Override
     public Representation get() throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+        JSONArray results = new JSONArray();
         List<ImageGroup> groups = imageManager.getImageLibraryGroups(ctx.getUserId(), ctx.getHubId());
-        return new JsonRepresentation(JSONMarshaller.createImageLibraryGroupListJSON(ctx, groups));
+        for (ImageGroup group : groups) {
+            results.put(linkHelper.addImageLibraryGroupLinks(
+                ctx,
+                JSONSerializationHelper.createImageLibraryGroupJSON(group),
+                group.getId()
+            ));
+        }
+        return new JsonRepresentation(results);
     }
 }

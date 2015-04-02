@@ -8,8 +8,11 @@
 package com.whizzosoftware.hobson.rest.v1.resource.action;
 
 import com.whizzosoftware.hobson.api.action.ActionManager;
+import com.whizzosoftware.hobson.api.action.HobsonAction;
+import com.whizzosoftware.hobson.json.JSONSerializationHelper;
+import com.whizzosoftware.hobson.rest.v1.Authorizer;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.JSONMarshaller;
+import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkHelper;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -25,7 +28,11 @@ public class ActionResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/{pluginId}/actions/{actionId}";
 
     @Inject
+    Authorizer authorizer;
+    @Inject
     ActionManager actionManager;
+    @Inject
+    HATEOASLinkHelper linkHelper;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/actions/:actionId Get action details
@@ -55,6 +62,17 @@ public class ActionResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        return new JsonRepresentation(JSONMarshaller.createActionJSON(ctx, actionManager.getAction(ctx.getUserId(), ctx.getHubId(), getAttribute("pluginId"), getAttribute("actionId")), true));
+        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+        HobsonAction action = actionManager.getAction(ctx.getUserId(), ctx.getHubId(), getAttribute("pluginId"), getAttribute("actionId"));
+        return new JsonRepresentation(
+            linkHelper.addActionLinks(
+                ctx,
+                JSONSerializationHelper.createActionJSON(
+                    action,
+                    true
+                ),
+                action
+            )
+        );
     }
 }

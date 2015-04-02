@@ -11,8 +11,10 @@ import com.whizzosoftware.hobson.api.HobsonNotFoundException;
 import com.whizzosoftware.hobson.api.plugin.PluginDescriptor;
 import com.whizzosoftware.hobson.api.plugin.PluginList;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
+import com.whizzosoftware.hobson.json.JSONSerializationHelper;
+import com.whizzosoftware.hobson.rest.v1.Authorizer;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.JSONMarshaller;
+import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkHelper;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -29,7 +31,11 @@ public class PluginResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/{pluginId}";
 
     @Inject
+    Authorizer authorizer;
+    @Inject
     PluginManager pluginManager;
+    @Inject
+    HATEOASLinkHelper linkHelper;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId Get plugin details
@@ -55,16 +61,27 @@ public class PluginResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
         String pluginId = getAttribute("pluginId");
 
         // TODO: this whole thing can probably be made way more efficient
         // generate a plugin list
-        PluginList bl = pluginManager.getPlugins(ctx.getUserId(), ctx.getHubId(), true);
+        PluginList bl = pluginManager.getPluginDescriptors(ctx.getUserId(), ctx.getHubId(), true);
 
         // build a JSON response array
         for (PluginDescriptor pd : bl.getPlugins()) {
             if (pluginId.equals(pd.getId())) {
-                return new JsonRepresentation(JSONMarshaller.createPluginDescriptorJSON(ctx, pd, true));
+                return new JsonRepresentation(
+                    linkHelper.addPluginDescriptorLinks(
+                        ctx,
+                        JSONSerializationHelper.createPluginDescriptorJSON(
+                            pd,
+                            true
+                        ),
+                        pd,
+                        true
+                    )
+                );
             }
         }
 

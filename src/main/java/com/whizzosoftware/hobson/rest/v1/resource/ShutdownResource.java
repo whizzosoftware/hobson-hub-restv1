@@ -7,12 +7,16 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource;
 
+import com.whizzosoftware.hobson.rest.v1.Authorizer;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.JSONMarshaller;
+import com.whizzosoftware.hobson.rest.v1.resource.hub.HubResource;
+import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkHelper;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.representation.EmptyRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.routing.Template;
+
+import javax.inject.Inject;
 
 /**
  * A REST resource for shutting down the Hub.
@@ -22,6 +26,11 @@ import org.restlet.routing.Template;
 public class ShutdownResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/shutdown";
     public static final String REL = "shutdown";
+
+    @Inject
+    Authorizer authorizer;
+    @Inject
+    HATEOASLinkHelper linkHelper;
 
     /**
      * @api {post} /api/v1/users/:userId/hubs/:hubId/shutdown Shutdown
@@ -33,12 +42,13 @@ public class ShutdownResource extends SelfInjectingServerResource {
      * @apiGroup Hub
      * @apiSuccessExample {json} Success Response:
      * HTTP/1.1 202 Accepted
-     * Location: /api/v1
+     * Location: /api/v1/users/local/hubs/local
      */
     @Override
     public Representation post(Representation entity) {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        getResponse().setLocationRef(new Template(HubInfoResource.PATH).format(JSONMarshaller.createEmptyMap(ctx)));
+        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+        getResponse().setLocationRef(new Template(HubResource.PATH).format(linkHelper.createEmptyMap(ctx)));
         Representation result = new EmptyRepresentation();
 
         Thread t = new Thread(new Runnable() {

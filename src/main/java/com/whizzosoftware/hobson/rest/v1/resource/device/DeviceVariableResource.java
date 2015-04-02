@@ -9,10 +9,14 @@ package com.whizzosoftware.hobson.rest.v1.resource.device;
 
 import com.whizzosoftware.hobson.api.event.EventManager;
 import com.whizzosoftware.hobson.api.event.VariableUpdateRequestEvent;
+import com.whizzosoftware.hobson.api.variable.HobsonVariable;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
 import com.whizzosoftware.hobson.api.variable.VariableUpdate;
+import com.whizzosoftware.hobson.json.JSONSerializationHelper;
+import com.whizzosoftware.hobson.rest.v1.Authorizer;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.JSONMarshaller;
+import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkHelper;
+import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import org.restlet.data.Reference;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -32,9 +36,13 @@ public class DeviceVariableResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/{pluginId}/devices/{deviceId}/variables/{variableName}";
 
     @Inject
+    Authorizer authorizer;
+    @Inject
     VariableManager variableManager;
     @Inject
     EventManager eventManager;
+    @Inject
+    HATEOASLinkHelper linkHelper;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/devices/:deviceId/variables/:variableName Get device variable
@@ -54,9 +62,24 @@ public class DeviceVariableResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
         String pluginId = getAttribute("pluginId");
         String deviceId = getAttribute("deviceId");
-        return new JsonRepresentation(JSONMarshaller.createDeviceVariableJSON(ctx, pluginId, deviceId, variableManager.getDeviceVariable(ctx.getUserId(), ctx.getHubId(), pluginId, deviceId, getAttribute("variableName")), true));
+        HobsonVariable var = variableManager.getDeviceVariable(ctx.getUserId(), ctx.getHubId(), pluginId, deviceId, getAttribute("variableName"));
+        return new JsonRepresentation(
+            linkHelper.addDeviceVariableLinks(
+                ctx,
+                JSONSerializationHelper.createDeviceVariableJSON(
+                    pluginId,
+                    deviceId,
+                    linkHelper.createMediaVariableOverride(ctx, pluginId, deviceId, var),
+                    true
+                ),
+                pluginId,
+                deviceId,
+                var.getName()
+            )
+        );
     }
 
     /**
@@ -75,17 +98,18 @@ public class DeviceVariableResource extends SelfInjectingServerResource {
     @Override
     protected Representation put(Representation entity) {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        Object value = JSONMarshaller.createDeviceVariableValue(JSONMarshaller.createJSONFromRepresentation(entity));
+        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+        Object value = JSONSerializationHelper.createDeviceVariableValue(JSONHelper.createJSONFromRepresentation(entity));
         String pluginId = getAttribute("pluginId");
         String deviceId = getAttribute("deviceId");
         String variableName = getAttribute("variableName");
-        eventManager.postEvent(ctx.getUserId(), ctx.getHubId(), new VariableUpdateRequestEvent(pluginId, deviceId, variableName, value));
+        eventManager.postEvent(ctx.getUserId(), ctx.getHubId(), new VariableUpdateRequestEvent(new VariableUpdate(pluginId, deviceId, variableName, value)));
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
 
         // TODO: is there a better way to do this? The Restlet request reference scheme is always HTTP for some reason...
         Reference requestRef = getRequest().getResourceRef();
         if (Boolean.getBoolean(System.getProperty("useSSL"))) {
-            getResponse().setLocationRef(new Reference("https", requestRef.getHostDomain(), requestRef.getHostPort(), ctx.getApiRoot() + new Template(DeviceVariableResource.PATH).format(JSONMarshaller.createTripleEntryMap(ctx, "pluginId", pluginId, "deviceId" , deviceId, "variableName", variableName)), null, null));
+            getResponse().setLocationRef(new Reference("https", requestRef.getHostDomain(), requestRef.getHostPort(), ctx.getApiRoot() + new Template(DeviceVariableResource.PATH).format(linkHelper.createTripleEntryMap(ctx, "pluginId", pluginId, "deviceId", deviceId, "variableName", variableName)), null, null));
         } else {
             getResponse().setLocationRef(requestRef);
         }

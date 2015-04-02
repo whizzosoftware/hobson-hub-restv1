@@ -7,9 +7,13 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.device;
 
+import com.whizzosoftware.hobson.api.variable.HobsonVariable;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
+import com.whizzosoftware.hobson.json.JSONSerializationHelper;
+import com.whizzosoftware.hobson.rest.v1.Authorizer;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.JSONMarshaller;
+import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkHelper;
+import org.json.JSONObject;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -25,7 +29,11 @@ public class DeviceVariablesResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/{pluginId}/devices/{deviceId}/variables";
 
     @Inject
+    Authorizer authorizer;
+    @Inject
     VariableManager variableManager;
+    @Inject
+    HATEOASLinkHelper linkHelper;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/devices/:deviceId/variables Get all device variables
@@ -46,8 +54,21 @@ public class DeviceVariablesResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
         String pluginId = getAttribute("pluginId");
         String deviceId = getAttribute("deviceId");
-        return new JsonRepresentation(JSONMarshaller.createDeviceVariableListJSON(ctx, pluginId, deviceId, variableManager.getDeviceVariables(ctx.getUserId(), ctx.getHubId(), pluginId, deviceId)));
+        JSONObject results = new JSONObject();
+        for (HobsonVariable v : variableManager.getDeviceVariables(ctx.getUserId(), ctx.getHubId(), pluginId, deviceId)) {
+            results.put(
+                v.getName(),
+                JSONSerializationHelper.createDeviceVariableJSON(
+                    pluginId,
+                    deviceId,
+                    linkHelper.createMediaVariableOverride(ctx, pluginId, deviceId, v),
+                    false
+                )
+            );
+        }
+        return new JsonRepresentation(results);
     }
 }

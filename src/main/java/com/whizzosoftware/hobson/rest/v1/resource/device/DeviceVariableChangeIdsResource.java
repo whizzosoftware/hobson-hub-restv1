@@ -8,8 +8,9 @@
 package com.whizzosoftware.hobson.rest.v1.resource.device;
 
 import com.whizzosoftware.hobson.api.variable.VariableManager;
+import com.whizzosoftware.hobson.json.JSONSerializationHelper;
+import com.whizzosoftware.hobson.rest.v1.Authorizer;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.JSONMarshaller;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -25,11 +26,14 @@ public class DeviceVariableChangeIdsResource extends SelfInjectingServerResource
     public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/{pluginId}/devices/{deviceId}/variableChangeIds";
 
     @Inject
+    Authorizer authorizer;
+    @Inject
     VariableManager variableManager;
 
     @Override
     protected Representation get() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        return new JsonRepresentation(JSONMarshaller.createVariableEventIdJSON(variableManager.getDeviceVariableChangeIds(ctx.getUserId(), ctx.getHubId(), getAttribute("pluginId"), getAttribute("deviceId"))));
+        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+        return new JsonRepresentation(JSONSerializationHelper.createVariableEventIdJSON(variableManager.getDeviceVariableChangeIds(ctx.getUserId(), ctx.getHubId(), getAttribute("pluginId"), getAttribute("deviceId"))));
     }
 }

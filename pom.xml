@@ -4,7 +4,7 @@
 	<groupId>com.whizzosoftware.hobson.hub</groupId>
     <artifactId>hobson-hub-restv1</artifactId>
     <version>0.5.0-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <packaging>bundle</packaging>
     <name>REST API v1 Plugin</name>
     <description>Provides a RESTful API that can be used to manage the Hobson Hub</description>
     <dependencies>
@@ -57,8 +57,20 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>org.restlet.osgi</groupId>
+            <artifactId>org.restlet.ext.fileupload</artifactId>
+            <version>2.2.2</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>com.whizzosoftware.hobson.hub</groupId>
             <artifactId>hobson-hub-api</artifactId>
+            <version>0.5.0-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.whizzosoftware.hobson.hub</groupId>
+            <artifactId>hobson-hub-dto</artifactId>
             <version>0.5.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
@@ -96,6 +108,18 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
                 <version>2.5.1</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>2.4.0</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Import-Package>com.whizzosoftware.hobson.api.*</Import-Package>
+                        <Export-Package>com.whizzosoftware.hobson.rest.v1.*</Export-Package>
+                    </instructions>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>com.atlassian.maven.plugins</groupId>

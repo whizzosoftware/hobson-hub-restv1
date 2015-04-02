@@ -7,9 +7,11 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1;
 
+import com.whizzosoftware.hobson.api.HobsonAuthException;
 import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
 import com.whizzosoftware.hobson.api.HobsonNotFoundException;
 import com.whizzosoftware.hobson.api.HobsonRuntimeException;
+import com.whizzosoftware.hobson.json.JSONSerializationHelper;
 import org.json.JSONException;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -35,12 +37,12 @@ public class HobsonStatusService extends StatusService {
             } else {
                 return new Status(Status.CLIENT_ERROR_NOT_FOUND, t);
             }
-        } else if (t instanceof HobsonInvalidRequestException) {
+        } else if (t instanceof HobsonAuthException) {
+            return new Status(Status.CLIENT_ERROR_FORBIDDEN, t.getLocalizedMessage());
+        } else if (t instanceof JSONException || t instanceof HobsonInvalidRequestException) {
             return new Status(Status.CLIENT_ERROR_BAD_REQUEST, t.getLocalizedMessage());
         } else if (t instanceof HobsonRuntimeException) {
             return new Status(Status.SERVER_ERROR_INTERNAL, t, t.getLocalizedMessage());
-        } else if (t instanceof JSONException) {
-            return new Status(Status.CLIENT_ERROR_BAD_REQUEST, t);
         } else {
             return new Status(Status.SERVER_ERROR_INTERNAL, t);
         }
@@ -48,12 +50,12 @@ public class HobsonStatusService extends StatusService {
 
     public Representation getRepresentation(Status status, Request request, Response response) {
         if (status != null && status.getDescription() != null) {
-            return new JsonRepresentation(JSONMarshaller.createErrorJSON(status.getDescription()));
+            return new JsonRepresentation(JSONSerializationHelper.createErrorJSON(status.getDescription()));
         } else if (status != null && status.getThrowable() != null) {
-            return new JsonRepresentation(JSONMarshaller.createErrorJSON(status.getThrowable()));
+            return new JsonRepresentation(JSONSerializationHelper.createErrorJSON(status.getThrowable()));
         } else {
             logger.error("Unknown error servicing request: " + request.getOriginalRef());
-            return new JsonRepresentation(JSONMarshaller.createErrorJSON("An unknown error has occurred"));
+            return new JsonRepresentation(JSONSerializationHelper.createErrorJSON("An unknown error has occurred"));
         }
     }
 }

@@ -9,6 +9,7 @@ package com.whizzosoftware.hobson.rest.v1.resource.plugin;
 
 import com.whizzosoftware.hobson.api.image.ImageInputStream;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
+import com.whizzosoftware.hobson.rest.v1.Authorizer;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
 import org.restlet.data.MediaType;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -27,6 +28,8 @@ public class PluginIconResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/{pluginId}/icon";
 
     @Inject
+    Authorizer authorizer;
+    @Inject
     PluginManager pluginManager;
 
     /**
@@ -43,6 +46,7 @@ public class PluginIconResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
         String pluginId = getAttribute("pluginId");
         ImageInputStream iis = pluginManager.getPluginIcon(ctx.getUserId(), ctx.getHubId(), pluginId);
         return new InputRepresentation(iis.getInputStream(), MediaType.valueOf(iis.getMediaType()));

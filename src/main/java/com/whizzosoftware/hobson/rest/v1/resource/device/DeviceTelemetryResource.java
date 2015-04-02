@@ -7,10 +7,11 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.device;
 
-import com.whizzosoftware.hobson.api.device.DeviceManager;
+import com.whizzosoftware.hobson.api.telemetry.TelemetryInterval;
+import com.whizzosoftware.hobson.api.telemetry.TelemetryManager;
+import com.whizzosoftware.hobson.api.telemetry.TemporalValue;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
-import com.whizzosoftware.hobson.api.variable.telemetry.TelemetryInterval;
-import com.whizzosoftware.hobson.api.variable.telemetry.TemporalValue;
+import com.whizzosoftware.hobson.rest.v1.Authorizer;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
 import org.json.JSONObject;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -30,7 +31,9 @@ public class DeviceTelemetryResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/{pluginId}/devices/{deviceId}/telemetry";
 
     @Inject
-    DeviceManager deviceManager;
+    Authorizer authorizer;
+    @Inject
+    TelemetryManager telemetryManager;
     @Inject
     VariableManager variableManager;
 
@@ -55,12 +58,13 @@ public class DeviceTelemetryResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
         String pluginId = getAttribute("pluginId");
         String deviceId = getAttribute("deviceId");
         long endTime = System.currentTimeMillis() / 1000; // TODO: should be pulled from request
         TelemetryInterval interval = TelemetryInterval.HOURS_24; // TODO: should be pulled from request
 
-        Map<String,Collection<TemporalValue>> telemetry = deviceManager.getDeviceTelemetry(
+        Map<String,Collection<TemporalValue>> telemetry = telemetryManager.getDeviceTelemetry(
             ctx.getUserId(),
             ctx.getHubId(),
             pluginId,

@@ -7,9 +7,14 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.task;
 
+import com.whizzosoftware.hobson.api.task.HobsonTask;
 import com.whizzosoftware.hobson.api.task.TaskManager;
+import com.whizzosoftware.hobson.json.JSONSerializationHelper;
+import com.whizzosoftware.hobson.rest.v1.Authorizer;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.JSONMarshaller;
+import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkHelper;
+import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -18,6 +23,7 @@ import org.restlet.representation.EmptyRepresentation;
 import org.restlet.representation.Representation;
 
 import javax.inject.Inject;
+import java.util.Collection;
 
 /**
  * A REST resource for retrieving a list of all tasks.
@@ -29,7 +35,11 @@ public class TasksResource extends SelfInjectingServerResource {
     public static final String REL = "tasks";
 
     @Inject
+    Authorizer authorizer;
+    @Inject
     TaskManager taskManager;
+    @Inject
+    HATEOASLinkHelper linkHelper;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/tasks Get all tasks
@@ -52,7 +62,15 @@ public class TasksResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        return new JsonRepresentation(JSONMarshaller.createTaskListJSON(ctx, taskManager.getAllTasks(ctx.getUserId(), ctx.getHubId()), Boolean.parseBoolean(getQueryValue("properties"))));
+        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+        boolean includeProps = Boolean.parseBoolean(getQueryValue("properties"));
+
+        JSONArray results = new JSONArray();
+        Collection<HobsonTask> tasks = taskManager.getAllTasks(ctx.getUserId(), ctx.getHubId());
+        for (HobsonTask task : tasks) {
+            results.put(linkHelper.addTaskLinks(ctx, JSONSerializationHelper.createTaskJSON(task, false, includeProps), task.getProviderId(), task.getId()));
+        }
+        return new JsonRepresentation(results);
     }
 
     /**
@@ -126,8 +144,9 @@ public class TasksResource extends SelfInjectingServerResource {
     @Override
     protected Representation post(Representation entity) {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        JSONObject json = JSONMarshaller.createJSONFromRepresentation(entity);
-        taskManager.getPublisher().addTask(ctx.getUserId(), ctx.getHubId(), json.getString("provider"), json);
+        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+        JSONObject json = JSONHelper.createJSONFromRepresentation(entity);
+        taskManager.addTask(ctx.getUserId(), ctx.getHubId(), json.getString("provider"), json);
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();
     }

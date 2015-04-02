@@ -2,6 +2,7 @@ package com.whizzosoftware.hobson.rest.v1.resource.image;
 
 import com.whizzosoftware.hobson.api.image.ImageInputStream;
 import com.whizzosoftware.hobson.api.image.ImageManager;
+import com.whizzosoftware.hobson.rest.v1.Authorizer;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
 import org.restlet.data.MediaType;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -14,6 +15,8 @@ import javax.inject.Inject;
 public class ImageLibraryImageResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/imageLibrary/images/{imageId}";
 
+    @Inject
+    Authorizer authorizer;
     @Inject
     ImageManager imageManager;
 
@@ -31,6 +34,7 @@ public class ImageLibraryImageResource extends SelfInjectingServerResource {
     @Override
     public Representation get() throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
         ImageInputStream iis = imageManager.getImageLibraryImage(
             ctx.getUserId(), ctx.getHubId(), getAttribute("imageId"));
         return new InputRepresentation(iis.getInputStream(), MediaType.valueOf(iis.getMediaType()));

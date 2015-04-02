@@ -8,8 +8,10 @@
 package com.whizzosoftware.hobson.rest.v1.resource.variable;
 
 import com.whizzosoftware.hobson.api.variable.VariableManager;
+import com.whizzosoftware.hobson.json.JSONSerializationHelper;
+import com.whizzosoftware.hobson.rest.v1.Authorizer;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.JSONMarshaller;
+import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkHelper;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -20,7 +22,11 @@ public class GlobalVariableResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/globalVariables/{name}";
 
     @Inject
+    Authorizer authorizer;
+    @Inject
     VariableManager variableManager;
+    @Inject
+    HATEOASLinkHelper linkHelper;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/globalVariables/:name Get global variable
@@ -40,6 +46,16 @@ public class GlobalVariableResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        return new JsonRepresentation(JSONMarshaller.createGlobalVariableJSON(ctx, variableManager.getGlobalVariable(ctx.getUserId(), ctx.getHubId(), getAttribute("name"))));
+        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+        String varName = getAttribute("name");
+        return new JsonRepresentation(
+            linkHelper.addGlobalVariableLinks(
+                ctx,
+                JSONSerializationHelper.createGlobalVariableJSON(
+                    variableManager.getGlobalVariable(ctx.getUserId(), ctx.getHubId(), varName)
+                ),
+                varName
+            )
+        );
     }
 }

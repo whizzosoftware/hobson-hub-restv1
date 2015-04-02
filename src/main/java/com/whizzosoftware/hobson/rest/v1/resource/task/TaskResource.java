@@ -7,9 +7,13 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.task;
 
+import com.whizzosoftware.hobson.api.task.HobsonTask;
 import com.whizzosoftware.hobson.api.task.TaskManager;
+import com.whizzosoftware.hobson.json.JSONSerializationHelper;
+import com.whizzosoftware.hobson.rest.v1.Authorizer;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.JSONMarshaller;
+import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkHelper;
+import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import org.json.JSONObject;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -28,7 +32,11 @@ public class TaskResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/tasks/{providerId}/{taskId}";
 
     @Inject
+    Authorizer authorizer;
+    @Inject
     TaskManager taskManager;
+    @Inject
+    HATEOASLinkHelper linkHelper;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/tasks/:providerId/:taskId Get task details
@@ -60,7 +68,7 @@ public class TaskResource extends SelfInjectingServerResource {
      *       }
      *     }],
      *     "links": {
-     *       "self": "/api/tasks/com.whizzosoftware.hobson.server-rules/efc02d7a-d0e0-46fb-9cc3-2ca70a66dc05"
+     *       "self": "/api/v1/users/local/hubs/local/tasks/com.whizzosoftware.hobson.server-rules/efc02d7a-d0e0-46fb-9cc3-2ca70a66dc05"
      *     },
      *   }
      * ]
@@ -68,7 +76,20 @@ public class TaskResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        return new JsonRepresentation(JSONMarshaller.createTaskJSON(ctx, taskManager.getTask(ctx.getUserId(), ctx.getHubId(), getAttribute("providerId"), getAttribute("taskId")), true, true));
+        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+        HobsonTask task = taskManager.getTask(ctx.getUserId(), ctx.getHubId(), getAttribute("providerId"), getAttribute("taskId"));
+        return new JsonRepresentation(
+            linkHelper.addTaskLinks(
+                ctx,
+                JSONSerializationHelper.createTaskJSON(
+                    task,
+                    true,
+                    true
+                ),
+                task.getProviderId(),
+                task.getId()
+            )
+        );
     }
 
     /**
@@ -142,8 +163,9 @@ public class TaskResource extends SelfInjectingServerResource {
     @Override
     protected Representation put(Representation entity) {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        JSONObject json = JSONMarshaller.createJSONFromRepresentation(entity);
-        taskManager.getPublisher().updateTask(ctx.getUserId(), ctx.getHubId(), getAttribute("providerId"), getAttribute("taskId"), json);
+        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+        JSONObject json = JSONHelper.createJSONFromRepresentation(entity);
+        taskManager.updateTask(ctx.getUserId(), ctx.getHubId(), getAttribute("providerId"), getAttribute("taskId"), json);
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();
     }
@@ -160,7 +182,8 @@ public class TaskResource extends SelfInjectingServerResource {
     @Override
     protected Representation delete() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        taskManager.getPublisher().deleteTask(ctx.getUserId(), ctx.getHubId(), getAttribute("providerId"), getAttribute("taskId"));
+        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+        taskManager.deleteTask(ctx.getUserId(), ctx.getHubId(), getAttribute("providerId"), getAttribute("taskId"));
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();
     }

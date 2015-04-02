@@ -9,8 +9,12 @@ package com.whizzosoftware.hobson.rest.v1.resource.presence;
 
 import com.whizzosoftware.hobson.api.presence.PresenceEntity;
 import com.whizzosoftware.hobson.api.presence.PresenceManager;
+import com.whizzosoftware.hobson.json.JSONSerializationHelper;
+import com.whizzosoftware.hobson.rest.v1.Authorizer;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.JSONMarshaller;
+import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkHelper;
+import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -30,7 +34,11 @@ public class PresenceEntitiesResource extends SelfInjectingServerResource {
     public static final String REL = "presenceEntities";
 
     @Inject
+    Authorizer authorizer;
+    @Inject
     PresenceManager presenceManager;
+    @Inject
+    HATEOASLinkHelper linkHelper;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/presence/entities Get presence entities
@@ -60,7 +68,21 @@ public class PresenceEntitiesResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        return new JsonRepresentation(JSONMarshaller.createPresenceEntitiesListJSON(ctx, presenceManager.getAllEntities(ctx.getUserId(), ctx.getHubId())));
+        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+        JSONArray results = new JSONArray();
+        for (PresenceEntity entity : presenceManager.getAllEntities(ctx.getUserId(), ctx.getHubId())) {
+            results.put(
+                linkHelper.addPresenceEntityLinks(
+                    ctx,
+                    JSONSerializationHelper.createPresenceEntityJSON(
+                        entity,
+                        false
+                    ),
+                    entity.getId()
+                )
+            );
+        }
+        return new JsonRepresentation(results);
     }
 
     /**
@@ -81,7 +103,8 @@ public class PresenceEntitiesResource extends SelfInjectingServerResource {
     @Override
     protected Representation post(Representation entity) {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        JSONObject json = JSONMarshaller.createJSONFromRepresentation(entity);
+        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+        JSONObject json = JSONHelper.createJSONFromRepresentation(entity);
         presenceManager.addEntity(ctx.getUserId(), ctx.getHubId(), new PresenceEntity(json.getString("name"), json.getString("location")));
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();

@@ -9,8 +9,10 @@ package com.whizzosoftware.hobson.rest.v1.resource.plugin;
 
 import com.whizzosoftware.hobson.api.config.Configuration;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
+import com.whizzosoftware.hobson.json.JSONSerializationHelper;
+import com.whizzosoftware.hobson.rest.v1.Authorizer;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.JSONMarshaller;
+import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -28,6 +30,8 @@ import javax.inject.Inject;
 public class PluginConfigurationResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/{pluginId}/configuration";
 
+    @Inject
+    Authorizer authorizer;
     @Inject
     PluginManager pluginManager;
 
@@ -61,8 +65,9 @@ public class PluginConfigurationResource extends SelfInjectingServerResource {
     protected Representation get() throws ResourceException {
         String pluginId = getAttribute("pluginId");
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
         Configuration config = pluginManager.getPluginConfiguration(ctx.getUserId(), ctx.getHubId(), pluginId);
-        return new JsonRepresentation(JSONMarshaller.createPluginConfigPropertiesJSON(ctx, pluginId, config));
+        return new JsonRepresentation(JSONSerializationHelper.createPluginConfigPropertiesJSON(pluginId, config));
     }
 
     /**
@@ -86,8 +91,9 @@ public class PluginConfigurationResource extends SelfInjectingServerResource {
     @Override
     protected Representation put(Representation entity) throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
         String pluginId = getAttribute("pluginId");
-        pluginManager.setPluginConfiguration(ctx.getUserId(), ctx.getHubId(), pluginId, JSONMarshaller.createConfigurationFromConfigJSON(JSONMarshaller.createJSONFromRepresentation(entity)));
+        pluginManager.setPluginConfiguration(ctx.getUserId(), ctx.getHubId(), pluginId, JSONSerializationHelper.createConfiguration(JSONHelper.createJSONFromRepresentation(entity)));
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();
     }

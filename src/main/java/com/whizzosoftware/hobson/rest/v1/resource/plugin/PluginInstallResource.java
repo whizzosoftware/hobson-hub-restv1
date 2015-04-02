@@ -8,8 +8,9 @@
 package com.whizzosoftware.hobson.rest.v1.resource.plugin;
 
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
+import com.whizzosoftware.hobson.rest.v1.Authorizer;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.JSONMarshaller;
+import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkHelper;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.representation.EmptyRepresentation;
@@ -27,7 +28,11 @@ public class PluginInstallResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/{pluginId}/{pluginVersion}/install";
 
     @Inject
+    Authorizer authorizer;
+    @Inject
     PluginManager pluginManager;
+    @Inject
+    HATEOASLinkHelper linkHelper;
 
     /**
      * @api {post} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/:pluginVersion/install Install plugin
@@ -45,6 +50,7 @@ public class PluginInstallResource extends SelfInjectingServerResource {
     @Override
     protected Representation post(Representation entity) {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
 
         String pluginId = getAttribute("pluginId");
         String pluginVersion = getAttribute("pluginVersion");
@@ -52,7 +58,7 @@ public class PluginInstallResource extends SelfInjectingServerResource {
         pluginManager.installPlugin(ctx.getUserId(), ctx.getHubId(), pluginId, pluginVersion);
 
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
-        getResponse().setLocationRef(ctx.getApiRoot() + new Template(PluginCurrentVersionResource.PATH).format(JSONMarshaller.createSingleEntryMap(ctx, "pluginId", pluginId)));
+        getResponse().setLocationRef(ctx.getApiRoot() + new Template(PluginCurrentVersionResource.PATH).format(linkHelper.createSingleEntryMap(ctx, "pluginId", pluginId)));
 
         return new EmptyRepresentation();
     }

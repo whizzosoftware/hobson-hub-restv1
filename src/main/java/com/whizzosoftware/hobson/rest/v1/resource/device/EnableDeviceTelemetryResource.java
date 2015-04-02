@@ -7,10 +7,11 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.device;
 
-import com.whizzosoftware.hobson.api.device.DeviceManager;
+import com.whizzosoftware.hobson.api.telemetry.TelemetryManager;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
+import com.whizzosoftware.hobson.rest.v1.Authorizer;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.JSONMarshaller;
+import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import org.json.JSONObject;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -28,7 +29,9 @@ public class EnableDeviceTelemetryResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/{pluginId}/devices/{deviceId}/enableTelemetry";
 
     @Inject
-    DeviceManager deviceManager;
+    Authorizer authorizer;
+    @Inject
+    TelemetryManager telemetryManager;
     @Inject
     VariableManager variableManager;
 
@@ -48,12 +51,13 @@ public class EnableDeviceTelemetryResource extends SelfInjectingServerResource {
     @Override
     protected Representation put(Representation entity) {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
         String pluginId = getAttribute("pluginId");
         String deviceId = getAttribute("deviceId");
 
-        JSONObject json = JSONMarshaller.createJSONFromRepresentation(entity);
+        JSONObject json = JSONHelper.createJSONFromRepresentation(entity);
 
-        deviceManager.enableDeviceTelemetry(ctx.getUserId(), ctx.getHubId(), pluginId, deviceId, json.getBoolean("value"));
+        telemetryManager.enableDeviceTelemetry(ctx.getUserId(), ctx.getHubId(), pluginId, deviceId, json.getBoolean("value"));
 
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();
