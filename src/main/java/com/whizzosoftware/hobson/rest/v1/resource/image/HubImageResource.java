@@ -116,7 +116,6 @@ public class HubImageResource extends SelfInjectingServerResource {
             }
         } else if (MediaType.MULTIPART_FORM_DATA.equals(entity.getMediaType(), true)) {
             try {
-                System.out.println("Multipart form data!");
                 DiskFileItemFactory factory = new DiskFileItemFactory();
                 factory.setSizeThreshold(1000240);
                 RestletFileUpload upload = new RestletFileUpload(factory);
