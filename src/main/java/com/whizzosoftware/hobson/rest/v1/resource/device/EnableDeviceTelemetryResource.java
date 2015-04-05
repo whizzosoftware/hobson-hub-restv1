@@ -7,6 +7,7 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.device;
 
+import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.telemetry.TelemetryManager;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
 import com.whizzosoftware.hobson.rest.v1.Authorizer;
@@ -51,13 +52,13 @@ public class EnableDeviceTelemetryResource extends SelfInjectingServerResource {
     @Override
     protected Representation put(Representation entity) {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+        authorizer.authorizeHub(ctx.getHubContext());
         String pluginId = getAttribute("pluginId");
         String deviceId = getAttribute("deviceId");
 
         JSONObject json = JSONHelper.createJSONFromRepresentation(entity);
 
-        telemetryManager.enableDeviceTelemetry(ctx.getUserId(), ctx.getHubId(), pluginId, deviceId, json.getBoolean("value"));
+        telemetryManager.enableDeviceTelemetry(DeviceContext.create(ctx.getHubContext(), pluginId, deviceId), json.getBoolean("value"));
 
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();

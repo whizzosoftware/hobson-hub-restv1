@@ -7,8 +7,11 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.device;
 
+import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.api.device.HobsonDevice;
+import com.whizzosoftware.hobson.api.variable.HobsonVariable;
+import com.whizzosoftware.hobson.api.variable.HobsonVariableCollection;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
 import com.whizzosoftware.hobson.json.JSONSerializationHelper;
 import com.whizzosoftware.hobson.rest.v1.Authorizer;
@@ -20,6 +23,9 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
 
 import javax.inject.Inject;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A REST resource that returns device information.
@@ -68,22 +74,27 @@ public class DeviceResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
-        String pluginId = getAttribute("pluginId");
-        String deviceId = getAttribute("deviceId");
-        HobsonDevice device = deviceManager.getDevice(ctx.getUserId(), ctx.getHubId(), pluginId, deviceId);
-        boolean telemetryEnabled = deviceManager.isDeviceTelemetryEnabled(ctx.getUserId(), ctx.getHubId(), pluginId, deviceId);
+        authorizer.authorizeHub(ctx.getHubContext());
+        DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
+        HobsonDevice device = deviceManager.getDevice(dctx);
+        boolean telemetryEnabled = deviceManager.isDeviceTelemetryEnabled(dctx);
+
+        // get device variables if request asked for them
+        HobsonVariableCollection variables = null;
+        if (Boolean.parseBoolean(getQueryValue("variables"))) {
+            variables = variableManager.getDeviceVariables(dctx);
+        }
+
         return new JsonRepresentation(
             linkHelper.addDeviceLinks(
                 ctx,
                 JSONSerializationHelper.createDeviceJSON(
                     ctx.getUserId(),
                     ctx.getHubId(),
-                    variableManager,
                     device,
+                    variables,
                     telemetryEnabled,
-                    true,
-                    Boolean.parseBoolean(getQueryValue("variables"))
+                    true
                 ),
                 device,
                 true

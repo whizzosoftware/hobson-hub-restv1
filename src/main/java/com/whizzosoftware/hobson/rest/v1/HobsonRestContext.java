@@ -7,6 +7,7 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1;
 
+import com.whizzosoftware.hobson.api.hub.HubContext;
 import org.restlet.Request;
 import org.restlet.Restlet;
 import org.restlet.resource.Resource;
@@ -21,8 +22,7 @@ import java.util.Map;
  */
 public class HobsonRestContext {
     private String apiRoot;
-    private String userId;
-    private String hubId;
+    private HubContext hubContext;
 
     public static HobsonRestContext createContext(Resource resource, Request request) {
         Map<String,Object> atts = request.getAttributes();
@@ -43,19 +43,22 @@ public class HobsonRestContext {
         if (resource != null) {
             this.apiRoot = ((HobsonApiApplication) resource.getApplication()).getApiRoot();
         }
-        this.userId = userId;
-        this.hubId = hubId;
+        this.hubContext = HubContext.create(userId, hubId);
     }
 
     public String getApiRoot() {
         return apiRoot;
     }
 
+    public HubContext getHubContext() {
+        return hubContext;
+    }
+
     public String getUserId() {
-        return userId;
+        return hubContext.getUserId();
     }
 
     public String getHubId() {
-        return hubId;
+        return hubContext.getHubId();
     }
 }

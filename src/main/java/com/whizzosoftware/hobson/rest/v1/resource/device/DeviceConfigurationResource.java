@@ -8,6 +8,7 @@
 package com.whizzosoftware.hobson.rest.v1.resource.device;
 
 import com.whizzosoftware.hobson.api.HobsonRuntimeException;
+import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.json.JSONSerializationHelper;
 import com.whizzosoftware.hobson.rest.v1.Authorizer;
@@ -61,8 +62,9 @@ public class DeviceConfigurationResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
-        return new JsonRepresentation(JSONSerializationHelper.createDeviceConfigurationJSON(deviceManager.getDeviceConfiguration(ctx.getUserId(), ctx.getHubId(), getAttribute("pluginId"), getAttribute("deviceId"))));
+        authorizer.authorizeHub(ctx.getHubContext());
+        DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
+        return new JsonRepresentation(JSONSerializationHelper.createDeviceConfigurationJSON(deviceManager.getDeviceConfiguration(dctx)));
     }
 
     /**
@@ -87,10 +89,11 @@ public class DeviceConfigurationResource extends SelfInjectingServerResource {
     protected Representation put(Representation entity) {
         try {
             HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-            authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+            authorizer.authorizeHub(ctx.getHubContext());
             Map<String,Object> props = JSONSerializationHelper.createConfigurationPropertyMap(new JSONObject(new JSONTokener(entity.getStream())));
+            DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
             for (String name : props.keySet()) {
-                deviceManager.setDeviceConfigurationProperty(ctx.getUserId(), ctx.getHubId(), getAttribute("pluginId"), getAttribute("deviceId"), name, props.get(name), true);
+                deviceManager.setDeviceConfigurationProperty(dctx, name, props.get(name), true);
             }
             getResponse().setStatus(Status.SUCCESS_ACCEPTED);
             return new EmptyRepresentation();

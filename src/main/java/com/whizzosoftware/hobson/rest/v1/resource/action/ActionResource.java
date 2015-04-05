@@ -7,6 +7,7 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.action;
 
+import com.whizzosoftware.hobson.api.action.ActionContext;
 import com.whizzosoftware.hobson.api.action.ActionManager;
 import com.whizzosoftware.hobson.api.action.HobsonAction;
 import com.whizzosoftware.hobson.json.JSONSerializationHelper;
@@ -62,8 +63,8 @@ public class ActionResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
-        HobsonAction action = actionManager.getAction(ctx.getUserId(), ctx.getHubId(), getAttribute("pluginId"), getAttribute("actionId"));
+        authorizer.authorizeHub(ctx.getHubContext());
+        HobsonAction action = actionManager.getAction(ActionContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("actionId")));
         return new JsonRepresentation(
             linkHelper.addActionLinks(
                 ctx,

@@ -9,6 +9,7 @@ package com.whizzosoftware.hobson.rest.v1.resource.device;
 
 import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.api.device.HobsonDevice;
+import com.whizzosoftware.hobson.api.plugin.PluginContext;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
 import com.whizzosoftware.hobson.json.JSONSerializationHelper;
 import com.whizzosoftware.hobson.rest.v1.Authorizer;
@@ -68,17 +69,16 @@ public class PluginDevicesResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+        authorizer.authorizeHub(ctx.getHubContext());
         JSONArray results = new JSONArray();
         boolean details = Boolean.parseBoolean(getQueryValue("details"));
-        for (HobsonDevice device : deviceManager.getAllPluginDevices(ctx.getUserId(), ctx.getHubId(), getAttribute("pluginId"))) {
+        for (HobsonDevice device : deviceManager.getAllDevices(PluginContext.create(ctx.getHubContext(), getAttribute("pluginId")))) {
             results.put(
                 linkHelper.addDeviceLinks(
                     ctx,
                     JSONSerializationHelper.createDeviceJSON(
                         ctx.getUserId(),
                         ctx.getHubId(),
-                        variableManager,
                         device,
                         null,
                         details,

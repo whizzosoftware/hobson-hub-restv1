@@ -25,14 +25,11 @@ import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.representation.EmptyRepresentation;
 import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
-import org.restlet.representation.StringRepresentation;
 import org.restlet.resource.ResourceException;
 
 import javax.inject.Inject;
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 
 /**
  * A REST resource for setting/retrieving a hub image.
@@ -62,8 +59,8 @@ public class HubImageResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
-        ImageInputStream iis = imageManager.getHubImage();
+        authorizer.authorizeHub(ctx.getHubContext());
+        ImageInputStream iis = imageManager.getHubImage(ctx.getHubContext());
         return new InputRepresentation(iis.getInputStream(), MediaType.valueOf(iis.getMediaType()));
     }
 
@@ -90,16 +87,16 @@ public class HubImageResource extends SelfInjectingServerResource {
     @Override
     protected Representation put(Representation entity) throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+        authorizer.authorizeHub(ctx.getHubContext());
 
         if (MediaType.APPLICATION_JSON.equals(entity.getMediaType(), true)) {
             JSONObject json = JSONHelper.createJSONFromRepresentation(entity);
             if (json.has("imageLibRef")) {
                 String path = json.getString("imageLibRef");
                 String imageId = path.substring(path.lastIndexOf('/') + 1, path.length());
-                ImageInputStream iis = imageManager.getImageLibraryImage(ctx.getUserId(), ctx.getHubId(), imageId);
+                ImageInputStream iis = imageManager.getImageLibraryImage(ctx.getHubContext(), imageId);
                 try {
-                    imageManager.setHubImage(new ImageInputStream(MediaType.IMAGE_PNG.toString(), iis.getInputStream()));
+                    imageManager.setHubImage(ctx.getHubContext(), new ImageInputStream(MediaType.IMAGE_PNG.toString(), iis.getInputStream()));
                     getResponse().setStatus(Status.SUCCESS_ACCEPTED);
                 } finally {
                     iis.close();
@@ -108,7 +105,7 @@ public class HubImageResource extends SelfInjectingServerResource {
                 JSONObject image = json.getJSONObject("image");
                 ImageInputStream iis = new ImageInputStream(image.getString("mediaType"), new ByteArrayInputStream(Base64.decodeBase64(image.getString("data"))));
                 try {
-                    imageManager.setHubImage(iis);
+                    imageManager.setHubImage(ctx.getHubContext(), iis);
                     getResponse().setStatus(Status.SUCCESS_ACCEPTED);
                 } finally {
                     iis.close();
@@ -127,7 +124,7 @@ public class HubImageResource extends SelfInjectingServerResource {
                         found = true;
                         ImageInputStream iis = new ImageInputStream(fi.getContentType(), fi.openStream());
                         try {
-                            imageManager.setHubImage(iis);
+                            imageManager.setHubImage(ctx.getHubContext(), iis);
                             getResponse().setStatus(Status.SUCCESS_ACCEPTED);
                         } finally {
                             iis.close();

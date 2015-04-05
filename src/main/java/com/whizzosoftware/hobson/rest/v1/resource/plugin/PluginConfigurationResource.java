@@ -8,6 +8,7 @@
 package com.whizzosoftware.hobson.rest.v1.resource.plugin;
 
 import com.whizzosoftware.hobson.api.config.Configuration;
+import com.whizzosoftware.hobson.api.plugin.PluginContext;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
 import com.whizzosoftware.hobson.json.JSONSerializationHelper;
 import com.whizzosoftware.hobson.rest.v1.Authorizer;
@@ -65,8 +66,8 @@ public class PluginConfigurationResource extends SelfInjectingServerResource {
     protected Representation get() throws ResourceException {
         String pluginId = getAttribute("pluginId");
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
-        Configuration config = pluginManager.getPluginConfiguration(ctx.getUserId(), ctx.getHubId(), pluginId);
+        authorizer.authorizeHub(ctx.getHubContext());
+        Configuration config = pluginManager.getPluginConfiguration(PluginContext.create(ctx.getHubContext(), pluginId));
         return new JsonRepresentation(JSONSerializationHelper.createPluginConfigPropertiesJSON(pluginId, config));
     }
 
@@ -91,9 +92,9 @@ public class PluginConfigurationResource extends SelfInjectingServerResource {
     @Override
     protected Representation put(Representation entity) throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+        authorizer.authorizeHub(ctx.getHubContext());
         String pluginId = getAttribute("pluginId");
-        pluginManager.setPluginConfiguration(ctx.getUserId(), ctx.getHubId(), pluginId, JSONSerializationHelper.createConfiguration(JSONHelper.createJSONFromRepresentation(entity)));
+        pluginManager.setPluginConfiguration(PluginContext.create(ctx.getHubContext(), pluginId), JSONSerializationHelper.createConfiguration(JSONHelper.createJSONFromRepresentation(entity)));
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();
     }

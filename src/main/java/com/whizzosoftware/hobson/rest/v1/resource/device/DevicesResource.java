@@ -9,6 +9,7 @@ package com.whizzosoftware.hobson.rest.v1.resource.device;
 
 import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.api.device.HobsonDevice;
+import com.whizzosoftware.hobson.api.variable.HobsonVariableCollection;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
 import com.whizzosoftware.hobson.json.JSONSerializationHelper;
 import com.whizzosoftware.hobson.rest.v1.Authorizer;
@@ -88,20 +89,25 @@ public class DevicesResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+        authorizer.authorizeHub(ctx.getHubContext());
         JSONArray results = new JSONArray();
+
         boolean details = Boolean.parseBoolean(getQueryValue("details"));
-        for (HobsonDevice device : deviceManager.getAllDevices(ctx.getUserId(), ctx.getHubId())) {
+
+        for (HobsonDevice device : deviceManager.getAllDevices(ctx.getHubContext())) {
+            HobsonVariableCollection variables = null;
+            if (details) {
+                variables = variableManager.getDeviceVariables(device.getContext());
+            }
             results.put(linkHelper.addDeviceLinks(
                 ctx,
                 JSONSerializationHelper.createDeviceJSON(
                     ctx.getUserId(),
                     ctx.getHubId(),
-                    variableManager,
                     device,
-                    null,
-                    details,
-                    false
+                    variables,
+                    false,
+                    details
                 ),
                 device,
                 details

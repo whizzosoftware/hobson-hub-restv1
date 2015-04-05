@@ -7,6 +7,7 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.plugin;
 
+import com.whizzosoftware.hobson.api.plugin.PluginContext;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
 import com.whizzosoftware.hobson.rest.v1.Authorizer;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
@@ -42,10 +43,8 @@ public class PluginReloadResource extends SelfInjectingServerResource {
     @Override
     protected Representation post(Representation entity) {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
-        String pluginId = getAttribute("pluginId");
-
-        pluginManager.reloadPlugin(ctx.getUserId(), ctx.getHubId(), pluginId);
+        authorizer.authorizeHub(ctx.getHubContext());
+        pluginManager.reloadPlugin(PluginContext.create(ctx.getHubContext(), getAttribute("pluginId")));
 
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();

@@ -7,6 +7,7 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.plugin;
 
+import com.whizzosoftware.hobson.api.plugin.PluginContext;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
 import com.whizzosoftware.hobson.rest.v1.Authorizer;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
@@ -50,12 +51,12 @@ public class PluginInstallResource extends SelfInjectingServerResource {
     @Override
     protected Representation post(Representation entity) {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+        authorizer.authorizeHub(ctx.getHubContext());
 
         String pluginId = getAttribute("pluginId");
         String pluginVersion = getAttribute("pluginVersion");
 
-        pluginManager.installPlugin(ctx.getUserId(), ctx.getHubId(), pluginId, pluginVersion);
+        pluginManager.installPlugin(PluginContext.create(ctx.getHubContext(), pluginId), pluginVersion);
 
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         getResponse().setLocationRef(ctx.getApiRoot() + new Template(PluginCurrentVersionResource.PATH).format(linkHelper.createSingleEntryMap(ctx, "pluginId", pluginId)));

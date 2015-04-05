@@ -69,11 +69,11 @@ public class LogResource extends SelfInjectingServerResource {
         }
 
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+        authorizer.authorizeHub(ctx.getHubContext());
 
         AppendableRepresentation ar = new AppendableRepresentation();
         ar.setMediaType(MediaType.APPLICATION_JSON);
-        LineRange lineRange = hubManager.getLog(ctx.getUserId(), ctx.getHubId(), startLine, endLine, ar);
+        LineRange lineRange = hubManager.getLog(ctx.getHubContext(), startLine, endLine, ar);
 
         Map<String,Object> attrs = getResponse().getAttributes();
         headers = (Series<Header>)attrs.get(HEADERS);

@@ -34,9 +34,9 @@ public class ImageLibraryImageResource extends SelfInjectingServerResource {
     @Override
     public Representation get() throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+        authorizer.authorizeHub(ctx.getHubContext());
         ImageInputStream iis = imageManager.getImageLibraryImage(
-            ctx.getUserId(), ctx.getHubId(), getAttribute("imageId"));
+            ctx.getHubContext(), getAttribute("imageId"));
         return new InputRepresentation(iis.getInputStream(), MediaType.valueOf(iis.getMediaType()));
     }
 }

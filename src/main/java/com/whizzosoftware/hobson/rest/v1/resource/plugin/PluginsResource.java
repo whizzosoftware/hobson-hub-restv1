@@ -112,13 +112,13 @@ public class PluginsResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+        authorizer.authorizeHub(ctx.getHubContext());
         Form queryParams = getQuery();
         Boolean remote = getBooleanParam(queryParams.getFirstValue("remote"));
         Boolean details = getBooleanParam(queryParams.getFirstValue("details"));
 
         // generate a plugin list
-        PluginList bl = pluginManager.getPluginDescriptors(ctx.getUserId(), ctx.getHubId(), remote);
+        PluginList bl = pluginManager.getPluginDescriptors(ctx.getHubContext(), remote);
 
         // return a 200 with the JSON
         JSONArray results = new JSONArray();

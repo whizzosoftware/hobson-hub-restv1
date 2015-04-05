@@ -58,7 +58,7 @@ public class HubsResource extends SelfInjectingServerResource {
                 linkHelper.addHubSummaryLinks(
                     ctx,
                     JSONSerializationHelper.createHubSummaryJSON(hub),
-                    hub.getId()
+                    hub.getContext().getHubId()
                 )
             );
         }
@@ -88,14 +88,15 @@ public class HubsResource extends SelfInjectingServerResource {
     protected Representation post(Representation entity) throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
         JSONObject json = JSONHelper.createJSONFromRepresentation(entity);
-        HobsonHub hub = hubManager.getRegistrar().addHub(ctx.getUserId(), json.getString("name"));
+        HobsonHub hub = hubManager.getRegistrar().addHub(ctx.getHubContext().getUserId(), json.getString("name"));
+        String hubId = hub.getContext().getHubId();
         getResponse().setStatus(Status.SUCCESS_CREATED);
-        getResponse().setLocationRef(ctx.getApiRoot() + new Template(HubResource.PATH).format(Collections.singletonMap("hubId", hub.getId())));
+        getResponse().setLocationRef(ctx.getApiRoot() + new Template(HubResource.PATH).format(Collections.singletonMap("hubId", hubId)));
         return new JsonRepresentation(
             linkHelper.addHubSummaryLinks(
                 ctx,
                 JSONSerializationHelper.createHubSummaryJSON(hub),
-                hub.getId()
+                hubId
             )
         );
     }

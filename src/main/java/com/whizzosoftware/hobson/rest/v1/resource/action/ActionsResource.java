@@ -60,11 +60,11 @@ public class ActionsResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+        authorizer.authorizeHub(ctx.getHubContext());
         JSONObject results = new JSONObject();
-        for (HobsonAction action : actionManager.getAllActions(ctx.getUserId(), ctx.getHubId())) {
+        for (HobsonAction action : actionManager.getAllActions(ctx.getHubContext())) {
             results.put(
-                action.getId(),
+                action.getContext().getActionId(),
                 JSONSerializationHelper.createActionJSON(
                     action,
                     false

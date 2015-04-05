@@ -56,8 +56,8 @@ public class HubPasswordResource extends SelfInjectingServerResource {
     @Override
     protected Representation post(Representation entity) throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
-        hubManager.setHubPassword(ctx.getUserId(), ctx.getHubId(), JSONSerializationHelper.createPasswordChange(JSONHelper.createJSONFromRepresentation(entity)));
+        authorizer.authorizeHub(ctx.getHubContext());
+        hubManager.setHubPassword(ctx.getHubContext(), JSONSerializationHelper.createPasswordChange(JSONHelper.createJSONFromRepresentation(entity)));
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();
     }

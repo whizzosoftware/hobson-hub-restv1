@@ -61,8 +61,8 @@ public class HubSendTestEmailResource extends SelfInjectingServerResource {
     protected Representation post(Representation entity) throws ResourceException {
         try {
             HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-            authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
-            hubManager.sendTestEmail(ctx.getUserId(), ctx.getHubId(), JSONSerializationHelper.createEmailConfiguration(JSONHelper.createJSONFromRepresentation(entity)));
+            authorizer.authorizeHub(ctx.getHubContext());
+            hubManager.sendTestEmail(ctx.getHubContext(), JSONSerializationHelper.createEmailConfiguration(JSONHelper.createJSONFromRepresentation(entity)));
             getResponse().setStatus(Status.SUCCESS_ACCEPTED);
             return new EmptyRepresentation();
         } catch (HobsonRuntimeException e) {

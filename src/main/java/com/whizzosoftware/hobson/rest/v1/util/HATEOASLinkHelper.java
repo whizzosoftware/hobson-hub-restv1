@@ -53,7 +53,7 @@ public class HATEOASLinkHelper {
     public JSONObject addActionLinks(HobsonRestContext ctx, JSONObject json, HobsonAction action) {
         JSONObject links = new JSONObject();
         json.put("links", links);
-        links.put("self", ctx.getApiRoot() + new Template(ActionResource.PATH).format(createDoubleEntryMap(ctx, "pluginId", action.getPluginId(), "actionId", action.getId())));
+        links.put("self", ctx.getApiRoot() + new Template(ActionResource.PATH).format(createDoubleEntryMap(ctx, "pluginId", action.getContext().getPluginId(), "actionId", action.getContext().getActionId())));
         return json;
     }
 
@@ -61,17 +61,31 @@ public class HATEOASLinkHelper {
         JSONObject links = new JSONObject();
         json.put("links", links);
 
-        links.put("self", ctx.getApiRoot() + new Template(DeviceResource.PATH).format(createDoubleEntryMap(ctx, "pluginId", device.getPluginId(), "deviceId", device.getId())));
+        String pluginId = device.getContext().getPluginId();
+        String deviceId = device.getContext().getDeviceId();
+
+        links.put("self", ctx.getApiRoot() + new Template(DeviceResource.PATH).format(createDoubleEntryMap(ctx, "pluginId", pluginId, "deviceId", deviceId)));
         if (details) {
-            Map<String,Object> propMap = createDoubleEntryMap(ctx, "pluginId", device.getPluginId(), "deviceId", device.getId());
+            Map<String,Object> propMap = createDoubleEntryMap(ctx, "pluginId", pluginId, "deviceId", deviceId);
             links.put("config", ctx.getApiRoot() + new Template(DeviceConfigurationResource.PATH).format(propMap));
             links.put("variables", ctx.getApiRoot() + new Template(DeviceVariablesResource.PATH).format(propMap));
             links.put("variableEvents", ctx.getApiRoot() + new Template(DeviceVariableChangeIdsResource.PATH).format(propMap));
-            if (device.hasTelemetry()) {
+            if (device.isTelemetryCapable()) {
                 links.put("enableTelemetry", ctx.getApiRoot() + new Template(EnableDeviceTelemetryResource.PATH).format(propMap));
                 links.put("telemetry", ctx.getApiRoot() + new Template(DeviceTelemetryResource.PATH).format(propMap));
             }
         }
+
+        // add link for preferred variable if present
+        if (json.has("preferredVariable")) {
+            JSONObject pv = json.getJSONObject("preferredVariable");
+            JSONObject pvLinks = new JSONObject();
+            pvLinks.put("self", ctx.getApiRoot() + new Template(DeviceVariableResource.PATH).format(
+                createTripleEntryMap(ctx, "pluginId", pluginId, "deviceId", deviceId, "variableName", pv.getString("name"))
+            ));
+            pv.put("links", pvLinks);
+        }
+
         return json;
     }
 
@@ -188,9 +202,9 @@ public class HATEOASLinkHelper {
         return json;
     }
 
-    public JSONObject addTaskLinks(HobsonRestContext ctx, JSONObject json, String providerId, String taskId) {
+    public JSONObject addTaskLinks(HobsonRestContext ctx, JSONObject json, String pluginId, String taskId) {
         JSONObject links = new JSONObject();
-        links.put("self", ctx.getApiRoot() + new Template(TaskResource.PATH).format(createDoubleEntryMap(ctx, "providerId", providerId, "taskId", taskId)));
+        links.put("self", ctx.getApiRoot() + new Template(TaskResource.PATH).format(createDoubleEntryMap(ctx, "pluginId", pluginId, "taskId", taskId)));
         json.put("links", links);
         return json;
     }

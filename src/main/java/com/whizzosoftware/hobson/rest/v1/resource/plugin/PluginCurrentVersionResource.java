@@ -7,6 +7,7 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.plugin;
 
+import com.whizzosoftware.hobson.api.plugin.PluginContext;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
 import com.whizzosoftware.hobson.json.JSONSerializationHelper;
 import com.whizzosoftware.hobson.rest.v1.Authorizer;
@@ -49,8 +50,8 @@ public class PluginCurrentVersionResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+        authorizer.authorizeHub(ctx.getHubContext());
         String pluginId = getAttribute("pluginId");
-        return new JsonRepresentation(JSONSerializationHelper.createCurrentVersionJSON(pluginManager.getPluginCurrentVersion(ctx.getUserId(), ctx.getHubId(), pluginId)));
+        return new JsonRepresentation(JSONSerializationHelper.createCurrentVersionJSON(pluginManager.getPluginCurrentVersion(PluginContext.create(ctx.getHubContext(), pluginId))));
     }
 }

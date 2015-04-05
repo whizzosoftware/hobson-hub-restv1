@@ -8,6 +8,7 @@
 package com.whizzosoftware.hobson.rest.v1.resource.device;
 
 import com.whizzosoftware.hobson.api.HobsonRuntimeException;
+import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.variable.HobsonVariable;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
 import com.whizzosoftware.hobson.rest.v1.Authorizer;
@@ -64,8 +65,8 @@ public class MediaProxyResource extends SelfInjectingServerResource {
     @Override
     public Representation head() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
-        HobsonVariable hvar = variableManager.getDeviceVariable(ctx.getUserId(), ctx.getHubId(), getAttribute("pluginId"), getAttribute("deviceId"), getAttribute("mediaId"));
+        authorizer.authorizeHub(ctx.getHubContext());
+        HobsonVariable hvar = variableManager.getDeviceVariable(DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId")), getAttribute("mediaId"));
         if (hvar != null && hvar.getValue() != null) {
             try {
                 final HttpProps httpProps = createHttpGet(hvar.getValue().toString());
@@ -98,8 +99,8 @@ public class MediaProxyResource extends SelfInjectingServerResource {
     public Representation get() {
         try {
             HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-            authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
-            HobsonVariable hvar = variableManager.getDeviceVariable(ctx.getUserId(), ctx.getHubId(), getAttribute("pluginId"), getAttribute("deviceId"), getAttribute("mediaId"));
+            authorizer.authorizeHub(ctx.getHubContext());
+            HobsonVariable hvar = variableManager.getDeviceVariable(DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId")), getAttribute("mediaId"));
             if (hvar != null && hvar.getValue() != null) {
                 final HttpProps httpProps = createHttpGet(hvar.getValue().toString());
 

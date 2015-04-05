@@ -8,6 +8,7 @@
 package com.whizzosoftware.hobson.rest.v1.resource.task;
 
 import com.whizzosoftware.hobson.api.task.HobsonTask;
+import com.whizzosoftware.hobson.api.task.TaskContext;
 import com.whizzosoftware.hobson.api.task.TaskManager;
 import com.whizzosoftware.hobson.json.JSONSerializationHelper;
 import com.whizzosoftware.hobson.rest.v1.Authorizer;
@@ -29,7 +30,7 @@ import javax.inject.Inject;
  * @author Dan Noguerol
  */
 public class TaskResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/tasks/{providerId}/{taskId}";
+    public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/{pluginId}/tasks/{taskId}";
 
     @Inject
     Authorizer authorizer;
@@ -39,7 +40,7 @@ public class TaskResource extends SelfInjectingServerResource {
     HATEOASLinkHelper linkHelper;
 
     /**
-     * @api {get} /api/v1/users/:userId/hubs/:hubId/tasks/:providerId/:taskId Get task details
+     * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/tasks/:taskId Get task details
      * @apiVersion 0.1.3
      * @apiName GetTask
      * @apiDescription Retrieves details about a specific task.
@@ -68,7 +69,7 @@ public class TaskResource extends SelfInjectingServerResource {
      *       }
      *     }],
      *     "links": {
-     *       "self": "/api/v1/users/local/hubs/local/tasks/com.whizzosoftware.hobson.server-rules/efc02d7a-d0e0-46fb-9cc3-2ca70a66dc05"
+     *       "self": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.server-rules/tasks/efc02d7a-d0e0-46fb-9cc3-2ca70a66dc05"
      *     },
      *   }
      * ]
@@ -76,8 +77,8 @@ public class TaskResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
-        HobsonTask task = taskManager.getTask(ctx.getUserId(), ctx.getHubId(), getAttribute("providerId"), getAttribute("taskId"));
+        authorizer.authorizeHub(ctx.getHubContext());
+        HobsonTask task = taskManager.getTask(TaskContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("taskId")));
         return new JsonRepresentation(
             linkHelper.addTaskLinks(
                 ctx,
@@ -86,14 +87,14 @@ public class TaskResource extends SelfInjectingServerResource {
                     true,
                     true
                 ),
-                task.getProviderId(),
-                task.getId()
+                task.getContext().getPluginId(),
+                task.getContext().getTaskId()
             )
         );
     }
 
     /**
-     * @api {put} /api/v1/users/:userId/hubs/:hubId/tasks/:providerId/:taskId Update task
+     * @api {put} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/tasks/:taskId Update task
      * @apiVersion 0.1.3
      * @apiName UpdateTask
      * @apiDescription Updated an existing task.
@@ -163,15 +164,15 @@ public class TaskResource extends SelfInjectingServerResource {
     @Override
     protected Representation put(Representation entity) {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+        authorizer.authorizeHub(ctx.getHubContext());
         JSONObject json = JSONHelper.createJSONFromRepresentation(entity);
-        taskManager.updateTask(ctx.getUserId(), ctx.getHubId(), getAttribute("providerId"), getAttribute("taskId"), json);
+        taskManager.updateTask(TaskContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("taskId")), json);
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();
     }
 
     /**
-     * @api {delete} /api/v1/users/:userId/hubs/:hubId/tasks/:providerId/:taskId Delete task
+     * @api {delete} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/tasks/:taskId Delete task
      * @apiVersion 0.1.3
      * @apiName DeleteTask
      * @apiDescription Deletes a specific task.
@@ -182,8 +183,8 @@ public class TaskResource extends SelfInjectingServerResource {
     @Override
     protected Representation delete() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
-        taskManager.deleteTask(ctx.getUserId(), ctx.getHubId(), getAttribute("providerId"), getAttribute("taskId"));
+        authorizer.authorizeHub(ctx.getHubContext());
+        taskManager.deleteTask(TaskContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("taskId")));
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();
     }

@@ -7,6 +7,7 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.device;
 
+import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
 import com.whizzosoftware.hobson.json.JSONSerializationHelper;
 import com.whizzosoftware.hobson.rest.v1.Authorizer;
@@ -33,7 +34,7 @@ public class DeviceVariableChangeIdsResource extends SelfInjectingServerResource
     @Override
     protected Representation get() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
-        return new JsonRepresentation(JSONSerializationHelper.createVariableEventIdJSON(variableManager.getDeviceVariableChangeIds(ctx.getUserId(), ctx.getHubId(), getAttribute("pluginId"), getAttribute("deviceId"))));
+        authorizer.authorizeHub(ctx.getHubContext());
+        return new JsonRepresentation(JSONSerializationHelper.createVariableEventIdJSON(variableManager.getDeviceVariableChangeIds(DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId")))));
     }
 }

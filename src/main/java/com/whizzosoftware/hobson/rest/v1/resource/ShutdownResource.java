@@ -47,7 +47,7 @@ public class ShutdownResource extends SelfInjectingServerResource {
     @Override
     public Representation post(Representation entity) {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+        authorizer.authorizeHub(ctx.getHubContext());
         getResponse().setLocationRef(new Template(HubResource.PATH).format(linkHelper.createEmptyMap(ctx)));
         Representation result = new EmptyRepresentation();
 

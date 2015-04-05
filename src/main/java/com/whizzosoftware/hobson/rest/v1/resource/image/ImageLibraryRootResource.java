@@ -58,9 +58,9 @@ public class ImageLibraryRootResource extends SelfInjectingServerResource {
     @Override
     public Representation get() throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+        authorizer.authorizeHub(ctx.getHubContext());
         JSONArray results = new JSONArray();
-        List<ImageGroup> groups = imageManager.getImageLibraryGroups(ctx.getUserId(), ctx.getHubId());
+        List<ImageGroup> groups = imageManager.getImageLibraryGroups(ctx.getHubContext());
         for (ImageGroup group : groups) {
             results.put(linkHelper.addImageLibraryGroupLinks(
                 ctx,

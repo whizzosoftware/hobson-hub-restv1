@@ -7,6 +7,7 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.device;
 
+import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.telemetry.TelemetryInterval;
 import com.whizzosoftware.hobson.api.telemetry.TelemetryManager;
 import com.whizzosoftware.hobson.api.telemetry.TemporalValue;
@@ -58,17 +59,14 @@ public class DeviceTelemetryResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+        authorizer.authorizeHub(ctx.getHubContext());
         String pluginId = getAttribute("pluginId");
         String deviceId = getAttribute("deviceId");
         long endTime = System.currentTimeMillis() / 1000; // TODO: should be pulled from request
         TelemetryInterval interval = TelemetryInterval.HOURS_24; // TODO: should be pulled from request
 
         Map<String,Collection<TemporalValue>> telemetry = telemetryManager.getDeviceTelemetry(
-            ctx.getUserId(),
-            ctx.getHubId(),
-            pluginId,
-            deviceId,
+            DeviceContext.create(ctx.getHubContext(), pluginId, deviceId),
             endTime,
             interval
         );

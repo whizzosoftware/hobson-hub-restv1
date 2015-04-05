@@ -7,6 +7,7 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.device;
 
+import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.event.EventManager;
 import com.whizzosoftware.hobson.api.event.VariableUpdateRequestEvent;
 import com.whizzosoftware.hobson.api.variable.HobsonVariable;
@@ -62,10 +63,10 @@ public class DeviceVariableResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+        authorizer.authorizeHub(ctx.getHubContext());
         String pluginId = getAttribute("pluginId");
         String deviceId = getAttribute("deviceId");
-        HobsonVariable var = variableManager.getDeviceVariable(ctx.getUserId(), ctx.getHubId(), pluginId, deviceId, getAttribute("variableName"));
+        HobsonVariable var = variableManager.getDeviceVariable(DeviceContext.create(ctx.getHubContext(), pluginId, deviceId), getAttribute("variableName"));
         return new JsonRepresentation(
             linkHelper.addDeviceVariableLinks(
                 ctx,
@@ -98,12 +99,12 @@ public class DeviceVariableResource extends SelfInjectingServerResource {
     @Override
     protected Representation put(Representation entity) {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+        authorizer.authorizeHub(ctx.getHubContext());
         Object value = JSONSerializationHelper.createDeviceVariableValue(JSONHelper.createJSONFromRepresentation(entity));
         String pluginId = getAttribute("pluginId");
         String deviceId = getAttribute("deviceId");
         String variableName = getAttribute("variableName");
-        eventManager.postEvent(ctx.getUserId(), ctx.getHubId(), new VariableUpdateRequestEvent(new VariableUpdate(pluginId, deviceId, variableName, value)));
+        eventManager.postEvent(ctx.getHubContext(), new VariableUpdateRequestEvent(new VariableUpdate(pluginId, deviceId, variableName, value)));
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
 
         // TODO: is there a better way to do this? The Restlet request reference scheme is always HTTP for some reason...

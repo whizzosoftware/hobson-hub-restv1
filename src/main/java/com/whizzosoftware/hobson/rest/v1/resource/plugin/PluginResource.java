@@ -61,12 +61,12 @@ public class PluginResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+        authorizer.authorizeHub(ctx.getHubContext());
         String pluginId = getAttribute("pluginId");
 
         // TODO: this whole thing can probably be made way more efficient
         // generate a plugin list
-        PluginList bl = pluginManager.getPluginDescriptors(ctx.getUserId(), ctx.getHubId(), true);
+        PluginList bl = pluginManager.getPluginDescriptors(ctx.getHubContext(), true);
 
         // build a JSON response array
         for (PluginDescriptor pd : bl.getPlugins()) {

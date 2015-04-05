@@ -8,6 +8,7 @@
 package com.whizzosoftware.hobson.rest.v1.resource.hub;
 
 import com.whizzosoftware.hobson.api.hub.HobsonHub;
+import com.whizzosoftware.hobson.api.hub.HubContext;
 import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.json.JSONSerializationHelper;
 import com.whizzosoftware.hobson.rest.v1.Authorizer;
@@ -81,14 +82,14 @@ public class HubResource extends SelfInjectingServerResource {
     protected Representation get() throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
 
-        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+        authorizer.authorizeHub(ctx.getHubContext());
 
         // return the JSON response
         return new JsonRepresentation(
             linkHelper.addHubDetailsLinks(
                 ctx,
                 JSONSerializationHelper.createHubDetailsJSON(
-                    hubManager.getHub(ctx.getUserId(), ctx.getHubId())
+                    hubManager.getHub(ctx.getHubContext())
                 ),
                 ctx.getHubId()
             )
@@ -125,8 +126,8 @@ public class HubResource extends SelfInjectingServerResource {
     @Override
     protected Representation put(Representation entity) {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        HobsonHub hub = JSONSerializationHelper.createHubDetails(getAttribute("hubId"), JSONHelper.createJSONFromRepresentation(entity));
-        hubManager.setHubDetails(ctx.getUserId(), ctx.getHubId(), hub);
+        HobsonHub hub = JSONSerializationHelper.createHubDetails(ctx.getHubContext(), JSONHelper.createJSONFromRepresentation(entity));
+        hubManager.setHubDetails(hub);
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();
     }
@@ -143,7 +144,7 @@ public class HubResource extends SelfInjectingServerResource {
     @Override
     protected Representation delete() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        hubManager.clearHubDetails(ctx.getUserId(), ctx.getHubId());
+        hubManager.clearHubDetails(ctx.getHubContext());
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();
     }

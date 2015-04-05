@@ -49,7 +49,7 @@ public class UserResource extends SelfInjectingServerResource {
             linkHelper.addUserLinks(
                 ctx,
                 JSONSerializationHelper.createUserJSON(
-                    new com.whizzosoftware.hobson.api.user.User.Builder().
+                    new com.whizzosoftware.hobson.api.user.HobsonUser.Builder().
                         id(user.getIdentifier()).
                         firstName(user.getFirstName()).
                         lastName(user.getLastName()).

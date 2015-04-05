@@ -50,9 +50,9 @@ public class GlobalVariablesResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getUserId(), ctx.getHubId());
+        authorizer.authorizeHub(ctx.getHubContext());
         JSONObject results = new JSONObject();
-        for (HobsonVariable v : variableManager.getGlobalVariables(ctx.getUserId(), ctx.getHubId())) {
+        for (HobsonVariable v : variableManager.getGlobalVariables(ctx.getHubContext())) {
             results.put(
                 v.getName(),
                 linkHelper.addGlobalVariableLinks(
