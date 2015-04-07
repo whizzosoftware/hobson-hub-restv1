@@ -147,7 +147,7 @@ public class TasksResource extends SelfInjectingServerResource {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
         authorizer.authorizeHub(ctx.getHubContext());
         JSONObject json = JSONHelper.createJSONFromRepresentation(entity);
-        taskManager.addTask(PluginContext.create(ctx.getHubContext(), json.getString("provider")), json);
+        taskManager.createTask(PluginContext.create(ctx.getHubContext(), json.getString("provider")), json);
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();
     }

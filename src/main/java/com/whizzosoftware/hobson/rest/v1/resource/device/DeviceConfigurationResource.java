@@ -92,9 +92,7 @@ public class DeviceConfigurationResource extends SelfInjectingServerResource {
             authorizer.authorizeHub(ctx.getHubContext());
             Map<String,Object> props = JSONSerializationHelper.createConfigurationPropertyMap(new JSONObject(new JSONTokener(entity.getStream())));
             DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
-            for (String name : props.keySet()) {
-                deviceManager.setDeviceConfigurationProperty(dctx, name, props.get(name), true);
-            }
+            deviceManager.setDeviceConfigurationProperties(dctx, props, true);
             getResponse().setStatus(Status.SUCCESS_ACCEPTED);
             return new EmptyRepresentation();
         } catch (IOException e) {

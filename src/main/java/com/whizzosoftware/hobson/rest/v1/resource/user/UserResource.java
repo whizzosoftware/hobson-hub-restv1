@@ -7,6 +7,7 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.user;
 
+import com.whizzosoftware.hobson.api.HobsonRuntimeException;
 import com.whizzosoftware.hobson.json.JSONSerializationHelper;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkHelper;
@@ -45,18 +46,22 @@ public class UserResource extends SelfInjectingServerResource {
     protected Representation get() throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
         User user = getRequest().getClientInfo().getUser();
-        return new JsonRepresentation(
-            linkHelper.addUserLinks(
-                ctx,
-                JSONSerializationHelper.createUserJSON(
-                    new com.whizzosoftware.hobson.api.user.HobsonUser.Builder().
-                        id(user.getIdentifier()).
-                        firstName(user.getFirstName()).
-                        lastName(user.getLastName()).
-                        email(user.getEmail()).
-                        build()
+        if (user != null) {
+            return new JsonRepresentation(
+                linkHelper.addUserLinks(
+                    ctx,
+                    JSONSerializationHelper.createUserJSON(
+                        new com.whizzosoftware.hobson.api.user.HobsonUser.Builder().
+                            id(user.getIdentifier()).
+                            firstName(user.getFirstName()).
+                            lastName(user.getLastName()).
+                            email(user.getEmail()).
+                            build()
+                    )
                 )
-            )
-        );
+            );
+        } else {
+            throw new HobsonRuntimeException("No user information could be located");
+        }
     }
 }

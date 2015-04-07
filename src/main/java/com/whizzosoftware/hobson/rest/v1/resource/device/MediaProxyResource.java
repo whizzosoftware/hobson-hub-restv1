@@ -15,6 +15,7 @@ import com.whizzosoftware.hobson.rest.v1.Authorizer;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.URIInfo;
 import com.whizzosoftware.hobson.rest.v1.util.URLVariableParser;
+import org.apache.commons.codec.binary.Base64OutputStream;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
@@ -100,8 +101,13 @@ public class MediaProxyResource extends SelfInjectingServerResource {
         try {
             HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
             authorizer.authorizeHub(ctx.getHubContext());
+
+            String s = getQueryValue("base64");
+            final boolean base64 = (s != null) && Boolean.parseBoolean(s);
+
             HobsonVariable hvar = variableManager.getDeviceVariable(DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId")), getAttribute("mediaId"));
             if (hvar != null && hvar.getValue() != null) {
+                logger.debug("Beginning proxy of {}", hvar.getValue());
                 final HttpProps httpProps = createHttpGet(hvar.getValue().toString());
 
                 try {
@@ -128,13 +134,21 @@ public class MediaProxyResource extends SelfInjectingServerResource {
                                 @Override
                                 public void write(OutputStream output) throws IOException {
                                     try {
+                                        OutputStream os;
+                                        if (base64) {
+                                            os = new Base64OutputStream(output);
+                                        }  else {
+                                            os = output;
+                                        }
+
                                         // stream the camera image to the response stream
                                         byte[] buf = new byte[PROXY_BUF_SIZE];
                                         int read;
                                         while ((read = inputStream.read(buf)) > -1) {
-                                            output.write(buf, 0, read);
+                                            os.write(buf, 0, read);
                                         }
-                                        output.close();
+
+                                        os.close();
                                     } catch (IOException ioe) {
                                         logger.debug("IOException occurred while streaming media", ioe);
                                     } finally {
@@ -166,7 +180,7 @@ public class MediaProxyResource extends SelfInjectingServerResource {
                     } catch (IOException ioe) {
                         logger.warn("Error closing HttpClient", ioe);
                     }
-                    throw new HobsonRuntimeException(e.getLocalizedMessage(), e);
+                    throw new HobsonRuntimeException("An error occurred proxying the media stream", e);
                 }
             } else {
                 getResponse().setStatus(Status.CLIENT_ERROR_NOT_FOUND);

@@ -13,8 +13,6 @@ import com.whizzosoftware.hobson.api.plugin.PluginDescriptor;
 import com.whizzosoftware.hobson.api.plugin.PluginStatus;
 import com.whizzosoftware.hobson.api.plugin.PluginType;
 import com.whizzosoftware.hobson.api.util.VersionUtil;
-import com.whizzosoftware.hobson.api.variable.HobsonVariable;
-import com.whizzosoftware.hobson.api.variable.VariableConstants;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.resource.LogResource;
 import com.whizzosoftware.hobson.rest.v1.resource.ShutdownResource;
@@ -250,16 +248,5 @@ public class HATEOASLinkHelper {
         map.put(key2, value2);
         map.put(key3, value3);
         return map;
-    }
-
-    public HobsonVariable createMediaVariableOverride(HobsonRestContext ctx, String pluginId, String deviceId, HobsonVariable v) {
-        if (v != null && (VariableConstants.IMAGE_STATUS_URL.equals(v.getName()) || VariableConstants.VIDEO_STATUS_URL.equals(v.getName()))) {
-            return new HobsonVariableValueOverrider(
-                v,
-                ctx.getApiRoot() + new Template(MediaProxyResource.PATH).format(createTripleEntryMap(ctx, "pluginId", pluginId, "deviceId", deviceId, "mediaId", v.getName())
-            ));
-        } else {
-            return v;
-        }
     }
 }

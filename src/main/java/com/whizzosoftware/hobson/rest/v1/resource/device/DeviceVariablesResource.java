@@ -14,12 +14,14 @@ import com.whizzosoftware.hobson.json.JSONSerializationHelper;
 import com.whizzosoftware.hobson.rest.v1.Authorizer;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkHelper;
+import com.whizzosoftware.hobson.rest.v1.util.MediaVariableProxyProvider;
 import org.json.JSONObject;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
 
 import javax.inject.Inject;
+import java.util.Collection;
 
 /**
  * A REST resource that retrieves device variable information.
@@ -59,13 +61,17 @@ public class DeviceVariablesResource extends SelfInjectingServerResource {
         String pluginId = getAttribute("pluginId");
         String deviceId = getAttribute("deviceId");
         JSONObject results = new JSONObject();
-        for (HobsonVariable v : variableManager.getDeviceVariables(DeviceContext.create(ctx.getHubContext(), pluginId, deviceId)).getCollection()) {
+        Collection<HobsonVariable> variables = variableManager.getDeviceVariables(
+            DeviceContext.create(ctx.getHubContext(), pluginId, deviceId),
+            new MediaVariableProxyProvider(ctx)
+        ).getCollection();
+        for (HobsonVariable v : variables) {
             results.put(
                 v.getName(),
                 JSONSerializationHelper.createDeviceVariableJSON(
                     pluginId,
                     deviceId,
-                    linkHelper.createMediaVariableOverride(ctx, pluginId, deviceId, v),
+                    v,
                     false
                 )
             );

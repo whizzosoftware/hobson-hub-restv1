@@ -18,6 +18,7 @@ import com.whizzosoftware.hobson.rest.v1.Authorizer;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkHelper;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
+import com.whizzosoftware.hobson.rest.v1.util.MediaVariableProxyProvider;
 import org.restlet.data.Reference;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -66,14 +67,17 @@ public class DeviceVariableResource extends SelfInjectingServerResource {
         authorizer.authorizeHub(ctx.getHubContext());
         String pluginId = getAttribute("pluginId");
         String deviceId = getAttribute("deviceId");
-        HobsonVariable var = variableManager.getDeviceVariable(DeviceContext.create(ctx.getHubContext(), pluginId, deviceId), getAttribute("variableName"));
+        HobsonVariable var = variableManager.getDeviceVariable(
+            DeviceContext.create(ctx.getHubContext(), pluginId, deviceId), getAttribute("variableName"),
+            new MediaVariableProxyProvider(ctx)
+        );
         return new JsonRepresentation(
             linkHelper.addDeviceVariableLinks(
                 ctx,
                 JSONSerializationHelper.createDeviceVariableJSON(
                     pluginId,
                     deviceId,
-                    linkHelper.createMediaVariableOverride(ctx, pluginId, deviceId, var),
+                    var,
                     true
                 ),
                 pluginId,

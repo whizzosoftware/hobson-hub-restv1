@@ -15,6 +15,7 @@ import com.whizzosoftware.hobson.json.JSONSerializationHelper;
 import com.whizzosoftware.hobson.rest.v1.Authorizer;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkHelper;
+import com.whizzosoftware.hobson.rest.v1.util.MediaVariableProxyProvider;
 import org.json.JSONArray;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -97,7 +98,7 @@ public class DevicesResource extends SelfInjectingServerResource {
         for (HobsonDevice device : deviceManager.getAllDevices(ctx.getHubContext())) {
             HobsonVariableCollection variables = null;
             if (details) {
-                variables = variableManager.getDeviceVariables(device.getContext());
+                variables = variableManager.getDeviceVariables(device.getContext(), new MediaVariableProxyProvider(ctx));
             }
             results.put(linkHelper.addDeviceLinks(
                 ctx,
