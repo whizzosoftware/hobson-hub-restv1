@@ -108,7 +108,7 @@ public class DeviceVariableResource extends SelfInjectingServerResource {
         String pluginId = getAttribute("pluginId");
         String deviceId = getAttribute("deviceId");
         String variableName = getAttribute("variableName");
-        eventManager.postEvent(ctx.getHubContext(), new VariableUpdateRequestEvent(new VariableUpdate(pluginId, deviceId, variableName, value)));
+        eventManager.postEvent(ctx.getHubContext(), new VariableUpdateRequestEvent(System.currentTimeMillis(), new VariableUpdate(DeviceContext.create(ctx.getHubContext(), pluginId, deviceId), variableName, value)));
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
 
         // TODO: is there a better way to do this? The Restlet request reference scheme is always HTTP for some reason...

@@ -11,6 +11,7 @@ import com.whizzosoftware.hobson.rest.v1.resource.LogResource;
 import com.whizzosoftware.hobson.rest.v1.resource.ShutdownResource;
 import com.whizzosoftware.hobson.rest.v1.resource.action.ActionResource;
 import com.whizzosoftware.hobson.rest.v1.resource.action.ActionsResource;
+import com.whizzosoftware.hobson.rest.v1.resource.activity.ActivityLogResource;
 import com.whizzosoftware.hobson.rest.v1.resource.device.*;
 import com.whizzosoftware.hobson.rest.v1.resource.hub.*;
 import com.whizzosoftware.hobson.rest.v1.resource.image.HubImageResource;
@@ -29,15 +30,11 @@ import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.CacheDirective;
-import org.restlet.data.ChallengeScheme;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.ResourceInjectingApplication;
 import org.restlet.routing.Filter;
 import org.restlet.routing.Router;
 import org.restlet.security.Authenticator;
-import org.restlet.security.Authorizer;
-import org.restlet.security.ChallengeAuthenticator;
-import org.restlet.security.Verifier;
 
 import java.util.ArrayList;
 
@@ -67,6 +64,7 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
         Router router = newRouter();
         router.attach(ActionResource.PATH, ActionResource.class);
         router.attach(ActionsResource.PATH, ActionsResource.class);
+        router.attach(ActivityLogResource.PATH, ActivityLogResource.class);
         router.attach(DeviceResource.PATH, DeviceResource.class);
         router.attach(DeviceConfigurationResource.PATH, DeviceConfigurationResource.class);
         router.attach(DeviceTelemetryResource.PATH, DeviceTelemetryResource.class);
