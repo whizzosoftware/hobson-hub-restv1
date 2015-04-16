@@ -12,6 +12,7 @@ import com.whizzosoftware.hobson.api.plugin.PluginContext;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
 import com.whizzosoftware.hobson.rest.v1.Authorizer;
 import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
+import org.apache.commons.codec.binary.Base64InputStream;
 import org.restlet.data.MediaType;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.representation.InputRepresentation;
@@ -19,6 +20,7 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
 
 import javax.inject.Inject;
+import java.io.InputStream;
 
 /**
  * A REST resource for retrieving a plugin's icon.
@@ -49,7 +51,16 @@ public class PluginIconResource extends SelfInjectingServerResource {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
         authorizer.authorizeHub(ctx.getHubContext());
         String pluginId = getAttribute("pluginId");
+
+        String s = getQueryValue("base64");
+        final boolean base64 = (s != null) && Boolean.parseBoolean(s);
+
         ImageInputStream iis = pluginManager.getPluginIcon(PluginContext.create(ctx.getHubContext(), pluginId));
-        return new InputRepresentation(iis.getInputStream(), MediaType.valueOf(iis.getMediaType()));
+        InputStream is = iis.getInputStream();
+        if (base64) {
+            is = new Base64InputStream(is, true);
+        }
+
+        return new InputRepresentation(is, MediaType.valueOf(iis.getMediaType()));
     }
 }

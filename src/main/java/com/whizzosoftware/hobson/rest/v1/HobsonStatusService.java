@@ -49,13 +49,14 @@ public class HobsonStatusService extends StatusService {
     }
 
     public Representation getRepresentation(Status status, Request request, Response response) {
+        Integer code = (status != null) ? status.getCode() : null;
         if (status != null && status.getDescription() != null) {
-            return new JsonRepresentation(JSONSerializationHelper.createErrorJSON(status.getDescription()));
+            return new JsonRepresentation(JSONSerializationHelper.createErrorJSON(code, status.getDescription()));
         } else if (status != null && status.getThrowable() != null) {
             return new JsonRepresentation(JSONSerializationHelper.createErrorJSON(status.getThrowable()));
         } else {
             logger.error("Unknown error servicing request: " + request.getOriginalRef());
-            return new JsonRepresentation(JSONSerializationHelper.createErrorJSON("An unknown error has occurred"));
+            return new JsonRepresentation(JSONSerializationHelper.createErrorJSON(code, "An unknown error has occurred"));
         }
     }
 }
