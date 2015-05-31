@@ -7,16 +7,15 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.task;
 
-import com.whizzosoftware.hobson.api.plugin.PluginContext;
 import com.whizzosoftware.hobson.api.task.HobsonTask;
 import com.whizzosoftware.hobson.api.task.TaskManager;
-import com.whizzosoftware.hobson.json.JSONSerializationHelper;
-import com.whizzosoftware.hobson.rest.v1.Authorizer;
-import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkHelper;
+import com.whizzosoftware.hobson.dto.HobsonTaskDTO;
+import com.whizzosoftware.hobson.rest.Authorizer;
+import com.whizzosoftware.hobson.rest.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
+import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import org.json.JSONArray;
-import org.json.JSONObject;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -32,7 +31,7 @@ import java.util.Collection;
  * @author Dan Noguerol
  */
 public class TasksResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/{pluginId}/tasks";
+    public static final String PATH = "/users/{userId}/hubs/{hubId}/tasks";
     public static final String REL = "tasks";
 
     @Inject
@@ -40,12 +39,11 @@ public class TasksResource extends SelfInjectingServerResource {
     @Inject
     TaskManager taskManager;
     @Inject
-    HATEOASLinkHelper linkHelper;
+    HATEOASLinkProvider linkHelper;
 
     /**
-     * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/tasks Get all tasks
+     * @api {get} /api/v1/users/:userId/hubs/:hubId/tasks Get all tasks
      * @apiVersion 0.1.3
-     * @apiParam {Boolean} properties If true, include any properties associated with the task
      * @apiName GetAllTasks
      * @apiDescription Retrieves a list of all tasks (regardless of provider).
      * @apiGroup Tasks
@@ -64,72 +62,31 @@ public class TasksResource extends SelfInjectingServerResource {
     protected Representation get() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
         authorizer.authorizeHub(ctx.getHubContext());
-        boolean includeProps = Boolean.parseBoolean(getQueryValue("properties"));
 
         JSONArray results = new JSONArray();
         Collection<HobsonTask> tasks = taskManager.getAllTasks(ctx.getHubContext());
         for (HobsonTask task : tasks) {
-            results.put(linkHelper.addTaskLinks(ctx, JSONSerializationHelper.createTaskJSON(task, false, includeProps), task.getContext().getPluginId(), task.getContext().getTaskId()));
+            results.put(new HobsonTaskDTO(linkHelper.createTaskLink(task.getContext()), task, linkHelper).toJSON(linkHelper));
         }
+
         return new JsonRepresentation(results);
     }
 
     /**
-     * @api {post} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/tasks Create task
+     * @api {post} /api/v1/users/:userId/hubs/:hubId/tasks Create task
      * @apiVersion 0.1.3
      * @apiName AddTask
      * @apiDescription Creates a new task.
      * @apiGroup Tasks
-     * @apiExample Example Request (simple event task):
-     * {
-     *   "name": "My Event Task",
-     *   "provider": "com.whizzosoftware.hobson.hub.hobson-hub-rules",
-     *   "conditions": [{
-     *     "event": "variableUpdate",
-     *     "pluginId": "com.whizzosoftware.hobson.hub.hobson-hub-zwave",
-     *     "deviceId": "zwave-32",
-     *     "changeId": "turnOff"
-     *   }],
-     *   "actions": [{
-     *     "pluginId": "com.whizzosoftware.hobson.hub.hobson-hub-actions",
-     *     "actionId": "log",
-     *     "name": "My Action 1",
-     *     "properties": {
-     *       "message": "Event task fired"
-     *     }
-     *   }]
-     * }
-     * @apiExample Example Request (advanced event task):
-     * {
-     *   "name": "My Event Task",
-     *   "provider": "com.whizzosoftware.hobson.hub.hobson-hub-rules",
-     *   "conditions": [{
-     *     "event": "variableUpdate",
-     *     "pluginId": "com.whizzosoftware.hobson.hub.hobson-hub-zwave",
-     *     "deviceId": "zwave-32",
-     *     "variable": {
-     *       "name": "on",
-     *       "comparator": "eq",
-     *       "value": true
-     *     }
-     *   }],
-     *   "actions": [{
-     *     "pluginId": "com.whizzosoftware.hobson.hub.hobson-hub-actions",
-     *     "actionId": "log",
-     *     "name": "My Action 1",
-     *     "properties": {
-     *       "message": "Event task fired"
-     *     }
-     *   }]
-     * }
      * @apiExample Example Request (scheduled task):
      * {
      *   "name": "My Scheduled Task",
-     *   "provider": "com.whizzosoftware.hobson.hub.hobson-hub-scheduler",
-     *   "conditions": [{
-     *     "start": "20140701T100000",
+     *   "triggerCondition": {
+     *     "pluginId": "com.whizzosoftware.hobson.hub.hobson-hub.scheduler",
+     *     "date": "20140701",
+     *     "time": "100000",
      *     "recurrence": "FREQ=MINUTELY;INTERVAL=1"
-     *   }],
+     *   },
      *   "actions": [{
      *     "pluginId": "com.whizzosoftware.hobson.hub.hobson-hub-actions",
      *     "actionId": "log",
@@ -146,8 +103,16 @@ public class TasksResource extends SelfInjectingServerResource {
     protected Representation post(Representation entity) {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
         authorizer.authorizeHub(ctx.getHubContext());
-        JSONObject json = JSONHelper.createJSONFromRepresentation(entity);
-        taskManager.createTask(PluginContext.create(ctx.getHubContext(), json.getString("provider")), json);
+
+        HobsonTaskDTO dto = new HobsonTaskDTO(JSONHelper.createJSONFromRepresentation(entity));
+        dto.validate();
+
+        taskManager.createTask(
+            dto.getName(),
+            DTOMapper.mapPropertyContainerSetDTO(dto.getConditionSet(), linkHelper),
+            DTOMapper.mapPropertyContainerSetDTO(dto.getActionSet(), linkHelper)
+        );
+
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();
     }

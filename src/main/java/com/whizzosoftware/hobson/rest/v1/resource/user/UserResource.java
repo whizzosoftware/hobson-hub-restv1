@@ -7,10 +7,15 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.user;
 
+import com.whizzosoftware.hobson.api.HobsonAuthorizationException;
 import com.whizzosoftware.hobson.api.HobsonRuntimeException;
-import com.whizzosoftware.hobson.json.JSONSerializationHelper;
-import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkHelper;
+import com.whizzosoftware.hobson.api.user.HobsonUser;
+import com.whizzosoftware.hobson.api.user.UserStore;
+import com.whizzosoftware.hobson.dto.ItemListDTO;
+import com.whizzosoftware.hobson.dto.PersonDTO;
+import com.whizzosoftware.hobson.rest.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkProvider;
+import org.restlet.data.MediaType;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -23,22 +28,27 @@ public class UserResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}";
 
     @Inject
-    HATEOASLinkHelper linkHelper;
+    UserStore userStore;
+    @Inject
+    HATEOASLinkProvider linkHelper;
 
     /**
-     * @api {get} /api/v1/users/:userId Get User details
+     * @api {get} /api/v1/users/:userId Get user details
      * @apiVersion 0.5.0
      * @apiName GetUser
-     * @apiDescription Retrieves details about the current user.
+     * @apiDescription Retrieves details about a user.
      * @apiGroup User
      * @apiSuccessExample Success Response:
      * {
-     *   "id": "local",
      *   "firstName": "Local",
      *   "lastName": "User",
-     *   "links": {
-     *     "self": "/api/v1/users/local",
-     *     "hubs": "/api/v1/users/local/hubs"
+     *   "_links": {
+     *     "self": {
+     *       "href": "/api/v1/users/local"
+     *     },
+     *     "hubs": {
+     *       "href": "/api/v1/users/local/hubs"
+     *     }
      *   }
      * }
      */
@@ -47,19 +57,15 @@ public class UserResource extends SelfInjectingServerResource {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
         User user = getRequest().getClientInfo().getUser();
         if (user != null) {
-            return new JsonRepresentation(
-                linkHelper.addUserLinks(
-                    ctx,
-                    JSONSerializationHelper.createUserJSON(
-                        new com.whizzosoftware.hobson.api.user.HobsonUser.Builder().
-                            id(user.getIdentifier()).
-                            firstName(user.getFirstName()).
-                            lastName(user.getLastName()).
-                            email(user.getEmail()).
-                            build()
-                    )
-                )
-            );
+            if (user.getIdentifier().equals(ctx.getUserId())) {
+                HobsonUser hu = userStore.getUser(user.getIdentifier());
+                PersonDTO dto = new PersonDTO(hu, linkHelper);
+                JsonRepresentation jr = new JsonRepresentation(dto.toJSON(linkHelper));
+                jr.setMediaType(new MediaType(dto.getMediaType() + "+json"));
+                return jr;
+            } else {
+                throw new HobsonAuthorizationException("You are not authorized to access that information");
+            }
         } else {
             throw new HobsonRuntimeException("No user information could be located");
         }

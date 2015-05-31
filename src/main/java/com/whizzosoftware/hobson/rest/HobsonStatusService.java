@@ -5,12 +5,9 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
-package com.whizzosoftware.hobson.rest.v1;
+package com.whizzosoftware.hobson.rest;
 
-import com.whizzosoftware.hobson.api.HobsonAuthException;
-import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
-import com.whizzosoftware.hobson.api.HobsonNotFoundException;
-import com.whizzosoftware.hobson.api.HobsonRuntimeException;
+import com.whizzosoftware.hobson.api.*;
 import com.whizzosoftware.hobson.json.JSONSerializationHelper;
 import org.json.JSONException;
 import org.restlet.Request;
@@ -37,7 +34,9 @@ public class HobsonStatusService extends StatusService {
             } else {
                 return new Status(Status.CLIENT_ERROR_NOT_FOUND, t);
             }
-        } else if (t instanceof HobsonAuthException) {
+        } else if (t instanceof HobsonAuthenticationException) {
+            return new Status(Status.CLIENT_ERROR_UNAUTHORIZED, t.getLocalizedMessage());
+        } else if (t instanceof HobsonAuthorizationException) {
             return new Status(Status.CLIENT_ERROR_FORBIDDEN, t.getLocalizedMessage());
         } else if (t instanceof JSONException || t instanceof HobsonInvalidRequestException) {
             return new Status(Status.CLIENT_ERROR_BAD_REQUEST, t.getLocalizedMessage());

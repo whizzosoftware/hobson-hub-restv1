@@ -5,23 +5,18 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
-package com.whizzosoftware.hobson.rest.v1;
-
-import com.whizzosoftware.hobson.api.hub.HubContext;
+package com.whizzosoftware.hobson.rest;
 
 /**
- * An interface for performing user authorization.
+ * An interface for all Hobson API application classes.
  *
  * @author Dan Noguerol
  */
-public interface Authorizer {
+public interface HobsonApiApplication {
     /**
-     * Verifies whether a user is authorized to acccess a hub.
+     * Returns the root path of this application (e.g. /api/v1).
      *
-     * @param ctx the context of the hub being accessed
-     *
-     * @throws com.whizzosoftware.hobson.api.HobsonAuthException if authorization fails
-     *
+     * @return the root of the application
      */
-    public void authorizeHub(HubContext ctx);
+    public String getApiRoot();
 }

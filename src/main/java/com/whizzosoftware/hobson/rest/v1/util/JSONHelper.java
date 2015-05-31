@@ -13,6 +13,9 @@ import org.json.JSONTokener;
 import org.restlet.representation.Representation;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A helper utility for JSON-related functions.
@@ -22,9 +25,27 @@ import java.io.IOException;
 public class JSONHelper {
     public static JSONObject createJSONFromRepresentation(Representation r) {
         try {
-            return new JSONObject(new JSONTokener(r.getStream()));
+            InputStream is = r.getStream();
+            if (is != null) {
+                try {
+                    return new JSONObject(new JSONTokener(is));
+                } finally {
+                    is.close();
+                }
+            } else {
+                return new JSONObject();
+            }
         } catch (IOException e) {
             throw new HobsonRuntimeException("Error reading JSON", e);
         }
+    }
+
+    public static Map<String,Object> createMapFromJSONObject(JSONObject json) {
+        Map<String,Object> map = new HashMap<>();
+        for (Object o : json.keySet()) {
+            String key = (String)o;
+            map.put(key, json.get(key));
+        }
+        return map;
     }
 }

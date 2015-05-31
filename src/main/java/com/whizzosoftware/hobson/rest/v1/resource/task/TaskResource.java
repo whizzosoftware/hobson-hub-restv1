@@ -10,12 +10,12 @@ package com.whizzosoftware.hobson.rest.v1.resource.task;
 import com.whizzosoftware.hobson.api.task.HobsonTask;
 import com.whizzosoftware.hobson.api.task.TaskContext;
 import com.whizzosoftware.hobson.api.task.TaskManager;
-import com.whizzosoftware.hobson.json.JSONSerializationHelper;
-import com.whizzosoftware.hobson.rest.v1.Authorizer;
-import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkHelper;
+import com.whizzosoftware.hobson.dto.HobsonTaskDTO;
+import com.whizzosoftware.hobson.rest.Authorizer;
+import com.whizzosoftware.hobson.rest.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
+import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
-import org.json.JSONObject;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -37,7 +37,7 @@ public class TaskResource extends SelfInjectingServerResource {
     @Inject
     TaskManager taskManager;
     @Inject
-    HATEOASLinkHelper linkHelper;
+    HATEOASLinkProvider linkHelper;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/tasks/:taskId Get task details
@@ -79,18 +79,7 @@ public class TaskResource extends SelfInjectingServerResource {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
         authorizer.authorizeHub(ctx.getHubContext());
         HobsonTask task = taskManager.getTask(TaskContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("taskId")));
-        return new JsonRepresentation(
-            linkHelper.addTaskLinks(
-                ctx,
-                JSONSerializationHelper.createTaskJSON(
-                    task,
-                    true,
-                    true
-                ),
-                task.getContext().getPluginId(),
-                task.getContext().getTaskId()
-            )
-        );
+        return new JsonRepresentation(new HobsonTaskDTO(linkHelper.createTaskLink(task.getContext()), task, linkHelper));
     }
 
     /**
@@ -165,8 +154,17 @@ public class TaskResource extends SelfInjectingServerResource {
     protected Representation put(Representation entity) {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
         authorizer.authorizeHub(ctx.getHubContext());
-        JSONObject json = JSONHelper.createJSONFromRepresentation(entity);
-        taskManager.updateTask(TaskContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("taskId")), json);
+
+        DTOMapper mapper = new DTOMapper(); // TODO: inject
+
+        HobsonTaskDTO dto = new HobsonTaskDTO(JSONHelper.createJSONFromRepresentation(entity));
+        taskManager.updateTask(
+            TaskContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("taskId")),
+            dto.getName(),
+            mapper.mapPropertyContainerSetDTO(dto.getConditionSet(), linkHelper),
+            mapper.mapPropertyContainerSetDTO(dto.getActionSet(), linkHelper)
+        );
+
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();
     }

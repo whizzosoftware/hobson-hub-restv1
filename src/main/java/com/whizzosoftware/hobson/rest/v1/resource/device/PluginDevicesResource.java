@@ -12,9 +12,9 @@ import com.whizzosoftware.hobson.api.device.HobsonDevice;
 import com.whizzosoftware.hobson.api.plugin.PluginContext;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
 import com.whizzosoftware.hobson.json.JSONSerializationHelper;
-import com.whizzosoftware.hobson.rest.v1.Authorizer;
-import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkHelper;
+import com.whizzosoftware.hobson.rest.Authorizer;
+import com.whizzosoftware.hobson.rest.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkProvider;
 import org.json.JSONArray;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -37,7 +37,7 @@ public class PluginDevicesResource extends SelfInjectingServerResource {
     @Inject
     VariableManager variableManager;
     @Inject
-    HATEOASLinkHelper linkHelper;
+    HATEOASLinkProvider linkHelper;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/devices Get all plugin devices

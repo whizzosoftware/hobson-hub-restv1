@@ -7,10 +7,11 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.hub;
 
+import com.whizzosoftware.hobson.api.HobsonRuntimeException;
 import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.json.JSONSerializationHelper;
-import com.whizzosoftware.hobson.rest.v1.Authorizer;
-import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.Authorizer;
+import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -57,8 +58,12 @@ public class HubPasswordResource extends SelfInjectingServerResource {
     protected Representation post(Representation entity) throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
         authorizer.authorizeHub(ctx.getHubContext());
-        hubManager.setHubPassword(ctx.getHubContext(), JSONSerializationHelper.createPasswordChange(JSONHelper.createJSONFromRepresentation(entity)));
-        getResponse().setStatus(Status.SUCCESS_ACCEPTED);
-        return new EmptyRepresentation();
+        if (hubManager.getLocalManager() != null) {
+            hubManager.getLocalManager().setLocalPassword(ctx.getHubContext(), JSONSerializationHelper.createPasswordChange(JSONHelper.createJSONFromRepresentation(entity)));
+            getResponse().setStatus(Status.SUCCESS_ACCEPTED);
+            return new EmptyRepresentation();
+        } else {
+            throw new HobsonRuntimeException("Cannot change local Hub password remotely");
+        }
     }
 }

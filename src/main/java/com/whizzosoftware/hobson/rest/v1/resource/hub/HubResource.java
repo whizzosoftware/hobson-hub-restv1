@@ -7,18 +7,19 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.hub;
 
+import com.whizzosoftware.hobson.ExpansionFields;
 import com.whizzosoftware.hobson.api.hub.HobsonHub;
-import com.whizzosoftware.hobson.api.hub.HubContext;
 import com.whizzosoftware.hobson.api.hub.HubManager;
-import com.whizzosoftware.hobson.json.JSONSerializationHelper;
-import com.whizzosoftware.hobson.rest.v1.Authorizer;
-import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkHelper;
-import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
-import org.restlet.data.Status;
+import com.whizzosoftware.hobson.api.property.PropertyContainerClass;
+import com.whizzosoftware.hobson.api.task.HobsonTask;
+import com.whizzosoftware.hobson.api.task.TaskManager;
+import com.whizzosoftware.hobson.dto.*;
+import com.whizzosoftware.hobson.rest.Authorizer;
+import com.whizzosoftware.hobson.rest.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkProvider;
+import org.restlet.data.MediaType;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
-import org.restlet.representation.EmptyRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
 
@@ -37,116 +38,96 @@ public class HubResource extends SelfInjectingServerResource {
     @Inject
     HubManager hubManager;
     @Inject
-    HATEOASLinkHelper linkHelper;
+    TaskManager taskManager;
+    @Inject
+    HATEOASLinkProvider linkHelper;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId Get Hub details
      * @apiVersion 0.1.6
      * @apiName GetHubDetails
+     * @apiParam (Query Parameters) {String} expand A comma-separated list of fields to expand in the response. Valid field values are "configurationClass, configuration, actionClasses, conditionClasses".
      * @apiDescription Retrieves details about a Hub. This provides the API version number as well as links to other relevant resources.
      * @apiGroup Hub
      * @apiSuccessExample Success Response:
      * {
+     *   "@id": "/api/v1/users/local/hubs/local",
+     *   "actionClasses": {"@id": "/api/v1/users/local/hubs/local/tasks/actionClasses"},
+     *   "conditionClasses": {"@id": "/api/v1/users/local/hubs/local/tasks/conditionClasses"},
+     *   "configuration": {"@id": "/api/v1/users/local/hubs/local/configuration"},
+     *   "configurationClass": {"@id": "/api/v1/users/local/hubs/local/configurationClass"},
      *   "name": "Unnamed",
-     *   "version": "0.5.0",
-     *   "location": {
-     *     "text": "",
-     *     "latitude": 0.1234,
-     *     "longitude": -0.1234
-     *   },
-     *   "email": {
-     *     "server": "localhost",
-     *     "secure": false,
-     *     "username": "foo",
-     *     "senderAddress": "foo@bar.com"
-     *   },
-     *   "logLevel": "INFO",
-     *   "setupComplete": true,
-     *   "links": {
-     *     "actions": "/api/v1/users/local/hubs/local/configuration/actions",
-     *     "devices": "/api/v1/users/local/hubs/local/devices",
-     *     "globalVariables": "/api/v1/users/local/hubs/local/globalVariables",
-     *     "image": "/api/v1/users/local/hubs/local/image",
-     *     "imageLibrary": "/api/v1/users/local/hubs/local/imageLibrary",
-     *     "log": "/api/v1/users/local/hubs/local/log",
-     *     "password": "/api/v1/users/local/hubs/local/password",
-     *     "presenceEntities": "/api/v1/users/local/hubs/local/presence/entities",
-     *     "plugins": "/api/v1/users/local/hubs/local/plugins",
-     *     "self": "/api/v1/users/local/hubs/local",
-     *     "shutdown": "/api/v1/users/local/hubs/local/shutdown",
-     *     "tasks": "/api/v1/users/local/hubs/local/tasks"
-     *   }
+     *   "version": "0.5.0.SNAPSHOT"
      * }
+     *
      */
     @Override
     protected Representation get() throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
 
         authorizer.authorizeHub(ctx.getHubContext());
 
         // return the JSON response
-        return new JsonRepresentation(
-            linkHelper.addHubDetailsLinks(
-                ctx,
-                JSONSerializationHelper.createHubDetailsJSON(
-                    hubManager.getHub(ctx.getHubContext())
-                ),
-                ctx.getHubId()
-            )
-        );
-    }
+        HobsonHub hub = hubManager.getHub(ctx.getHubContext());
+        HobsonHubDTO dto = new HobsonHubDTO(hub, linkHelper);
 
-    /**
-     * @api {put} /api/v1/users/:userId/hubs/:hubId Set Hub details
-     * @apiVersion 0.5.0
-     * @apiName SetHubDetails
-     * @apiDescription Sets details about a hub.
-     * @apiGroup Hub
-     * @apiParamExample {json} Example Request:
-     * {
-     *   "name": "Test Hub",
-     *   "email": {
-     *     "server": "smtp.mydomain.com",
-     *     "secure": true,
-     *     "senderAddress": "foo@bar.com",
-     *     "username": "user",
-     *     "password": "password"
-     *   },
-     *   "location": {
-     *     "text": "555 Some St, New York, NY 10021",
-     *     "latitude": 0.1234,
-     *     "longitude": 0.1234,
-     *   },
-     *   "logLevel": "INFO",
-     *   "setupComplete": false
-     * }
-     * @apiSuccessExample {json} Success Response:
-     * HTTP/1.1 202 Accepted
-     */
-    @Override
-    protected Representation put(Representation entity) {
-        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        HobsonHub hub = JSONSerializationHelper.createHubDetails(ctx.getHubContext(), JSONHelper.createJSONFromRepresentation(entity));
-        hubManager.setHubDetails(hub);
-        getResponse().setStatus(Status.SUCCESS_ACCEPTED);
-        return new EmptyRepresentation();
-    }
+        // add configuration class attribute
+        if (expansions.has("configurationClass")) {
+            dto.setConfigurationClass(
+                new PropertyContainerClassDTO(linkHelper.createHubConfigurationClassLink(hub.getContext()), hub.getConfigurationClass())
+            );
+        } else {
+            dto.setConfigurationClass(new PropertyContainerClassDTO(linkHelper.createHubConfigurationClassLink(hub.getContext())));
+        }
 
-    /**
-     * @api {delete} /api/v1/users/:userId/hubs/:hubId Delete Hub details
-     * @apiVersion 0.5.0
-     * @apiName DeleteHubDetails
-     * @apiDescription Deletes any user-defined details about a hub.
-     * @apiGroup Hub
-     * @apiSuccessExample {json} Success Response:
-     * HTTP/1.1 202 Accepted
-     */
-    @Override
-    protected Representation delete() {
-        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        hubManager.clearHubDetails(ctx.getHubContext());
-        getResponse().setStatus(Status.SUCCESS_ACCEPTED);
-        return new EmptyRepresentation();
-    }
+        // add configuration attribute
+        if (expansions.has("configuration")) {
+            dto.setConfiguration(
+                new PropertyContainerDTO(linkHelper.createHubConfigurationLink(hub.getContext()), hub.getConfiguration())
+            );
+        } else {
+            dto.setConfiguration(new PropertyContainerDTO(linkHelper.createHubConfigurationLink(hub.getContext())));
+        }
 
+        // add plugins attribute
+        ItemListDTO ildto = new ItemListDTO(linkHelper.createPluginsLink(ctx.getHubContext()));
+        dto.setPlugins(ildto);
+
+        // add devices attribute
+        ildto = new ItemListDTO(linkHelper.createDevicesLink(ctx.getHubContext()));
+        dto.setDevices(ildto);
+
+        // add condition classes
+        ildto = new ItemListDTO(linkHelper.createTaskConditionClassesLink(ctx.getHubContext()));
+        if (expansions.has("conditionClasses")) {
+            for (PropertyContainerClass tcc : taskManager.getAllConditionClasses(hub.getContext())) {
+                ildto.add(new PropertyContainerClassDTO(linkHelper.createTaskConditionClassLink(tcc.getContext()), tcc));
+            }
+        }
+        dto.setConditionClasses(ildto);
+
+        // add action classes
+        ildto = new ItemListDTO(linkHelper.createTaskActionClassesLink(ctx.getHubContext()));
+        if (expansions.has("actionClasses")) {
+            for (PropertyContainerClass tac : taskManager.getAllActionClasses(hub.getContext())) {
+                ildto.add(new PropertyContainerClassDTO(linkHelper.createTaskActionClassLink(tac.getContext()), tac));
+            }
+        }
+        dto.setActionClasses(ildto);
+
+        // add tasks
+        ildto = new ItemListDTO(linkHelper.createTasksLink(ctx.getHubContext()));
+        if (expansions.has("tasks")) {
+            ildto.updateNumberOfItems();
+            for (HobsonTask task : taskManager.getAllTasks(hub.getContext())) {
+                ildto.add(new HobsonTaskDTO(linkHelper.createTaskLink(task.getContext()), task, linkHelper));
+            }
+        }
+        dto.setTasks(ildto);
+
+        JsonRepresentation jr = new JsonRepresentation(dto.toJSON(linkHelper));
+        jr.setMediaType(new MediaType(dto.getMediaType() + "+json"));
+        return jr;
+    }
 }

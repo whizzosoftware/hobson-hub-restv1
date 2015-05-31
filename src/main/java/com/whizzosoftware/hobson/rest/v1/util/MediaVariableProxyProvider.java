@@ -10,7 +10,7 @@ package com.whizzosoftware.hobson.rest.v1.util;
 import com.whizzosoftware.hobson.api.variable.HobsonVariable;
 import com.whizzosoftware.hobson.api.variable.VariableConstants;
 import com.whizzosoftware.hobson.api.variable.VariableProxyValueProvider;
-import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.resource.device.MediaProxyResource;
 import org.restlet.routing.Template;
 

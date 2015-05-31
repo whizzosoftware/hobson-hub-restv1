@@ -9,11 +9,11 @@ package com.whizzosoftware.hobson.rest.v1.resource;
 
 import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.api.hub.LineRange;
-import com.whizzosoftware.hobson.rest.v1.Authorizer;
-import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.Authorizer;
+import com.whizzosoftware.hobson.rest.HobsonRestContext;
+import org.restlet.data.Header;
 import org.restlet.data.MediaType;
 import org.restlet.data.Status;
-import org.restlet.engine.header.Header;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.representation.AppendableRepresentation;
 import org.restlet.representation.Representation;
@@ -21,7 +21,6 @@ import org.restlet.resource.ResourceException;
 import org.restlet.util.Series;
 
 import javax.inject.Inject;
-import java.util.Map;
 
 /**
  * A REST resource for retrieving content from the Hub log.
@@ -60,7 +59,7 @@ public class LogResource extends SelfInjectingServerResource {
         long endLine = 24;
 
         // since we are using a custom range, we can't use the standard Restlet range mechanism
-        Series<Header> headers = (Series<Header>)getRequest().getAttributes().get(HEADERS);
+        Series<Header> headers = getRequest().getHeaders();
         String rangeStr = headers.getFirstValue("Range");
         if (rangeStr != null) {
             LineRange range = new LineRange(rangeStr);
@@ -75,12 +74,7 @@ public class LogResource extends SelfInjectingServerResource {
         ar.setMediaType(MediaType.APPLICATION_JSON);
         LineRange lineRange = hubManager.getLog(ctx.getHubContext(), startLine, endLine, ar);
 
-        Map<String,Object> attrs = getResponse().getAttributes();
-        headers = (Series<Header>)attrs.get(HEADERS);
-        if (headers == null) {
-            headers = new Series<>(Header.class);
-            attrs.put(HEADERS, headers);
-        }
+        headers = getResponse().getHeaders();
         headers.add(new Header("Range", lineRange.toString()));
 
         getResponse().setStatus(Status.SUCCESS_PARTIAL_CONTENT);

@@ -7,10 +7,10 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource;
 
-import com.whizzosoftware.hobson.rest.v1.Authorizer;
-import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.Authorizer;
+import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.resource.hub.HubResource;
-import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkHelper;
+import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkProvider;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.representation.EmptyRepresentation;
 import org.restlet.representation.Representation;
@@ -30,7 +30,7 @@ public class ShutdownResource extends SelfInjectingServerResource {
     @Inject
     Authorizer authorizer;
     @Inject
-    HATEOASLinkHelper linkHelper;
+    HATEOASLinkProvider linkHelper;
 
     /**
      * @api {post} /api/v1/users/:userId/hubs/:hubId/shutdown Shutdown

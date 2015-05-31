@@ -7,14 +7,14 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.device;
 
-import com.whizzosoftware.hobson.api.HobsonRuntimeException;
+import com.whizzosoftware.hobson.api.config.Configuration;
 import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.json.JSONSerializationHelper;
-import com.whizzosoftware.hobson.rest.v1.Authorizer;
-import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
-import org.json.JSONObject;
-import org.json.JSONTokener;
+import com.whizzosoftware.hobson.rest.Authorizer;
+import com.whizzosoftware.hobson.rest.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkProvider;
+import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -22,8 +22,6 @@ import org.restlet.representation.EmptyRepresentation;
 import org.restlet.representation.Representation;
 
 import javax.inject.Inject;
-import java.io.IOException;
-import java.util.Map;
 
 /**
  * A REST resource that accesses a device's configuration.
@@ -37,6 +35,8 @@ public class DeviceConfigurationResource extends SelfInjectingServerResource {
     Authorizer authorizer;
     @Inject
     DeviceManager deviceManager;
+    @Inject
+    HATEOASLinkProvider linkHelper;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/devices/:deviceId/configuration Get device configuration
@@ -46,16 +46,21 @@ public class DeviceConfigurationResource extends SelfInjectingServerResource {
      * @apiGroup Devices
      * @apiSuccessExample {json} Success Response:
      * {
-     *   "name": {
-     *     "name": "Name",
-     *     "description": "The device name",
-     *     "value": "My Device",
-     *     "type": "STRING"
+     *   "properties": {
+     *     "name": {
+     *       "name": "Name",
+     *       "description": "The device name",
+     *       "value": "My Device",
+     *       "type": "STRING"
+     *     },
+     *     "username": {
+     *       "name": "User Name",
+     *       "description": "A username",
+     *       "type": "STRING"
+     *     }
      *   },
-     *   "username": {
-     *     "name": "User Name",
-     *     "description": "A username",
-     *     "type": "STRING"
+     *   "links": {
+     *       "self": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-radiora/device1/configuration"
      *   }
      * }
      */
@@ -63,8 +68,17 @@ public class DeviceConfigurationResource extends SelfInjectingServerResource {
     protected Representation get() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
         authorizer.authorizeHub(ctx.getHubContext());
-        DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
-        return new JsonRepresentation(JSONSerializationHelper.createDeviceConfigurationJSON(deviceManager.getDeviceConfiguration(dctx)));
+        String pluginId = getAttribute("pluginId");
+        String deviceId = getAttribute("deviceId");
+        DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), pluginId, deviceId);
+        return new JsonRepresentation(
+            linkHelper.addDeviceConfigurationLinks(
+                ctx,
+                JSONSerializationHelper.createConfigurationJSON(deviceManager.getDeviceConfiguration(dctx)),
+                pluginId,
+                deviceId
+            )
+        );
     }
 
     /**
@@ -75,11 +89,13 @@ public class DeviceConfigurationResource extends SelfInjectingServerResource {
      * @apiGroup Devices
      * @apiParamExample {json} Example Request:
      * {
-     *   "name": {
-     *     "value": "My New Device Name"
-     *   },
-     *   "username": {
-     *     "value": "johndoe"
+     *   "properties": {
+     *     "name": {
+     *       "value": "My New Device Name"
+     *     },
+     *     "username": {
+     *       "value": "johndoe"
+     *     }
      *   }
      * }
      * @apiSuccessExample {json} Success Response:
@@ -87,16 +103,12 @@ public class DeviceConfigurationResource extends SelfInjectingServerResource {
      */
     @Override
     protected Representation put(Representation entity) {
-        try {
-            HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-            authorizer.authorizeHub(ctx.getHubContext());
-            Map<String,Object> props = JSONSerializationHelper.createConfigurationPropertyMap(new JSONObject(new JSONTokener(entity.getStream())));
-            DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
-            deviceManager.setDeviceConfigurationProperties(dctx, props, true);
-            getResponse().setStatus(Status.SUCCESS_ACCEPTED);
-            return new EmptyRepresentation();
-        } catch (IOException e) {
-            throw new HobsonRuntimeException("Error setting device property", e);
-        }
+        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        authorizer.authorizeHub(ctx.getHubContext());
+        Configuration config = JSONSerializationHelper.createConfiguration(JSONHelper.createJSONFromRepresentation(entity));
+        DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
+        deviceManager.setDeviceConfigurationProperties(dctx, config.getPropertyMap(), true);
+        getResponse().setStatus(Status.SUCCESS_ACCEPTED);
+        return new EmptyRepresentation();
     }
 }

@@ -7,21 +7,23 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.util;
 
-import com.whizzosoftware.hobson.api.action.HobsonAction;
 import com.whizzosoftware.hobson.api.device.HobsonDevice;
+import com.whizzosoftware.hobson.api.hub.HubContext;
+import com.whizzosoftware.hobson.api.plugin.PluginContext;
 import com.whizzosoftware.hobson.api.plugin.PluginDescriptor;
 import com.whizzosoftware.hobson.api.plugin.PluginStatus;
 import com.whizzosoftware.hobson.api.plugin.PluginType;
+import com.whizzosoftware.hobson.api.property.PropertyContainer;
+import com.whizzosoftware.hobson.api.property.PropertyContainerClass;
+import com.whizzosoftware.hobson.api.property.PropertyContainerClassContext;
+import com.whizzosoftware.hobson.api.task.TaskContext;
 import com.whizzosoftware.hobson.api.util.VersionUtil;
-import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
+import com.whizzosoftware.hobson.dto.LinkProvider;
+import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.resource.LogResource;
 import com.whizzosoftware.hobson.rest.v1.resource.ShutdownResource;
-import com.whizzosoftware.hobson.rest.v1.resource.action.ActionResource;
-import com.whizzosoftware.hobson.rest.v1.resource.action.ActionsResource;
 import com.whizzosoftware.hobson.rest.v1.resource.device.*;
-import com.whizzosoftware.hobson.rest.v1.resource.hub.HubPasswordResource;
-import com.whizzosoftware.hobson.rest.v1.resource.hub.HubResource;
-import com.whizzosoftware.hobson.rest.v1.resource.hub.HubsResource;
+import com.whizzosoftware.hobson.rest.v1.resource.hub.*;
 import com.whizzosoftware.hobson.rest.v1.resource.image.HubImageResource;
 import com.whizzosoftware.hobson.rest.v1.resource.image.ImageLibraryGroupResource;
 import com.whizzosoftware.hobson.rest.v1.resource.image.ImageLibraryImageResource;
@@ -29,8 +31,7 @@ import com.whizzosoftware.hobson.rest.v1.resource.image.ImageLibraryRootResource
 import com.whizzosoftware.hobson.rest.v1.resource.plugin.*;
 import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceEntitiesResource;
 import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceEntityResource;
-import com.whizzosoftware.hobson.rest.v1.resource.task.TaskResource;
-import com.whizzosoftware.hobson.rest.v1.resource.task.TasksResource;
+import com.whizzosoftware.hobson.rest.v1.resource.task.*;
 import com.whizzosoftware.hobson.rest.v1.resource.user.UserResource;
 import com.whizzosoftware.hobson.rest.v1.resource.variable.GlobalVariableResource;
 import com.whizzosoftware.hobson.rest.v1.resource.variable.GlobalVariablesResource;
@@ -43,21 +44,29 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * A helper class for populating DAOs with HATEOAS links.
+ * A helper class for populating DTOs with HATEOAS links.
  *
  * @author Dan Noguerol
  */
-public class HATEOASLinkHelper {
-    public JSONObject addActionLinks(HobsonRestContext ctx, JSONObject json, HobsonAction action) {
+public class HATEOASLinkProvider implements LinkProvider {
+    private static final String LINKS_NAME = "_links";
+
+    private String apiRoot;
+
+    public HATEOASLinkProvider() {
+        this.apiRoot = "/api/v1";
+    }
+
+    public JSONObject addDeviceConfigurationLinks(HobsonRestContext ctx, JSONObject json, String pluginId, String deviceId) {
         JSONObject links = new JSONObject();
-        json.put("links", links);
-        links.put("self", ctx.getApiRoot() + new Template(ActionResource.PATH).format(createDoubleEntryMap(ctx, "pluginId", action.getContext().getPluginId(), "actionId", action.getContext().getActionId())));
+        links.put("self", ctx.getApiRoot() + new Template(DeviceConfigurationResource.PATH).format(createDoubleEntryMap(ctx, "pluginId", pluginId, "deviceId", deviceId)));
+        json.put(LINKS_NAME, links);
         return json;
     }
 
     public JSONObject addDeviceLinks(HobsonRestContext ctx, JSONObject json, HobsonDevice device, boolean details) {
         JSONObject links = new JSONObject();
-        json.put("links", links);
+        json.put(LINKS_NAME, links);
 
         String pluginId = device.getContext().getPluginId();
         String deviceId = device.getContext().getDeviceId();
@@ -67,10 +76,11 @@ public class HATEOASLinkHelper {
             Map<String,Object> propMap = createDoubleEntryMap(ctx, "pluginId", pluginId, "deviceId", deviceId);
             links.put("config", ctx.getApiRoot() + new Template(DeviceConfigurationResource.PATH).format(propMap));
             links.put("variables", ctx.getApiRoot() + new Template(DeviceVariablesResource.PATH).format(propMap));
-            links.put("variableEvents", ctx.getApiRoot() + new Template(DeviceVariableChangeIdsResource.PATH).format(propMap));
-            if (device.isTelemetryCapable()) {
-                links.put("enableTelemetry", ctx.getApiRoot() + new Template(EnableDeviceTelemetryResource.PATH).format(propMap));
-                links.put("telemetry", ctx.getApiRoot() + new Template(DeviceTelemetryResource.PATH).format(propMap));
+
+            if (json.has("telemetry")) {
+                JSONObject tlinks = new JSONObject();
+                tlinks.put("self", ctx.getApiRoot() + new Template(DeviceTelemetryResource.PATH).format(propMap));
+                json.getJSONObject("telemetry").put(LINKS_NAME, tlinks);
             }
         }
 
@@ -81,7 +91,7 @@ public class HATEOASLinkHelper {
             pvLinks.put("self", ctx.getApiRoot() + new Template(DeviceVariableResource.PATH).format(
                 createTripleEntryMap(ctx, "pluginId", pluginId, "deviceId", deviceId, "variableName", pv.getString("name"))
             ));
-            pv.put("links", pvLinks);
+            pv.put(LINKS_NAME, pvLinks);
         }
 
         return json;
@@ -90,14 +100,14 @@ public class HATEOASLinkHelper {
     public JSONObject addDeviceVariableLinks(HobsonRestContext ctx, JSONObject json, String pluginId, String deviceId, String varName) {
         JSONObject links = new JSONObject();
         links.put("self", ctx.getApiRoot() + new Template(DeviceVariableResource.PATH).format(createTripleEntryMap(ctx, "pluginId", pluginId, "deviceId", deviceId, "variableName", varName)));
-        json.put("links", links);
+        json.put(LINKS_NAME, links);
         return json;
     }
 
     public JSONObject addGlobalVariableLinks(HobsonRestContext ctx, JSONObject json, String varName) {
         JSONObject links = new JSONObject();
         links.put("self", ctx.getApiRoot() + new Template(GlobalVariableResource.PATH).format(createSingleEntryMap(ctx, "name", varName)));
-        json.put("links", links);
+        json.put(LINKS_NAME, links);
         return json;
     }
 
@@ -107,7 +117,6 @@ public class HATEOASLinkHelper {
 
         // create HATEOAS links
         JSONObject links = new JSONObject();
-        links.put(ActionsResource.REL, apiRoot + new Template(ActionsResource.PATH).format(emptyMap));
         links.put(DevicesResource.REL, apiRoot + new Template(DevicesResource.PATH).format(emptyMap));
         links.put(GlobalVariablesResource.REL, apiRoot + new Template(GlobalVariablesResource.PATH).format(emptyMap));
         links.put(HubImageResource.REL, apiRoot + new Template(HubImageResource.PATH).format(emptyMap));
@@ -119,7 +128,7 @@ public class HATEOASLinkHelper {
         links.put(ShutdownResource.REL, apiRoot + new Template(ShutdownResource.PATH).format(emptyMap));
         links.put(TasksResource.REL, apiRoot + new Template(TasksResource.PATH).format(emptyMap));
         links.put("self", apiRoot + new Template(HubResource.PATH).format(createSingleEntryMap(ctx, "hubId", hubId)));
-        json.put("links", links);
+        json.put(LINKS_NAME, links);
 
         return json;
     }
@@ -128,21 +137,28 @@ public class HATEOASLinkHelper {
         String apiRoot = ctx.getApiRoot();
         JSONObject links = new JSONObject();
         links.put("self", apiRoot + new Template(HubResource.PATH).format(createSingleEntryMap(ctx, "hubId", hubId)));
-        json.put("links", links);
+        json.put(LINKS_NAME, links);
         return json;
     }
 
     public JSONObject addImageLibraryGroupLinks(HobsonRestContext ctx, JSONObject json, String groupId) {
         JSONObject groupLinks = new JSONObject();
         groupLinks.put("self", ctx.getApiRoot() + new Template(ImageLibraryGroupResource.PATH).format(createSingleEntryMap(ctx, "groupId", groupId)));
-        json.put("links", groupLinks);
+        json.put(LINKS_NAME, groupLinks);
         return json;
     }
 
     public JSONObject addImageLibraryImageLinks(HobsonRestContext ctx, JSONObject json, String imageId) {
         JSONObject links = new JSONObject();
         links.put("self", ctx.getApiRoot() + new Template(ImageLibraryImageResource.PATH).format(createSingleEntryMap(ctx, "imageId", imageId)));
-        json.put("links", links);
+        json.put(LINKS_NAME, links);
+        return json;
+    }
+
+    public JSONObject addPluginConfigurationLinks(HobsonRestContext ctx, JSONObject json, String pluginId) {
+        JSONObject links = new JSONObject();
+        links.put("self", ctx.getApiRoot() + new Template(PluginConfigurationResource.PATH).format(createSingleEntryMap(ctx, "pluginId", pluginId)));
+        json.put(LINKS_NAME, links);
         return json;
     }
 
@@ -156,7 +172,7 @@ public class HATEOASLinkHelper {
         }
 
         JSONObject links = new JSONObject();
-        json.put("links", links);
+        json.put(LINKS_NAME, links);
         links.put("self", ctx.getApiRoot() + new Template(PluginResource.PATH).format(createSingleEntryMap(ctx, "pluginId", encodedId)));
         if (pd.getType() == PluginType.PLUGIN && pd.getStatus().getStatus() == PluginStatus.Status.RUNNING) {
             links.put(DevicesResource.REL, ctx.getApiRoot() + DevicesResource.PATH);
@@ -196,14 +212,21 @@ public class HATEOASLinkHelper {
     public JSONObject addPresenceEntityLinks(HobsonRestContext ctx, JSONObject json, String entityId) {
         JSONObject links = new JSONObject();
         links.put("self", ctx.getApiRoot() + new Template(PresenceEntityResource.PATH).format(createSingleEntryMap(ctx, "entityId", entityId)));
-        json.put("links", links);
+        json.put(LINKS_NAME, links);
         return json;
     }
 
     public JSONObject addTaskLinks(HobsonRestContext ctx, JSONObject json, String pluginId, String taskId) {
         JSONObject links = new JSONObject();
         links.put("self", ctx.getApiRoot() + new Template(TaskResource.PATH).format(createDoubleEntryMap(ctx, "pluginId", pluginId, "taskId", taskId)));
-        json.put("links", links);
+        json.put(LINKS_NAME, links);
+        return json;
+    }
+
+    public JSONObject addTelemetryLinks(HobsonRestContext ctx, String pluginId, String deviceId, JSONObject json) {
+        JSONObject links = new JSONObject();
+        links.put("self", ctx.getApiRoot() + new Template(DeviceTelemetryResource.PATH).format(createDoubleEntryMap(ctx, "pluginId", pluginId, "deviceId", deviceId)));
+        json.put(LINKS_NAME, links);
         return json;
     }
 
@@ -212,7 +235,7 @@ public class HATEOASLinkHelper {
         Map<String,Object> emptyMap = createEmptyMap(ctx);
         links.put("self", ctx.getApiRoot() + new Template(UserResource.PATH).format(emptyMap));
         links.put("hubs", ctx.getApiRoot() + new Template(HubsResource.PATH).format(emptyMap));
-        json.put("links", links);
+        json.put(LINKS_NAME, links);
         return json;
     }
 
@@ -248,5 +271,193 @@ public class HATEOASLinkHelper {
         map.put(key2, value2);
         map.put(key3, value3);
         return map;
+    }
+
+    @Override
+    public HubContext createHubContext(String link) {
+        Template t = new Template(apiRoot + HubResource.PATH);
+        Map<String,Object> vars = new HashMap<>();
+        t.parse(link, vars);
+        return HubContext.create((String)vars.get("userId"), (String)vars.get("hubId"));
+    }
+
+    @Override
+    public String createTaskLink(TaskContext ctx) {
+        return null;
+    }
+
+    @Override
+    public TaskContext createTaskContext(String string) {
+        return null;
+    }
+
+    @Override
+    public String createTaskConditionClassesLink(HubContext ctx) {
+        Template t = new Template(apiRoot + TaskConditionClassesResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", ctx.getUserId());
+        values.put("hubId", ctx.getHubId());
+        return t.format(values);
+    }
+
+    @Override
+    public String createTaskConditionClassLink(PropertyContainerClassContext ctx) {
+        Template t = new Template(apiRoot + TaskConditionClassResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", ctx.getUserId());
+        values.put("hubId", ctx.getHubId());
+        values.put("pluginId", ctx.getPluginId());
+        values.put("conditionClassId", ctx.getContainerClassId());
+        return t.format(values);
+    }
+
+    @Override
+    public PropertyContainerClassContext createTaskConditionClassContext(String link) {
+        Template t = new Template(apiRoot + TaskConditionClassResource.PATH);
+        Map<String,Object> vars = new HashMap<>();
+        t.parse(link, vars);
+        return PropertyContainerClassContext.create(PluginContext.create(HubContext.create((String) vars.get("userId"), (String) vars.get("hubId")), (String)vars.get("pluginId")), (String)vars.get("conditionClassId"));
+    }
+
+    @Override
+    public String createTaskActionClassesLink(HubContext ctx) {
+        Template t = new Template(apiRoot + TaskActionClassesResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", ctx.getUserId());
+        values.put("hubId", ctx.getHubId());
+        return t.format(values);
+    }
+
+    @Override
+    public String createTaskActionClassLink(PropertyContainerClassContext ctx) {
+        Template t = new Template(apiRoot + TaskActionClassResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", ctx.getUserId());
+        values.put("hubId", ctx.getHubId());
+        values.put("pluginId", ctx.getPluginId());
+        values.put("actionClassId", ctx.getContainerClassId());
+        return t.format(values);
+    }
+
+    @Override
+    public PropertyContainerClassContext createTaskActionClassContext(String link) {
+        Template t = new Template(apiRoot + TaskActionClassResource.PATH);
+        Map<String,Object> vars = new HashMap<>();
+        t.parse(link, vars);
+        return PropertyContainerClassContext.create((String)vars.get("userId"), (String)vars.get("hubId"), (String)vars.get("pluginId"), (String)vars.get("actionClassId"));
+    }
+
+    @Override
+    public String createTaskActionSetLink(HubContext ctx, String actionSetId) {
+        Template t = new Template(apiRoot + TaskActionSetResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", ctx.getUserId());
+        values.put("hubId", ctx.getHubId());
+        values.put("actionSetId", actionSetId);
+        return t.format(values);
+    }
+
+    @Override
+    public PluginContext createPluginContext(String link) {
+        Template t = new Template(apiRoot + PluginResource.PATH);
+        Map<String,Object> vars = new HashMap<>();
+        t.parse(link, vars);
+        return PluginContext.create(HubContext.create((String) vars.get("userId"), (String) vars.get("hubId")), (String) vars.get("pluginId"));
+    }
+
+    @Override
+    public String createPluginLink(PluginContext ctx) {
+        Template t = new Template(apiRoot + PluginResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", ctx.getUserId());
+        values.put("hubId", ctx.getHubId());
+        values.put("pluginId", ctx.getPluginId());
+        return t.format(values);
+    }
+
+    @Override
+    public String createUserLink(String id) {
+        Template t = new Template(apiRoot + UserResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", id);
+        return t.format(values);
+    }
+
+    @Override
+    public String createHubLink(HubContext context) {
+        Template t = new Template(apiRoot + HubResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", context.getUserId());
+        values.put("hubId", context.getHubId());
+        return t.format(values);
+    }
+
+    @Override
+    public String createHubsLink(String userId) {
+        Template t = new Template(apiRoot + HubsResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", userId);
+        return t.format(values);
+    }
+
+    @Override
+    public String createHubConfigurationClassLink(HubContext context) {
+        Template t = new Template(apiRoot + HubConfigurationClassResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", context.getUserId());
+        values.put("hubId", context.getHubId());
+        return t.format(values);
+    }
+
+    @Override
+    public String createHubConfigurationLink(HubContext context) {
+        Template t = new Template(apiRoot + HubConfigurationResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", context.getUserId());
+        values.put("hubId", context.getHubId());
+        return t.format(values);
+    }
+
+    @Override
+    public String createPropertyContainerLink(PropertyContainer pc) {
+        return null;
+    }
+
+    @Override
+    public String createPropertyContainerClassLink(int type, PropertyContainerClass pcc) {
+        if (type == LinkProvider.CONDITION_CONTAINER) {
+            return createTaskConditionClassLink(pcc.getContext());
+        } else if (type == LinkProvider.ACTION_CONTAINER) {
+            return createTaskActionClassLink(pcc.getContext());
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public String createTasksLink(HubContext context) {
+        Template t = new Template(apiRoot + TasksResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", context.getUserId());
+        values.put("hubId", context.getHubId());
+        return t.format(values);
+    }
+
+    @Override
+    public String createDevicesLink(HubContext context) {
+        Template t = new Template(apiRoot + DevicesResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", context.getUserId());
+        values.put("hubId", context.getHubId());
+        return t.format(values);
+    }
+
+    @Override
+    public String createPluginsLink(HubContext context) {
+        Template t = new Template(apiRoot + PluginsResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", context.getUserId());
+        values.put("hubId", context.getHubId());
+        return t.format(values);
     }
 }

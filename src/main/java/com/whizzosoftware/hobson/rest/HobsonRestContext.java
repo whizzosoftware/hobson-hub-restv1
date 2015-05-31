@@ -5,11 +5,10 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
-package com.whizzosoftware.hobson.rest.v1;
+package com.whizzosoftware.hobson.rest;
 
 import com.whizzosoftware.hobson.api.hub.HubContext;
 import org.restlet.Request;
-import org.restlet.Restlet;
 import org.restlet.resource.Resource;
 import org.restlet.security.User;
 
@@ -23,6 +22,10 @@ import java.util.Map;
 public class HobsonRestContext {
     private String apiRoot;
     private HubContext hubContext;
+
+    public static HobsonRestContext createContext(Resource resource, String userId, String hubId) {
+        return new HobsonRestContext(resource, userId, hubId);
+    }
 
     public static HobsonRestContext createContext(Resource resource, Request request) {
         Map<String,Object> atts = request.getAttributes();

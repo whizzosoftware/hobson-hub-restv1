@@ -10,12 +10,13 @@ package com.whizzosoftware.hobson.rest.v1.resource.device;
 import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.api.device.HobsonDevice;
+import com.whizzosoftware.hobson.api.telemetry.TelemetryManager;
 import com.whizzosoftware.hobson.api.variable.HobsonVariableCollection;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
 import com.whizzosoftware.hobson.json.JSONSerializationHelper;
-import com.whizzosoftware.hobson.rest.v1.Authorizer;
-import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkHelper;
+import com.whizzosoftware.hobson.rest.Authorizer;
+import com.whizzosoftware.hobson.rest.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.MediaVariableProxyProvider;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -39,7 +40,9 @@ public class DeviceResource extends SelfInjectingServerResource {
     @Inject
     VariableManager variableManager;
     @Inject
-    HATEOASLinkHelper linkHelper;
+    TelemetryManager telemetryManager;
+    @Inject
+    HATEOASLinkProvider linkHelper;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/devices/:deviceId Get device details
@@ -53,7 +56,10 @@ public class DeviceResource extends SelfInjectingServerResource {
      *   "name": "RadioRa Zone 1",
      *   "type": "LIGHTBULB",
      *   "pluginId": "com.whizzosoftware.hobson.hub.hobson-hub-radiora",
-     *   "telemetryEnabled": false,
+     *   "telemetry" {
+     *     "capable": true,
+     *     "enabled": false,
+     *   },
      *   "preferredVariable": {
      *     "name": "on",
      *     "value": false,
@@ -74,7 +80,7 @@ public class DeviceResource extends SelfInjectingServerResource {
         authorizer.authorizeHub(ctx.getHubContext());
         DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
         HobsonDevice device = deviceManager.getDevice(dctx);
-        boolean telemetryEnabled = deviceManager.isDeviceTelemetryEnabled(dctx);
+        boolean telemetryEnabled = telemetryManager.isDeviceTelemetryEnabled(dctx);
 
         // get device variables if request asked for them
         HobsonVariableCollection variables = null;

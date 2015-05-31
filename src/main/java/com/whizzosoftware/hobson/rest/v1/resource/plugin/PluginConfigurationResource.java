@@ -11,8 +11,9 @@ import com.whizzosoftware.hobson.api.config.Configuration;
 import com.whizzosoftware.hobson.api.plugin.PluginContext;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
 import com.whizzosoftware.hobson.json.JSONSerializationHelper;
-import com.whizzosoftware.hobson.rest.v1.Authorizer;
-import com.whizzosoftware.hobson.rest.v1.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.Authorizer;
+import com.whizzosoftware.hobson.rest.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -35,6 +36,8 @@ public class PluginConfigurationResource extends SelfInjectingServerResource {
     Authorizer authorizer;
     @Inject
     PluginManager pluginManager;
+    @Inject
+    HATEOASLinkProvider linkHelper;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/configuration Get plugin configuration
@@ -68,7 +71,13 @@ public class PluginConfigurationResource extends SelfInjectingServerResource {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
         authorizer.authorizeHub(ctx.getHubContext());
         Configuration config = pluginManager.getPluginConfiguration(PluginContext.create(ctx.getHubContext(), pluginId));
-        return new JsonRepresentation(JSONSerializationHelper.createPluginConfigPropertiesJSON(pluginId, config));
+        return new JsonRepresentation(
+            linkHelper.addPluginConfigurationLinks(
+                ctx,
+                JSONSerializationHelper.createConfigurationJSON(config),
+                pluginId
+            )
+        );
     }
 
     /**
