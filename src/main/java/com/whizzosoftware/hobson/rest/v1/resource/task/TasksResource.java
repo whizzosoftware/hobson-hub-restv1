@@ -18,7 +18,6 @@ import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.DTOHelper;
 import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
-import org.json.JSONArray;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -77,6 +76,7 @@ public class TasksResource extends SelfInjectingServerResource {
             HobsonTaskDTO.Builder builder = new HobsonTaskDTO.Builder(linkHelper.createTaskLink(task.getContext()));
             if (expansions.has("item")) {
                 builder.name(task.getName());
+                builder.description(task.getDescription());
                 builder.conditionSet(DTOHelper.mapPropertyContainerSet(task.getConditionSet()));
                 builder.actionSet(DTOHelper.mapPropertyContainerSet(task.getActionSet()));
                 builder.properties(task.getProperties());
@@ -125,6 +125,7 @@ public class TasksResource extends SelfInjectingServerResource {
         taskManager.createTask(
             ctx.getHubContext(),
             dto.getName(),
+            dto.getDescription(),
             DTOHelper.mapPropertyContainerSetDTO(dto.getConditionSet(), hubManager, linkHelper),
             DTOHelper.mapPropertyContainerSetDTO(dto.getActionSet(), hubManager, linkHelper)
         );

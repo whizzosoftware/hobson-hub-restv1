@@ -172,9 +172,9 @@ public class TaskResource extends SelfInjectingServerResource {
         taskManager.updateTask(
             TaskContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("taskId")),
             dto.getName(),
+            dto.getDescription(),
             mapper.mapPropertyContainerSetDTO(dto.getConditionSet(), hubManager, linkHelper),
-            mapper.mapPropertyContainerSetDTO(dto.getActionSet(), hubManager, linkHelper)
-        );
+            mapper.mapPropertyContainerSetDTO(dto.getActionSet(), hubManager, linkHelper));
 
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();
