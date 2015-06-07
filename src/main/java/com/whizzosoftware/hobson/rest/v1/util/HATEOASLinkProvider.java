@@ -632,4 +632,21 @@ public class HATEOASLinkProvider implements LinkProvider {
         values.put("pluginId", context.getPluginId());
         return t.format(values);
     }
+
+    public String createGlobalVariablesLink(HubContext context) {
+        Template t = new Template(apiRoot + GlobalVariablesResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", context.getUserId());
+        values.put("hubId", context.getHubId());
+        return t.format(values);
+    }
+
+    public String createGlobalVariableLink(HubContext context, String name) {
+        Template t = new Template(apiRoot + GlobalVariableResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", context.getUserId());
+        values.put("hubId", context.getHubId());
+        values.put("name", name);
+        return t.format(values);
+    }
 }

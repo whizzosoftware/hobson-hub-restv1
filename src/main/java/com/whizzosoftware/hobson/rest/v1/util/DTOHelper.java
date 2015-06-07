@@ -1,6 +1,5 @@
 package com.whizzosoftware.hobson.rest.v1.util;
 
-import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
 import com.whizzosoftware.hobson.api.HobsonRuntimeException;
 import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.api.plugin.HobsonPlugin;
@@ -175,9 +174,9 @@ public class DTOHelper {
         }
 
         if (containerName != null) {
-            return PropertyContainerClassContext.create((String) vars.get("userId"), (String) vars.get("hubId"), (String) vars.get("pluginId"), (String) vars.get(containerName));
+            return PropertyContainerClassContext.create((String)vars.get("userId"), (String)vars.get("hubId"), (String)vars.get("pluginId"), (String)vars.get(containerName));
         } else {
-            throw new HobsonInvalidRequestException("Unknown condition class ID: " + id);
+            return null;
         }
     }
 

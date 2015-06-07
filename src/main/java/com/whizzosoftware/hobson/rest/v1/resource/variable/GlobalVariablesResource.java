@@ -9,6 +9,8 @@ package com.whizzosoftware.hobson.rest.v1.resource.variable;
 
 import com.whizzosoftware.hobson.api.variable.HobsonVariable;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
+import com.whizzosoftware.hobson.dto.HobsonVariableDTO;
+import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.json.JSONSerializationHelper;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
@@ -39,29 +41,43 @@ public class GlobalVariablesResource extends SelfInjectingServerResource {
      * @apiGroup Variables
      * @apiSuccessExample {json} Success Response:
      * {
-     *   "tempF": {
-     *     "value": 82.4,
-     *     "links": {
-     *       "self": "/api/v1/users/local/hubs/local/variables/tempF"
+     *   "numberOfItems": 2,
+     *   "itemListElement": [
+     *     {
+     *       "item": {
+     *         "lastUpdate": 1433642655612,
+     *         "name": "sunset",
+     *         "value": "20:24-06",
+     *         "mask": "READ_ONLY",
+     *         "@id": "/api/v1/users/local/hubs/local/globalVariables/sunset"
+     *     },
+     *     {
+     *       "item": {
+     *         "lastUpdate": 1433642655612,
+     *         "name": "sunrise",
+     *         "value": "05:33-06",
+     *         "mask": "READ_ONLY",
+     *         "@id":"/api/v1/users/local/hubs/local/globalVariables/sunrise"}}],"@id":"/api/v1/users/local/hubs/local/globalVariables"
      *     }
-     *   }
+     *   ]
      * }
      */
     @Override
     protected Representation get() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+
         authorizer.authorizeHub(ctx.getHubContext());
-        JSONObject results = new JSONObject();
+
+        ItemListDTO results = new ItemListDTO(linkHelper.createGlobalVariablesLink(ctx.getHubContext()));
         for (HobsonVariable v : variableManager.getGlobalVariables(ctx.getHubContext())) {
-            results.put(
-                v.getName(),
-                linkHelper.addGlobalVariableLinks(
-                    ctx,
-                    JSONSerializationHelper.createGlobalVariableJSON(v),
-                    v.getName()
+            results.add(
+                new HobsonVariableDTO(
+                    linkHelper.createGlobalVariableLink(ctx.getHubContext(), v.getName()),
+                    v
                 )
             );
         }
-        return new JsonRepresentation(results);
+
+        return new JsonRepresentation(results.toJSON(linkHelper));
     }
 }
