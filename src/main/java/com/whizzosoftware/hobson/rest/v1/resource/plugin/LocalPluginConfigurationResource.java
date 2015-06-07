@@ -7,12 +7,15 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.plugin;
 
-import com.whizzosoftware.hobson.api.config.Configuration;
+import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.api.plugin.PluginContext;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
-import com.whizzosoftware.hobson.json.JSONSerializationHelper;
+import com.whizzosoftware.hobson.api.property.PropertyContainer;
+import com.whizzosoftware.hobson.dto.PropertyContainerClassDTO;
+import com.whizzosoftware.hobson.dto.PropertyContainerDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.v1.util.DTOHelper;
 import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import org.restlet.data.Status;
@@ -29,18 +32,20 @@ import javax.inject.Inject;
  *
  * @author Dan Noguerol
  */
-public class PluginConfigurationResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/{pluginId}/configuration";
+public class LocalPluginConfigurationResource extends SelfInjectingServerResource {
+    public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/local/{pluginId}/configuration";
 
     @Inject
     Authorizer authorizer;
+    @Inject
+    HubManager hubManager;
     @Inject
     PluginManager pluginManager;
     @Inject
     HATEOASLinkProvider linkHelper;
 
     /**
-     * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/configuration Get plugin configuration
+     * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/local/:pluginId/configuration Get plugin configuration
      * @apiVersion 0.1.6
      * @apiName GetPluginConfiguration
      * @apiDescription Retrieves a plugin's configuration.
@@ -70,13 +75,19 @@ public class PluginConfigurationResource extends SelfInjectingServerResource {
         String pluginId = getAttribute("pluginId");
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
         authorizer.authorizeHub(ctx.getHubContext());
-        Configuration config = pluginManager.getPluginConfiguration(PluginContext.create(ctx.getHubContext(), pluginId));
+
+        PluginContext pctx = PluginContext.create(ctx.getHubContext(), pluginId);
+        PropertyContainer config = pluginManager.getPluginConfiguration(pctx);
+
         return new JsonRepresentation(
-            linkHelper.addPluginConfigurationLinks(
-                ctx,
-                JSONSerializationHelper.createConfigurationJSON(config),
-                pluginId
-            )
+            new PropertyContainerDTO(
+                linkHelper.createLocalPluginConfigurationLink(pctx),
+                config.getName(),
+                new PropertyContainerClassDTO(
+                    linkHelper.createLocalPluginConfigurationClassLink(pctx)
+                ),
+                config.getPropertyValues()
+            ).toJSON(linkHelper)
         );
     }
 
@@ -102,8 +113,11 @@ public class PluginConfigurationResource extends SelfInjectingServerResource {
     protected Representation put(Representation entity) throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
         authorizer.authorizeHub(ctx.getHubContext());
+
+        PropertyContainerDTO dto = new PropertyContainerDTO(JSONHelper.createJSONFromRepresentation(entity));
+
         String pluginId = getAttribute("pluginId");
-        pluginManager.setPluginConfiguration(PluginContext.create(ctx.getHubContext(), pluginId), JSONSerializationHelper.createConfiguration(JSONHelper.createJSONFromRepresentation(entity)));
+        pluginManager.setPluginConfiguration(PluginContext.create(ctx.getHubContext(), pluginId), DTOHelper.mapPropertyContainerDTO(dto, hubManager, linkHelper));
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();
     }

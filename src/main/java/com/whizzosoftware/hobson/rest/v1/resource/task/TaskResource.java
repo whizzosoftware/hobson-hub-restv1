@@ -7,13 +7,14 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.task;
 
+import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.api.task.HobsonTask;
 import com.whizzosoftware.hobson.api.task.TaskContext;
 import com.whizzosoftware.hobson.api.task.TaskManager;
 import com.whizzosoftware.hobson.dto.HobsonTaskDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
+import com.whizzosoftware.hobson.rest.v1.util.DTOHelper;
 import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import org.restlet.data.Status;
@@ -34,6 +35,8 @@ public class TaskResource extends SelfInjectingServerResource {
 
     @Inject
     Authorizer authorizer;
+    @Inject
+    HubManager hubManager;
     @Inject
     TaskManager taskManager;
     @Inject
@@ -79,7 +82,15 @@ public class TaskResource extends SelfInjectingServerResource {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
         authorizer.authorizeHub(ctx.getHubContext());
         HobsonTask task = taskManager.getTask(TaskContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("taskId")));
-        return new JsonRepresentation(new HobsonTaskDTO(linkHelper.createTaskLink(task.getContext()), task, linkHelper));
+
+        HobsonTaskDTO dto = new HobsonTaskDTO.Builder(linkHelper.createTaskLink(task.getContext()))
+            .name(task.getName())
+            .conditionSet(null)
+            .actionSet(null)
+            .properties(task.getProperties())
+            .build();
+
+        return new JsonRepresentation(dto.toJSON(linkHelper));
     }
 
     /**
@@ -155,14 +166,14 @@ public class TaskResource extends SelfInjectingServerResource {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
         authorizer.authorizeHub(ctx.getHubContext());
 
-        DTOMapper mapper = new DTOMapper(); // TODO: inject
+        DTOHelper mapper = new DTOHelper(); // TODO: inject
 
-        HobsonTaskDTO dto = new HobsonTaskDTO(JSONHelper.createJSONFromRepresentation(entity));
+        HobsonTaskDTO dto = new HobsonTaskDTO.Builder(JSONHelper.createJSONFromRepresentation(entity)).build();
         taskManager.updateTask(
             TaskContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("taskId")),
             dto.getName(),
-            mapper.mapPropertyContainerSetDTO(dto.getConditionSet(), linkHelper),
-            mapper.mapPropertyContainerSetDTO(dto.getActionSet(), linkHelper)
+            mapper.mapPropertyContainerSetDTO(dto.getConditionSet(), hubManager, linkHelper),
+            mapper.mapPropertyContainerSetDTO(dto.getActionSet(), hubManager, linkHelper)
         );
 
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);

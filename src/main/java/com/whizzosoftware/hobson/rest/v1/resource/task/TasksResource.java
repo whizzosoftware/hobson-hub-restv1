@@ -7,12 +7,15 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.task;
 
+import com.whizzosoftware.hobson.ExpansionFields;
+import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.api.task.HobsonTask;
 import com.whizzosoftware.hobson.api.task.TaskManager;
 import com.whizzosoftware.hobson.dto.HobsonTaskDTO;
+import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
+import com.whizzosoftware.hobson.rest.v1.util.DTOHelper;
 import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import org.json.JSONArray;
@@ -36,6 +39,8 @@ public class TasksResource extends SelfInjectingServerResource {
 
     @Inject
     Authorizer authorizer;
+    @Inject
+    HubManager hubManager;
     @Inject
     TaskManager taskManager;
     @Inject
@@ -61,15 +66,25 @@ public class TasksResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
+
         authorizer.authorizeHub(ctx.getHubContext());
 
-        JSONArray results = new JSONArray();
+        ItemListDTO results = new ItemListDTO(linkHelper.createTasksLink(ctx.getHubContext()));
+
         Collection<HobsonTask> tasks = taskManager.getAllTasks(ctx.getHubContext());
         for (HobsonTask task : tasks) {
-            results.put(new HobsonTaskDTO(linkHelper.createTaskLink(task.getContext()), task, linkHelper).toJSON(linkHelper));
+            HobsonTaskDTO.Builder builder = new HobsonTaskDTO.Builder(linkHelper.createTaskLink(task.getContext()));
+            if (expansions.has("item")) {
+                builder.name(task.getName());
+                builder.conditionSet(DTOHelper.mapPropertyContainerSet(task.getConditionSet()));
+                builder.actionSet(DTOHelper.mapPropertyContainerSet(task.getActionSet()));
+                builder.properties(task.getProperties());
+            }
+            results.add(builder.build());
         }
 
-        return new JsonRepresentation(results);
+        return new JsonRepresentation(results.toJSON(linkHelper));
     }
 
     /**
@@ -104,13 +119,14 @@ public class TasksResource extends SelfInjectingServerResource {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
         authorizer.authorizeHub(ctx.getHubContext());
 
-        HobsonTaskDTO dto = new HobsonTaskDTO(JSONHelper.createJSONFromRepresentation(entity));
+        HobsonTaskDTO dto = new HobsonTaskDTO.Builder(JSONHelper.createJSONFromRepresentation(entity)).build();
         dto.validate();
 
         taskManager.createTask(
+            ctx.getHubContext(),
             dto.getName(),
-            DTOMapper.mapPropertyContainerSetDTO(dto.getConditionSet(), linkHelper),
-            DTOMapper.mapPropertyContainerSetDTO(dto.getActionSet(), linkHelper)
+            DTOHelper.mapPropertyContainerSetDTO(dto.getConditionSet(), hubManager, linkHelper),
+            DTOHelper.mapPropertyContainerSetDTO(dto.getActionSet(), hubManager, linkHelper)
         );
 
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);

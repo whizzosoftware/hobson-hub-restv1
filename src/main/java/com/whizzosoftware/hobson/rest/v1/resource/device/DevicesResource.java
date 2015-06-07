@@ -7,16 +7,18 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.device;
 
+import com.whizzosoftware.hobson.ExpansionFields;
 import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.api.device.HobsonDevice;
-import com.whizzosoftware.hobson.api.variable.HobsonVariableCollection;
+import com.whizzosoftware.hobson.api.property.PropertyContainer;
+import com.whizzosoftware.hobson.api.property.PropertyContainerClass;
+import com.whizzosoftware.hobson.api.variable.HobsonVariable;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
-import com.whizzosoftware.hobson.json.JSONSerializationHelper;
+import com.whizzosoftware.hobson.dto.*;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.v1.util.DTOHelper;
 import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkProvider;
-import com.whizzosoftware.hobson.rest.v1.util.MediaVariableProxyProvider;
-import org.json.JSONArray;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -45,75 +47,83 @@ public class DevicesResource extends SelfInjectingServerResource {
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/devices Get all devices
      * @apiVersion 0.1.3
-     * @apiParam {Boolean} details If true, include details for each device
      * @apiName GetAllDevices
      * @apiDescription Retrieves a summary list of devices published by all plugins.
      * @apiGroup Devices
      * @apiSuccessExample {json} Success Response:
-     * [
-     *   {
-     *     "name": "RadioRa Zone 1",
-     *     "pluginId": "com.whizzosoftware.hobson.hub.hobson-hub-radiora",
-     *     "type": "LIGHTBULB",
-     *     "preferredVariable": {
-     *       "name": "on",
-     *       "value": false,
-     *       "links": {
-     *         "self": "/api/plugins/v1/users/local/hubs/local/com.whizzosoftware.hobson.server-radiora/devices/1/variables/on"
+     * {
+     *   "numberOfItems": 2,
+     *   "itemListElement": [
+     *     {
+     *       "item": {
+     *         "@id": "/api/plugins/v1/users/local/hubs/local/com.whizzosoftware.hobson.server-radiora/devices/1",
      *       }
      *     },
-     *     "links": {
-     *       "self": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.server-radiora/devices/1",
-     *       "setName": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.server-radiora/devices/1/name",
-     *       "variables": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.server-radiora/devices/1/variables"
-     *     }
-     *   },
-     *   {
-     *     "name": "RadioRa Zone 2",
-     *     "pluginId": "com.whizzosoftware.hobson.hub.hobson-hub-radiora",
-     *     "type": "LIGHTBULB",
-     *     "preferredVariable": {
-     *       "name": "on",
-     *       "value": true,
-     *       "links": {
-     *         "self": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.server-radiora/devices/2/variables/on"
+     *     {
+     *       "item": {
+     *         "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.server-radiora/devices/2",
      *       }
-     *     },
-     *     "links": {
-     *       "self": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.server-radiora/devices/2",
-     *       "setName": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.server-radiora/devices/2/name",
-     *       "variables": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.server-radiora/devices/2/variables"
      *     }
-     *   }
-     * ]
+     *   ]
+     * }
      */
     @Override
     protected Representation get() throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
+
         authorizer.authorizeHub(ctx.getHubContext());
-        JSONArray results = new JSONArray();
 
-        boolean details = Boolean.parseBoolean(getQueryValue("details"));
+        ItemListDTO results = new ItemListDTO(linkHelper.createDevicesLink(ctx.getHubContext()));
 
+        boolean itemExpand = expansions.has("item");
         for (HobsonDevice device : deviceManager.getAllDevices(ctx.getHubContext())) {
-            HobsonVariableCollection variables = null;
-            if (details) {
-                variables = variableManager.getDeviceVariables(device.getContext(), new MediaVariableProxyProvider(ctx));
+            HobsonDeviceDTO dto = new HobsonDeviceDTO(linkHelper.createDeviceLink(device.getContext()), itemExpand ? device.getName() : null);
+            if (itemExpand) {
+                dto.setType(device.getType());
+
+                // set configurationClass attribute
+                PropertyContainerClassDTO pccdto = new PropertyContainerClassDTO(linkHelper.createDeviceConfigurationClassLink(device.getContext()));
+                if (expansions.has("configurationClass")) {
+                    PropertyContainerClass pccc = device.getConfigurationClass();
+                    pccdto.setSupportedProperties(DTOHelper.mapTypedPropertyList(pccc.getSupportedProperties()));
+                }
+                dto.setConfigurationClass(pccdto);
+
+                // set configuration attribute
+                PropertyContainerDTO pcdto = new PropertyContainerDTO(linkHelper.createDeviceConfigurationLink(device.getContext()));
+                if (expansions.has("configuration")) {
+                    PropertyContainer config = deviceManager.getDeviceConfiguration(device.getContext());
+                    pcdto.setPropertyValues(config.getPropertyValues());
+                }
+                dto.setConfiguration(pcdto);
+
+                // set preferredVariable attribute
+                if (device.hasPreferredVariableName()) {
+                    HobsonVariableDTO.Builder vbuilder = new HobsonVariableDTO.Builder(linkHelper.createDeviceVariableLink(device.getContext(), device.getPreferredVariableName()));
+                    if (expansions.has("preferredVariable")) {
+                        HobsonVariable pv = variableManager.getDeviceVariable(device.getContext(), device.getPreferredVariableName());
+                        vbuilder.name(pv.getName()).mask(pv.getMask()).lastUpdate(pv.getLastUpdate()).value(pv.getValue());
+                    }
+                    dto.setPreferredVariable(vbuilder.build());
+                }
+
+                // set variables attribute
+                ItemListDTO vdto = new ItemListDTO(linkHelper.createDeviceVariablesLink(device.getContext()));
+                if (expansions.has("variables")) {
+                    for (HobsonVariable v : variableManager.getDeviceVariables(device.getContext()).getCollection()) {
+                        vdto.add(new HobsonVariableDTO.Builder(linkHelper.createDeviceVariableLink(device.getContext(), v.getName()))
+                            .name(v.getName())
+                            .mask(v.getMask())
+                            .value(v.getValue())
+                            .build()
+                        );
+                    }
+                }
+                dto.setVariables(vdto);
             }
-            results.put(linkHelper.addDeviceLinks(
-                ctx,
-                JSONSerializationHelper.createDeviceJSON(
-                    ctx.getUserId(),
-                    ctx.getHubId(),
-                    device,
-                    variables,
-                    false,
-                    details
-                ),
-                device,
-                details
-            ));
+            results.add(dto);
         }
-        return new JsonRepresentation(results);
+        return new JsonRepresentation(results.toJSON(linkHelper));
     }
 }

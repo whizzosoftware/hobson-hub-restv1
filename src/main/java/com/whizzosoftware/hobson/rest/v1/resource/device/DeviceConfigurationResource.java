@@ -7,10 +7,11 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.device;
 
-import com.whizzosoftware.hobson.api.config.Configuration;
 import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.device.DeviceManager;
-import com.whizzosoftware.hobson.json.JSONSerializationHelper;
+import com.whizzosoftware.hobson.api.property.PropertyContainer;
+import com.whizzosoftware.hobson.dto.PropertyContainerClassDTO;
+import com.whizzosoftware.hobson.dto.PropertyContainerDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkProvider;
@@ -70,15 +71,20 @@ public class DeviceConfigurationResource extends SelfInjectingServerResource {
         authorizer.authorizeHub(ctx.getHubContext());
         String pluginId = getAttribute("pluginId");
         String deviceId = getAttribute("deviceId");
+
         DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), pluginId, deviceId);
-        return new JsonRepresentation(
-            linkHelper.addDeviceConfigurationLinks(
-                ctx,
-                JSONSerializationHelper.createConfigurationJSON(deviceManager.getDeviceConfiguration(dctx)),
-                pluginId,
-                deviceId
-            )
+        PropertyContainer config = deviceManager.getDeviceConfiguration(dctx);
+
+        PropertyContainerDTO dto = new PropertyContainerDTO(
+            linkHelper.createDeviceConfigurationLink(dctx),
+            config.getName(),
+            new PropertyContainerClassDTO(
+                linkHelper.createDeviceConfigurationClassLink(dctx)
+            ),
+            config.getPropertyValues()
         );
+
+        return new JsonRepresentation(dto.toJSON(linkHelper));
     }
 
     /**
@@ -104,10 +110,14 @@ public class DeviceConfigurationResource extends SelfInjectingServerResource {
     @Override
     protected Representation put(Representation entity) {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+
         authorizer.authorizeHub(ctx.getHubContext());
-        Configuration config = JSONSerializationHelper.createConfiguration(JSONHelper.createJSONFromRepresentation(entity));
+
         DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
-        deviceManager.setDeviceConfigurationProperties(dctx, config.getPropertyMap(), true);
+        PropertyContainerDTO dto = new PropertyContainerDTO(JSONHelper.createJSONFromRepresentation(entity));
+
+        deviceManager.setDeviceConfigurationProperties(dctx, dto.getPropertyValues(), true);
+
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();
     }

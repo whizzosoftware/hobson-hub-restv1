@@ -19,13 +19,15 @@ public class BearerTokenVerifier implements Verifier {
         } else {
             String token = null;
 
-            // first check cookie
-            Cookie cookie = request.getCookies().getFirst("Token", true);
-            if (cookie != null) {
-                token = cookie.getValue();
-                // then check challenge response
-            } else if (request.getChallengeResponse() != null && ChallengeScheme.HTTP_OAUTH_BEARER.equals(request.getChallengeResponse().getScheme())) {
+            // first check challenge response
+            if (request.getChallengeResponse() != null && ChallengeScheme.HTTP_OAUTH_BEARER.equals(request.getChallengeResponse().getScheme())) {
                 token = request.getChallengeResponse().getRawValue();
+            // then check for a cookie
+            } else {
+                Cookie cookie = request.getCookies().getFirst("Token", true);
+                if (cookie != null) {
+                    token = cookie.getValue();
+                }
             }
 
             if (token != null) {

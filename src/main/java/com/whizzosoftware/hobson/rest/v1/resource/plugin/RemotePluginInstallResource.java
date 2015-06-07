@@ -25,8 +25,8 @@ import javax.inject.Inject;
  *
  * @author Dan Noguerol
  */
-public class PluginInstallResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/{pluginId}/{pluginVersion}/install";
+public class RemotePluginInstallResource extends SelfInjectingServerResource {
+    public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/remote/{pluginId}/{pluginVersion}/install";
 
     @Inject
     Authorizer authorizer;
@@ -36,7 +36,7 @@ public class PluginInstallResource extends SelfInjectingServerResource {
     HATEOASLinkProvider linkHelper;
 
     /**
-     * @api {post} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/:pluginVersion/install Install plugin
+     * @api {post} /api/v1/users/:userId/hubs/:hubId/plugins/remote/:pluginId/:pluginVersion/install Install plugin
      * @apiVersion 0.1.6
      * @apiName InstallPlugin
      * @apiDescription Install a plugin from the Hobson plugin repository.

@@ -10,7 +10,7 @@ package com.whizzosoftware.hobson.rest.v1;
 import com.whizzosoftware.hobson.rest.BearerTokenVerifier;
 import com.whizzosoftware.hobson.rest.HobsonApiApplication;
 import com.whizzosoftware.hobson.rest.HobsonStatusService;
-import com.whizzosoftware.hobson.rest.v1.resource.LogResource;
+import com.whizzosoftware.hobson.rest.v1.resource.hub.HubLogResource;
 import com.whizzosoftware.hobson.rest.v1.resource.ShutdownResource;
 import com.whizzosoftware.hobson.rest.v1.resource.login.LoginResource;
 import com.whizzosoftware.hobson.rest.v1.resource.task.*;
@@ -58,13 +58,12 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
 
     @Override
     public Restlet createInboundRoot() {
-        System.out.println("createInboundRoot()");
-
         // create the router with all of our resource classes attached
         Router router = newRouter();
         router.attach(ActivityLogResource.PATH, ActivityLogResource.class);
         router.attach(DeviceResource.PATH, DeviceResource.class);
         router.attach(DeviceConfigurationResource.PATH, DeviceConfigurationResource.class);
+        router.attach(DeviceConfigurationClassResource.PATH, DeviceConfigurationClassResource.class);
         router.attach(DeviceTelemetryResource.PATH, DeviceTelemetryResource.class);
         router.attach(DevicesResource.PATH, DevicesResource.class);
         router.attach(DeviceVariableResource.PATH, DeviceVariableResource.class);
@@ -73,6 +72,8 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
         router.attach(ExecuteTaskResource.PATH, ExecuteTaskResource.class);
         router.attach(GlobalVariableResource.PATH, GlobalVariableResource.class);
         router.attach(GlobalVariablesResource.PATH, GlobalVariablesResource.class);
+        router.attach(HubConfigurationResource.PATH, HubConfigurationResource.class);
+        router.attach(HubConfigurationClassResource.PATH, HubConfigurationClassResource.class);
         router.attach(HubImageResource.PATH, HubImageResource.class);
         router.attach(HubResource.PATH, HubResource.class);
         router.attach(HubPasswordResource.PATH, HubPasswordResource.class);
@@ -81,18 +82,18 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
         router.attach(ImageLibraryGroupResource.PATH, ImageLibraryGroupResource.class);
         router.attach(ImageLibraryImageResource.PATH, ImageLibraryImageResource.class);
         router.attach(ImageLibraryRootResource.PATH, ImageLibraryRootResource.class);
-        router.attach(LogResource.PATH, LogResource.class);
+        router.attach(LocalPluginsResource.PATH, LocalPluginsResource.class);
+        router.attach(LocalPluginResource.PATH, LocalPluginResource.class);
+        router.attach(LocalPluginConfigurationResource.PATH, LocalPluginConfigurationResource.class);
+        router.attach(LocalPluginConfigurationClassResource.PATH, LocalPluginConfigurationClassResource.class);
+        router.attach(LocalPluginIconResource.PATH, LocalPluginIconResource.class);
+        router.attach(HubLogResource.PATH, HubLogResource.class);
         router.attach(LoginResource.PATH, LoginResource.class);
         router.attach(MediaProxyResource.PATH, MediaProxyResource.class);
-        router.attach(PluginConfigurationResource.PATH, PluginConfigurationResource.class);
-        router.attach(PluginCurrentVersionResource.PATH, PluginCurrentVersionResource.class);
         router.attach(PluginDevicesResource.PATH, PluginDevicesResource.class);
-        router.attach(PluginIconResource.PATH, PluginIconResource.class);
-        router.attach(PluginInstallResource.PATH, PluginInstallResource.class);
-        router.attach(PluginReloadResource.PATH, PluginReloadResource.class);
-        router.attach(PluginResource.PATH, PluginResource.class);
-        router.attach(PluginsResource.PATH, PluginsResource.class);
         router.attach(PresenceEntitiesResource.PATH, PresenceEntitiesResource.class);
+        router.attach(RemotePluginsResource.PATH, RemotePluginsResource.class);
+        router.attach(RemotePluginResource.PATH, RemotePluginResource.class);
         router.attach(ShutdownResource.PATH, ShutdownResource.class);
         router.attach(TaskActionClassesResource.PATH, TaskActionClassesResource.class);
         router.attach(TaskActionSetsResource.PATH, TaskActionSetsResource.class);

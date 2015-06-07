@@ -28,7 +28,7 @@ import javax.inject.Inject;
  * @author Dan Noguerol
  */
 public class PluginDevicesResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/{pluginId}/devices";
+    public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/local/{pluginId}/devices";
 
     @Inject
     Authorizer authorizer;

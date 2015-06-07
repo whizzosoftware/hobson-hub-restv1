@@ -2,11 +2,12 @@ package com.whizzosoftware.hobson.rest.v1.resource.task;
 
 import com.whizzosoftware.hobson.api.property.PropertyContainerClass;
 import com.whizzosoftware.hobson.api.task.TaskManager;
+import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.dto.PropertyContainerClassDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.v1.util.DTOHelper;
 import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkProvider;
-import org.json.JSONArray;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -75,11 +76,19 @@ public class TaskConditionClassesResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+
         authorizer.authorizeHub(ctx.getHubContext());
-        JSONArray results = new JSONArray();
+
+        ItemListDTO results = new ItemListDTO(linkHelper.createTaskConditionClassesLink(ctx.getHubContext()));
         for (PropertyContainerClass conditionClass : taskManager.getAllConditionClasses(ctx.getHubContext())) {
-            results.put(new PropertyContainerClassDTO(linkHelper.createTaskConditionClassLink(conditionClass.getContext()), conditionClass).toJSON(linkHelper));
+            results.add(
+                new PropertyContainerClassDTO(
+                    linkHelper.createTaskConditionClassLink(conditionClass.getContext()),
+                    conditionClass.getName(),
+                    DTOHelper.mapTypedPropertyList(conditionClass.getSupportedProperties())
+                )
+            );
         }
-        return new JsonRepresentation(results);
+        return new JsonRepresentation(results.toJSON(linkHelper));
     }
 }

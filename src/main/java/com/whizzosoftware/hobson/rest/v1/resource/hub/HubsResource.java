@@ -62,7 +62,7 @@ public class HubsResource extends SelfInjectingServerResource {
 
         ItemListDTO itemList = new ItemListDTO(linkHelper.createHubsLink(ctx.getUserId()));
         for (HobsonHub hub : hubManager.getHubs(ctx.getUserId())) {
-            itemList.add(new HobsonHubDTO(hub.getContext(), hub.getName(), linkHelper));
+            itemList.add(new HobsonHubDTO(linkHelper.createHubLink(hub.getContext())));
         }
 
         JsonRepresentation jr = new JsonRepresentation(itemList.toJSON(linkHelper));

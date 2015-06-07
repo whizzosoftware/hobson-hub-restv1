@@ -5,7 +5,7 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
-package com.whizzosoftware.hobson.rest.v1.resource;
+package com.whizzosoftware.hobson.rest.v1.resource.hub;
 
 import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.api.hub.LineRange;
@@ -27,9 +27,7 @@ import javax.inject.Inject;
  *
  * @author Dan Noguerol
  */
-public class LogResource extends SelfInjectingServerResource {
-    private final static String HEADERS = "org.restlet.http.headers";
-
+public class HubLogResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/log";
     public static final String REL = "log";
 

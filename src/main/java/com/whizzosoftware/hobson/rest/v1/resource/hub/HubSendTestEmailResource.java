@@ -9,8 +9,9 @@ package com.whizzosoftware.hobson.rest.v1.resource.hub;
 
 import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
 import com.whizzosoftware.hobson.api.HobsonRuntimeException;
+import com.whizzosoftware.hobson.api.config.EmailConfiguration;
 import com.whizzosoftware.hobson.api.hub.HubManager;
-import com.whizzosoftware.hobson.json.JSONSerializationHelper;
+import com.whizzosoftware.hobson.dto.PropertyContainerDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
@@ -43,11 +44,13 @@ public class HubSendTestEmailResource extends SelfInjectingServerResource {
      * @apiGroup Hub
      * @apiParamExample {json} Example Request:
      * {
-     *   "server": "smtp.mydomain.com",
-     *   "secure": true,
-     *   "senderAddress": "foo@bar.com",
-     *   "username": "user",
-     *   "password": "password"
+     *   "values": {
+     *     "emailServer": "smtp.mydomain.com",
+     *     "emailSecure": true,
+     *     "emailSender": "foo@bar.com",
+     *     "emailUsername": "user",
+     *     "emailPassword": "password"
+     *   }
      * }
      * @apiSuccessExample {json} Success Response:
      * HTTP/1.1 202 Accepted
@@ -62,7 +65,8 @@ public class HubSendTestEmailResource extends SelfInjectingServerResource {
         try {
             HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
             authorizer.authorizeHub(ctx.getHubContext());
-            hubManager.sendTestEmail(ctx.getHubContext(), JSONSerializationHelper.createEmailConfiguration(JSONHelper.createJSONFromRepresentation(entity)));
+            PropertyContainerDTO dto = new PropertyContainerDTO(JSONHelper.createJSONFromRepresentation(entity));
+            hubManager.sendTestEmail(ctx.getHubContext(), new EmailConfiguration.Builder().map(dto.getPropertyValues()).build());
             getResponse().setStatus(Status.SUCCESS_ACCEPTED);
             return new EmptyRepresentation();
         } catch (HobsonRuntimeException e) {

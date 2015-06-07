@@ -7,20 +7,19 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.util;
 
+import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.device.HobsonDevice;
 import com.whizzosoftware.hobson.api.hub.HubContext;
 import com.whizzosoftware.hobson.api.plugin.PluginContext;
 import com.whizzosoftware.hobson.api.plugin.PluginDescriptor;
 import com.whizzosoftware.hobson.api.plugin.PluginStatus;
 import com.whizzosoftware.hobson.api.plugin.PluginType;
-import com.whizzosoftware.hobson.api.property.PropertyContainer;
-import com.whizzosoftware.hobson.api.property.PropertyContainerClass;
 import com.whizzosoftware.hobson.api.property.PropertyContainerClassContext;
 import com.whizzosoftware.hobson.api.task.TaskContext;
-import com.whizzosoftware.hobson.api.util.VersionUtil;
+import com.whizzosoftware.hobson.dto.HobsonPluginDTO;
 import com.whizzosoftware.hobson.dto.LinkProvider;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.resource.LogResource;
+import com.whizzosoftware.hobson.rest.v1.resource.hub.HubLogResource;
 import com.whizzosoftware.hobson.rest.v1.resource.ShutdownResource;
 import com.whizzosoftware.hobson.rest.v1.resource.device.*;
 import com.whizzosoftware.hobson.rest.v1.resource.hub.*;
@@ -122,8 +121,7 @@ public class HATEOASLinkProvider implements LinkProvider {
         links.put(HubImageResource.REL, apiRoot + new Template(HubImageResource.PATH).format(emptyMap));
         links.put(HubPasswordResource.REL, apiRoot + new Template(HubPasswordResource.PATH).format(emptyMap));
         links.put(ImageLibraryRootResource.REL, apiRoot + new Template(ImageLibraryRootResource.PATH).format(emptyMap));
-        links.put(LogResource.REL, apiRoot + new Template(LogResource.PATH).format(emptyMap));
-        links.put(PluginsResource.REL, apiRoot + new Template(PluginsResource.PATH).format(emptyMap));
+        links.put(HubLogResource.REL, apiRoot + new Template(HubLogResource.PATH).format(emptyMap));
         links.put(PresenceEntitiesResource.REL, apiRoot + new Template(PresenceEntitiesResource.PATH).format(emptyMap));
         links.put(ShutdownResource.REL, apiRoot + new Template(ShutdownResource.PATH).format(emptyMap));
         links.put(TasksResource.REL, apiRoot + new Template(TasksResource.PATH).format(emptyMap));
@@ -157,7 +155,7 @@ public class HATEOASLinkProvider implements LinkProvider {
 
     public JSONObject addPluginConfigurationLinks(HobsonRestContext ctx, JSONObject json, String pluginId) {
         JSONObject links = new JSONObject();
-        links.put("self", ctx.getApiRoot() + new Template(PluginConfigurationResource.PATH).format(createSingleEntryMap(ctx, "pluginId", pluginId)));
+        links.put("self", ctx.getApiRoot() + new Template(LocalPluginConfigurationResource.PATH).format(createSingleEntryMap(ctx, "pluginId", pluginId)));
         json.put(LINKS_NAME, links);
         return json;
     }
@@ -180,29 +178,29 @@ public class HATEOASLinkProvider implements LinkProvider {
 
         if (details != null && details) {
             // determine whether there are current and newer versions of the plugin
-            String currentVersionString = pd.getCurrentVersionString();
-            String latestVersionString = pd.getLatestVersionString();
+//            String currentVersionString = pd.getCurrentVersionString();
+//            String latestVersionString = pd.getLatestVersionString();
 
             Map<String,Object> pluginIdMap = createSingleEntryMap(ctx, "pluginId", encodedId);
 
-            boolean hasCurrentVersion = (currentVersionString != null);
-            boolean hasNewerVersion = (VersionUtil.versionCompare(latestVersionString, currentVersionString) == 1);
+//            boolean hasCurrentVersion = (currentVersionString != null);
+//            boolean hasNewerVersion = (VersionUtil.versionCompare(latestVersionString, currentVersionString) == 1);
 
-            if (hasNewerVersion) {
-                String rel;
-                if (hasCurrentVersion) {
-                    rel = "update";
-                } else {
-                    rel = "install";
-                }
-                links.put(rel, ctx.getApiRoot() + new Template(PluginInstallResource.PATH).format(createDoubleEntryMap(ctx, "pluginId", encodedId, "pluginVersion", latestVersionString)));
-            }
-            if (hasCurrentVersion) {
-                links.put("reload", ctx.getApiRoot() + new Template(PluginReloadResource.PATH).format(pluginIdMap));
-            }
-            links.put("icon", ctx.getApiRoot() + new Template(PluginIconResource.PATH).format(pluginIdMap));
+//            if (hasNewerVersion) {
+//                String rel;
+//                if (hasCurrentVersion) {
+//                    rel = "update";
+//                } else {
+//                    rel = "install";
+//                }
+//                links.put(rel, ctx.getApiRoot() + new Template(RemotePluginInstallResource.PATH).format(createDoubleEntryMap(ctx, "pluginId", encodedId, "pluginVersion", latestVersionString)));
+//            }
+//            if (hasCurrentVersion) {
+//                links.put("reload", ctx.getApiRoot() + new Template(PluginReloadResource.PATH).format(pluginIdMap));
+//            }
+            links.put("icon", ctx.getApiRoot() + new Template(LocalPluginIconResource.PATH).format(pluginIdMap));
             if (pd.getStatus().getStatus() != PluginStatus.Status.NOT_INSTALLED && pd.isConfigurable()) {
-                links.put("configuration", ctx.getApiRoot() + new Template(PluginConfigurationResource.PATH).format(pluginIdMap));
+                links.put("configuration", ctx.getApiRoot() + new Template(LocalPluginConfigurationResource.PATH).format(pluginIdMap));
             }
         }
 
@@ -283,7 +281,13 @@ public class HATEOASLinkProvider implements LinkProvider {
 
     @Override
     public String createTaskLink(TaskContext ctx) {
-        return null;
+        Template t = new Template(apiRoot + TaskResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", ctx.getUserId());
+        values.put("hubId", ctx.getHubId());
+        values.put("pluginId", ctx.getPluginId());
+        values.put("taskId", ctx.getTaskId());
+        return t.format(values);
     }
 
     @Override
@@ -366,16 +370,6 @@ public class HATEOASLinkProvider implements LinkProvider {
     }
 
     @Override
-    public String createPluginLink(PluginContext ctx) {
-        Template t = new Template(apiRoot + PluginResource.PATH);
-        Map<String,String> values = new HashMap<>();
-        values.put("userId", ctx.getUserId());
-        values.put("hubId", ctx.getHubId());
-        values.put("pluginId", ctx.getPluginId());
-        return t.format(values);
-    }
-
-    @Override
     public String createUserLink(String id) {
         Template t = new Template(apiRoot + UserResource.PATH);
         Map<String,String> values = new HashMap<>();
@@ -419,19 +413,37 @@ public class HATEOASLinkProvider implements LinkProvider {
     }
 
     @Override
-    public String createPropertyContainerLink(PropertyContainer pc) {
-        return null;
-    }
-
-    @Override
-    public String createPropertyContainerClassLink(int type, PropertyContainerClass pcc) {
+    public String createPropertyContainerLink(HubContext context, int type) {
         if (type == LinkProvider.CONDITION_CONTAINER) {
-            return createTaskConditionClassLink(pcc.getContext());
+            return createTaskConditionLink();
         } else if (type == LinkProvider.ACTION_CONTAINER) {
-            return createTaskActionClassLink(pcc.getContext());
+            return createTaskActionLink();
+        } else if (type == LinkProvider.HUB_CONFIG_CONTAINER) {
+            return createHubConfigurationLink(context);
         } else {
             return null;
         }
+    }
+
+    @Override
+    public String createPropertyContainerClassLink(int type, PropertyContainerClassContext pccc) {
+        if (type == LinkProvider.CONDITION_CONTAINER) {
+            return createTaskConditionClassLink(pccc);
+        } else if (type == LinkProvider.ACTION_CONTAINER) {
+            return createTaskActionClassLink(pccc);
+        } else if (type == LinkProvider.HUB_CONFIG_CONTAINER) {
+            return createHubConfigurationClassLink(pccc.getHubContext());
+        } else {
+            return null;
+        }
+    }
+
+    public String createTaskActionLink() {
+        return null;
+    }
+
+    public String createTaskConditionLink() {
+        return null;
     }
 
     @Override
@@ -453,11 +465,171 @@ public class HATEOASLinkProvider implements LinkProvider {
     }
 
     @Override
-    public String createPluginsLink(HubContext context) {
-        Template t = new Template(apiRoot + PluginsResource.PATH);
+    public String createLocalPluginLink(PluginContext context) {
+        Template t = new Template(apiRoot + LocalPluginResource.PATH);
         Map<String,String> values = new HashMap<>();
         values.put("userId", context.getUserId());
         values.put("hubId", context.getHubId());
+        values.put("pluginId", context.getPluginId());
+        return t.format(values);
+    }
+
+    @Override
+    public String createLocalPluginsLink(HubContext context) {
+        Template t = new Template(apiRoot + LocalPluginsResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", context.getUserId());
+        values.put("hubId", context.getHubId());
+        return t.format(values);
+    }
+
+    @Override
+    public String createRemotePluginLink(PluginContext context) {
+        Template t = new Template(apiRoot + RemotePluginResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", context.getUserId());
+        values.put("hubId", context.getHubId());
+        values.put("pluginId", context.getPluginId());
+        return t.format(values);
+    }
+
+    @Override
+    public String createRemotePluginsLink(HubContext context) {
+        Template t = new Template(apiRoot + RemotePluginsResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", context.getUserId());
+        values.put("hubId", context.getHubId());
+        return t.format(values);
+    }
+
+    @Override
+    public String createDeviceLink(DeviceContext context) {
+        Template t = new Template(apiRoot + DeviceResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", context.getUserId());
+        values.put("hubId", context.getHubId());
+        values.put("pluginId", context.getPluginId());
+        values.put("deviceId", context.getDeviceId());
+        return t.format(values);
+    }
+
+    @Override
+    public String createDeviceVariableLink(DeviceContext context, String preferredVariableName) {
+        Template t = new Template(apiRoot + DeviceVariableResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", context.getUserId());
+        values.put("hubId", context.getHubId());
+        values.put("pluginId", context.getPluginId());
+        values.put("deviceId", context.getDeviceId());
+        values.put("variableName", preferredVariableName);
+        return t.format(values);
+    }
+
+    @Override
+    public String createDeviceConfigurationLink(DeviceContext context) {
+        Template t = new Template(apiRoot + DeviceConfigurationResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", context.getUserId());
+        values.put("hubId", context.getHubId());
+        values.put("pluginId", context.getPluginId());
+        values.put("deviceId", context.getDeviceId());
+        return t.format(values);
+    }
+
+    @Override
+    public String createDeviceConfigurationClassLink(DeviceContext context) {
+        Template t = new Template(apiRoot + DeviceConfigurationClassResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", context.getUserId());
+        values.put("hubId", context.getHubId());
+        values.put("pluginId", context.getPluginId());
+        values.put("deviceId", context.getDeviceId());
+        return t.format(values);
+    }
+
+    @Override
+    public String createLocalPluginConfigurationLink(PluginContext context) {
+        Template t = new Template(apiRoot + LocalPluginConfigurationResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", context.getUserId());
+        values.put("hubId", context.getHubId());
+        values.put("pluginId", context.getPluginId());
+        return t.format(values);
+    }
+
+    @Override
+    public String createLocalPluginConfigurationClassLink(PluginContext context) {
+        Template t = new Template(apiRoot + LocalPluginConfigurationClassResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", context.getUserId());
+        values.put("hubId", context.getHubId());
+        values.put("pluginId", context.getPluginId());
+        return t.format(values);
+    }
+
+    @Override
+    public String createDeviceVariablesLink(DeviceContext context) {
+        Template t = new Template(apiRoot + DeviceVariablesResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", context.getUserId());
+        values.put("hubId", context.getHubId());
+        values.put("pluginId", context.getPluginId());
+        values.put("deviceId", context.getDeviceId());
+        return t.format(values);
+    }
+
+    @Override
+    public String createRemotePluginInstallLink(PluginContext context, String version) {
+        Template t = new Template(apiRoot + RemotePluginInstallResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", context.getUserId());
+        values.put("hubId", context.getHubId());
+        values.put("pluginId", context.getPluginId());
+        values.put("pluginVersion", version);
+        return t.format(values);
+    }
+
+    @Override
+    public String createTaskActionSetsLink(HubContext context) {
+        Template t = new Template(apiRoot + TaskActionSetsResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", context.getUserId());
+        values.put("hubId", context.getHubId());
+        return t.format(values);
+    }
+
+    @Override
+    public DeviceContext createDeviceContext(String link) {
+        Template t = new Template(apiRoot + DeviceResource.PATH);
+        Map<String,Object> vars = new HashMap<>();
+        t.parse(link, vars);
+        return DeviceContext.create(HubContext.create((String)vars.get("userId"), (String)vars.get("hubId")), (String)vars.get("pluginId"), (String)vars.get("deviceId"));
+    }
+
+    public String createHubLogLink(HubContext context) {
+        Template t = new Template(apiRoot + HubLogResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", context.getUserId());
+        values.put("hubId", context.getHubId());
+        return t.format(values);
+    }
+
+    public void addRemotePluginLinks(HobsonRestContext ctx, PluginDescriptor pd, HobsonPluginDTO dto) {
+        String encodedId;
+        try {
+            encodedId = URLEncoder.encode(pd.getId(), "UTF8");
+        } catch (UnsupportedEncodingException e) {
+            encodedId = pd.getId();
+        }
+        dto.addLink("install", ctx.getApiRoot() + new Template(RemotePluginInstallResource.PATH).format(createDoubleEntryMap(ctx, "pluginId", encodedId, "pluginVersion", pd.getVersionString())));
+    }
+
+    public String createLocalPluginIconLink(PluginContext context) {
+        Template t = new Template(apiRoot + LocalPluginIconResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", context.getUserId());
+        values.put("hubId", context.getHubId());
+        values.put("pluginId", context.getPluginId());
         return t.format(values);
     }
 }

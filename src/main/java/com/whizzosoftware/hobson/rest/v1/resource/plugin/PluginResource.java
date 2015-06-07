@@ -9,7 +9,6 @@ package com.whizzosoftware.hobson.rest.v1.resource.plugin;
 
 import com.whizzosoftware.hobson.api.HobsonNotFoundException;
 import com.whizzosoftware.hobson.api.plugin.PluginDescriptor;
-import com.whizzosoftware.hobson.api.plugin.PluginList;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
 import com.whizzosoftware.hobson.json.JSONSerializationHelper;
 import com.whizzosoftware.hobson.rest.Authorizer;
@@ -21,6 +20,7 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
 
 import javax.inject.Inject;
+import java.util.List;
 
 /**
  * A REST resource for obtaining plugin information.
@@ -66,22 +66,24 @@ public class PluginResource extends SelfInjectingServerResource {
 
         // TODO: this whole thing can probably be made way more efficient
         // generate a plugin list
-        PluginList bl = pluginManager.getPluginDescriptors(ctx.getHubContext(), true);
+        List<PluginDescriptor> bl = null;//pluginManager.getPluginDescriptors(ctx.getHubContext(), true);
 
         // build a JSON response array
-        for (PluginDescriptor pd : bl.getPlugins()) {
-            if (pluginId.equals(pd.getId())) {
-                return new JsonRepresentation(
-                    linkHelper.addPluginDescriptorLinks(
-                        ctx,
-                        JSONSerializationHelper.createPluginDescriptorJSON(
+        if (bl != null) {
+            for (PluginDescriptor pd : bl) {
+                if (pluginId.equals(pd.getId())) {
+                    return new JsonRepresentation(
+                        linkHelper.addPluginDescriptorLinks(
+                            ctx,
+                            JSONSerializationHelper.createPluginDescriptorJSON(
+                                pd,
+                                true
+                            ),
                             pd,
                             true
-                        ),
-                        pd,
-                        true
-                    )
-                );
+                        )
+                    );
+                }
             }
         }
 

@@ -27,7 +27,7 @@ import java.io.InputStream;
  *
  * @author Dan Noguerol
  */
-public class PluginIconResource extends SelfInjectingServerResource {
+public class LocalPluginIconResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/{pluginId}/icon";
 
     @Inject
