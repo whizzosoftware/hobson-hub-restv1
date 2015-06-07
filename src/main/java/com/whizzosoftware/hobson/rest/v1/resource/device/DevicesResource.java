@@ -19,6 +19,7 @@ import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.DTOHelper;
 import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkProvider;
+import com.whizzosoftware.hobson.rest.v1.util.MediaVariableProxyProvider;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -102,7 +103,7 @@ public class DevicesResource extends SelfInjectingServerResource {
                 if (device.hasPreferredVariableName()) {
                     HobsonVariableDTO.Builder vbuilder = new HobsonVariableDTO.Builder(linkHelper.createDeviceVariableLink(device.getContext(), device.getPreferredVariableName()));
                     if (expansions.has("preferredVariable")) {
-                        HobsonVariable pv = variableManager.getDeviceVariable(device.getContext(), device.getPreferredVariableName());
+                        HobsonVariable pv = variableManager.getDeviceVariable(device.getContext(), device.getPreferredVariableName(), new MediaVariableProxyProvider(ctx));
                         vbuilder.name(pv.getName()).mask(pv.getMask()).lastUpdate(pv.getLastUpdate()).value(pv.getValue());
                     }
                     dto.setPreferredVariable(vbuilder.build());
@@ -111,7 +112,7 @@ public class DevicesResource extends SelfInjectingServerResource {
                 // set variables attribute
                 ItemListDTO vdto = new ItemListDTO(linkHelper.createDeviceVariablesLink(device.getContext()));
                 if (expansions.has("variables")) {
-                    for (HobsonVariable v : variableManager.getDeviceVariables(device.getContext()).getCollection()) {
+                    for (HobsonVariable v : variableManager.getDeviceVariables(device.getContext(), new MediaVariableProxyProvider(ctx)).getCollection()) {
                         vdto.add(new HobsonVariableDTO.Builder(linkHelper.createDeviceVariableLink(device.getContext(), v.getName()))
                             .name(v.getName())
                             .mask(v.getMask())
