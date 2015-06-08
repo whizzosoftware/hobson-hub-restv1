@@ -13,6 +13,7 @@ import com.whizzosoftware.hobson.api.event.VariableUpdateRequestEvent;
 import com.whizzosoftware.hobson.api.variable.HobsonVariable;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
 import com.whizzosoftware.hobson.api.variable.VariableUpdate;
+import com.whizzosoftware.hobson.dto.HobsonVariableDTO;
 import com.whizzosoftware.hobson.json.JSONSerializationHelper;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
@@ -54,37 +55,27 @@ public class DeviceVariableResource extends SelfInjectingServerResource {
      * @apiGroup Variables
      * @apiSuccessExample {json} Success Response:
      * {
+     *   "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.server-radiora/devices/9/variables/level",
      *   "lastUpdate": 1408390215763,
+     *   "name": "level",
      *   "mask": "WRITE_ONLY",
-     *   "links": {
-     *     "self": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.server-radiora/devices/9/variables/level"
-     *   }
+     *   "value": 100
      * }
      */
     @Override
     protected Representation get() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+
         authorizer.authorizeHub(ctx.getHubContext());
-        String pluginId = getAttribute("pluginId");
-        String deviceId = getAttribute("deviceId");
-        HobsonVariable var = variableManager.getDeviceVariable(
-            DeviceContext.create(ctx.getHubContext(), pluginId, deviceId), getAttribute("variableName"),
-            new MediaVariableProxyProvider(ctx)
-        );
-        return new JsonRepresentation(
-            linkHelper.addDeviceVariableLinks(
-                ctx,
-                JSONSerializationHelper.createDeviceVariableJSON(
-                    pluginId,
-                    deviceId,
-                    var,
-                    true
-                ),
-                pluginId,
-                deviceId,
-                var.getName()
-            )
-        );
+
+        DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
+
+        HobsonVariable var = variableManager.getDeviceVariable(dctx, getAttribute("variableName"), new MediaVariableProxyProvider(ctx));
+
+        return new JsonRepresentation(new HobsonVariableDTO(
+            linkHelper.createDeviceVariableLink(dctx, var.getName()),
+            var
+        ).toJSON(linkHelper));
     }
 
     /**
@@ -103,12 +94,16 @@ public class DeviceVariableResource extends SelfInjectingServerResource {
     @Override
     protected Representation put(Representation entity) {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+
         authorizer.authorizeHub(ctx.getHubContext());
+
+        DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
+
         Object value = JSONSerializationHelper.createDeviceVariableValue(JSONHelper.createJSONFromRepresentation(entity));
         String pluginId = getAttribute("pluginId");
         String deviceId = getAttribute("deviceId");
         String variableName = getAttribute("variableName");
-        eventManager.postEvent(ctx.getHubContext(), new VariableUpdateRequestEvent(System.currentTimeMillis(), new VariableUpdate(DeviceContext.create(ctx.getHubContext(), pluginId, deviceId), variableName, value)));
+        eventManager.postEvent(ctx.getHubContext(), new VariableUpdateRequestEvent(System.currentTimeMillis(), new VariableUpdate(dctx, variableName, value)));
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
 
         // TODO: is there a better way to do this? The Restlet request reference scheme is always HTTP for some reason...

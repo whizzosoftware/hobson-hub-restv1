@@ -52,15 +52,16 @@ public class TasksResource extends SelfInjectingServerResource {
      * @apiDescription Retrieves a list of all tasks (regardless of provider).
      * @apiGroup Tasks
      * @apiSuccessExample {json} Success Response:
-     * [
-     *   {
-     *     "name": "My Task",
-     *     "type": "EVENT",
-     *     "links": {
-     *       "self": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.server-rules/tasks/efc02d7a-d0e0-46fb-9cc3-2ca70a66dc05"
-     *     },
-     *   }
-     * ]
+     * {
+     *   "numberOfItems": 1,
+     *   "itemListElement": [
+     *     {
+     *       "item": {
+     *         "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.server-rules/tasks/efc02d7a-d0e0-46fb-9cc3-2ca70a66dc05",
+     *       }
+     *     }
+     *   ]
+     * }
      */
     @Override
     protected Representation get() {
