@@ -649,4 +649,35 @@ public class HATEOASLinkProvider implements LinkProvider {
         values.put("name", name);
         return t.format(values);
     }
+
+    public String createDeviceTelemetryLink(DeviceContext context) {
+        Template t = new Template(apiRoot + DeviceTelemetryResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", context.getUserId());
+        values.put("hubId", context.getHubId());
+        values.put("pluginId", context.getPluginId());
+        values.put("deviceId", context.getDeviceId());
+        return t.format(values);
+    }
+
+    public String createDeviceTelemetryDatasetsLink(DeviceContext context) {
+        Template t = new Template(apiRoot + DeviceTelemetryDatasetsResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", context.getUserId());
+        values.put("hubId", context.getHubId());
+        values.put("pluginId", context.getPluginId());
+        values.put("deviceId", context.getDeviceId());
+        return t.format(values);
+    }
+
+    public String createDeviceTelemetryDatasetLink(DeviceContext context, String varName) {
+        Template t = new Template(apiRoot + DeviceTelemetryDatasetResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", context.getUserId());
+        values.put("hubId", context.getHubId());
+        values.put("pluginId", context.getPluginId());
+        values.put("deviceId", context.getDeviceId());
+        values.put("datasetId", varName);
+        return t.format(values);
+    }
 }

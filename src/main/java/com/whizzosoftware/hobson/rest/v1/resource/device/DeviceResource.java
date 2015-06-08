@@ -21,6 +21,7 @@ import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.DTOHelper;
 import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkProvider;
+import org.osgi.service.device.Device;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -69,6 +70,9 @@ public class DeviceResource extends SelfInjectingServerResource {
      *   },
      *   "configuration": {
      *     "@id": "/api/plugins/com.whizzosoftware.hobson.hub.hobson-hub-radiora/devices/1/configuration"
+     *   },
+     *   "telemetry": {
+     *     "@id": "/api/plugins/com.whizzosoftware.hobson.hub.hobson-hub-radiora/devices/1/telemetry"
      *   }
      * }
      */
@@ -126,6 +130,15 @@ public class DeviceResource extends SelfInjectingServerResource {
             }
         }
         builder.variables(vdto);
+
+        // set telemetry attribute
+        DeviceTelemetryDTO.Builder tdto = new DeviceTelemetryDTO.Builder(linkHelper.createDeviceTelemetryLink(device.getContext()));
+        if (expansions.has("telemetry")) {
+            tdto.capable(device.isTelemetryCapable());
+            tdto.enabled(telemetryManager.isDeviceTelemetryEnabled(dctx));
+            tdto.datasets(new ItemListDTO(linkHelper.createDeviceTelemetryDatasetsLink(dctx)));
+        }
+        builder.telemetry(tdto.build());
 
         return new JsonRepresentation(builder.build().toJSON(linkHelper));
     }

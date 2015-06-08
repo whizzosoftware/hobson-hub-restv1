@@ -79,9 +79,10 @@ public class DevicesResource extends SelfInjectingServerResource {
 
         boolean itemExpand = expansions.has("item");
         for (HobsonDevice device : deviceManager.getAllDevices(ctx.getHubContext())) {
-            HobsonDeviceDTO dto = new HobsonDeviceDTO(linkHelper.createDeviceLink(device.getContext()), itemExpand ? device.getName() : null);
+            HobsonDeviceDTO.Builder builder = new HobsonDeviceDTO.Builder(linkHelper.createDeviceLink(device.getContext()));
             if (itemExpand) {
-                dto.setType(device.getType());
+                builder.name(device.getName());
+                builder.type(device.getType());
 
                 // set configurationClass attribute
                 PropertyContainerClassDTO pccdto = new PropertyContainerClassDTO(linkHelper.createDeviceConfigurationClassLink(device.getContext()));
@@ -89,7 +90,7 @@ public class DevicesResource extends SelfInjectingServerResource {
                     PropertyContainerClass pccc = device.getConfigurationClass();
                     pccdto.setSupportedProperties(DTOHelper.mapTypedPropertyList(pccc.getSupportedProperties()));
                 }
-                dto.setConfigurationClass(pccdto);
+                builder.configurationClass(pccdto);
 
                 // set configuration attribute
                 PropertyContainerDTO pcdto = new PropertyContainerDTO(linkHelper.createDeviceConfigurationLink(device.getContext()));
@@ -97,7 +98,7 @@ public class DevicesResource extends SelfInjectingServerResource {
                     PropertyContainer config = deviceManager.getDeviceConfiguration(device.getContext());
                     pcdto.setPropertyValues(config.getPropertyValues());
                 }
-                dto.setConfiguration(pcdto);
+                builder.configuration(pcdto);
 
                 // set preferredVariable attribute
                 if (device.hasPreferredVariableName()) {
@@ -106,7 +107,7 @@ public class DevicesResource extends SelfInjectingServerResource {
                         HobsonVariable pv = variableManager.getDeviceVariable(device.getContext(), device.getPreferredVariableName(), new MediaVariableProxyProvider(ctx));
                         vbuilder.name(pv.getName()).mask(pv.getMask()).lastUpdate(pv.getLastUpdate()).value(pv.getValue());
                     }
-                    dto.setPreferredVariable(vbuilder.build());
+                    builder.preferredVariable(vbuilder.build());
                 }
 
                 // set variables attribute
@@ -121,9 +122,9 @@ public class DevicesResource extends SelfInjectingServerResource {
                         );
                     }
                 }
-                dto.setVariables(vdto);
+                builder.variables(vdto);
             }
-            results.add(dto);
+            results.add(builder.build());
         }
         return new JsonRepresentation(results.toJSON(linkHelper));
     }
