@@ -175,6 +175,8 @@ public class HubResource extends SelfInjectingServerResource {
                     null,
                     builder
                 );
+                builder.addLink("install", linkHelper.createRemotePluginInstallLink(pctx, pd.getVersionString()));
+                ildto.add(builder.build());
             }
         }
 

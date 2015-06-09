@@ -95,6 +95,7 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
         router.attach(PresenceEntitiesResource.PATH, PresenceEntitiesResource.class);
         router.attach(RemotePluginsResource.PATH, RemotePluginsResource.class);
         router.attach(RemotePluginResource.PATH, RemotePluginResource.class);
+        router.attach(RemotePluginInstallResource.PATH, RemotePluginInstallResource.class);
         router.attach(ShutdownResource.PATH, ShutdownResource.class);
         router.attach(TaskActionClassesResource.PATH, TaskActionClassesResource.class);
         router.attach(TaskActionSetsResource.PATH, TaskActionSetsResource.class);
