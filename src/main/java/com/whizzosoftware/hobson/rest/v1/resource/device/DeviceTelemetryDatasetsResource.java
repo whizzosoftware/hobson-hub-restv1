@@ -15,11 +15,11 @@ import com.whizzosoftware.hobson.api.telemetry.TelemetryInterval;
 import com.whizzosoftware.hobson.api.telemetry.TelemetryManager;
 import com.whizzosoftware.hobson.api.telemetry.TemporalValue;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
-import com.whizzosoftware.hobson.dto.TelemetryDatasetDTO;
-import com.whizzosoftware.hobson.dto.TemporalValueDTO;
+import com.whizzosoftware.hobson.dto.telemetry.TelemetryDatasetDTO;
+import com.whizzosoftware.hobson.dto.telemetry.TemporalValueDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkProvider;
+import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -37,13 +37,13 @@ public class DeviceTelemetryDatasetsResource extends SelfInjectingServerResource
     @Inject
     TelemetryManager telemetryManager;
     @Inject
-    HATEOASLinkProvider linkHelper;
+    LinkProvider linkProvider;
 
     /**
-     * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/devices/:deviceId/telemetry/datasets Get device variable telemetry datasets
+     * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/devices/:deviceId/telemetry/datasets Get device telemetry datasets
      * @apiVersion 0.5.0
      * @apiName GetDeviceTelemetryDatasets
-     * @apiDescription Retrieves telemetry datasets for a specific device.
+     * @apiDescription Retrieves all telemetry datasets for a specific device.
      * @apiGroup Devices
      * @apiSuccessExample {json} Success Response:
      * {
@@ -72,13 +72,13 @@ public class DeviceTelemetryDatasetsResource extends SelfInjectingServerResource
         DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
         HobsonDevice device = deviceManager.getDevice(dctx);
 
-        ItemListDTO datasets = new ItemListDTO(linkHelper.createDeviceTelemetryDatasetsLink(dctx));
+        ItemListDTO datasets = new ItemListDTO(linkProvider.createDeviceTelemetryDatasetsLink(dctx));
 
         String[] vars = device.getTelemetryVariableNames();
         for (String var : vars) {
             long endTime = System.currentTimeMillis() / 1000; // TODO: should be pulled from request
             TelemetryInterval interval = TelemetryInterval.HOURS_24; // TODO: should be pulled from request
-            TelemetryDatasetDTO.Builder builder = new TelemetryDatasetDTO.Builder(linkHelper.createDeviceTelemetryDatasetLink(dctx, var));
+            TelemetryDatasetDTO.Builder builder = new TelemetryDatasetDTO.Builder(linkProvider.createDeviceTelemetryDatasetLink(dctx, var));
             builder.name(var);
             if (expansions.has("item")) {
                 Collection<TemporalValue> data = telemetryManager.getDeviceVariableTelemetry(dctx, var, endTime, interval);
@@ -92,6 +92,6 @@ public class DeviceTelemetryDatasetsResource extends SelfInjectingServerResource
             datasets.add(builder.build());
         }
 
-        return new JsonRepresentation(datasets.toJSON(linkHelper));
+        return new JsonRepresentation(datasets.toJSON());
     }
 }

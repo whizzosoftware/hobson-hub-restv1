@@ -7,11 +7,13 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.plugin;
 
+import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
 import com.whizzosoftware.hobson.api.plugin.PluginContext;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
-import com.whizzosoftware.hobson.json.JSONSerializationHelper;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -52,6 +54,17 @@ public class PluginCurrentVersionResource extends SelfInjectingServerResource {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
         authorizer.authorizeHub(ctx.getHubContext());
         String pluginId = getAttribute("pluginId");
-        return new JsonRepresentation(JSONSerializationHelper.createCurrentVersionJSON(pluginManager.getPluginCurrentVersion(PluginContext.create(ctx.getHubContext(), pluginId))));
+        return new JsonRepresentation(createCurrentVersionJSON(pluginManager.getPluginCurrentVersion(PluginContext.create(ctx.getHubContext(), pluginId))));
     }
+
+    private static JSONObject createCurrentVersionJSON(String currentVersion) {
+        try {
+            JSONObject json = new JSONObject();
+            json.put("currentVersion", currentVersion);
+            return json;
+        } catch (JSONException e) {
+            throw new HobsonInvalidRequestException(e.getMessage());
+        }
+    }
+
 }

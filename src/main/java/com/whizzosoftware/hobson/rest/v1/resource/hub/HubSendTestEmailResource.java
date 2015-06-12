@@ -9,11 +9,11 @@ package com.whizzosoftware.hobson.rest.v1.resource.hub;
 
 import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
 import com.whizzosoftware.hobson.api.HobsonRuntimeException;
-import com.whizzosoftware.hobson.api.config.EmailConfiguration;
 import com.whizzosoftware.hobson.api.hub.HubManager;
-import com.whizzosoftware.hobson.dto.PropertyContainerDTO;
+import com.whizzosoftware.hobson.dto.property.PropertyContainerDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.v1.util.DTOHelper;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -66,7 +66,11 @@ public class HubSendTestEmailResource extends SelfInjectingServerResource {
             HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
             authorizer.authorizeHub(ctx.getHubContext());
             PropertyContainerDTO dto = new PropertyContainerDTO(JSONHelper.createJSONFromRepresentation(entity));
-            hubManager.sendTestEmail(ctx.getHubContext(), new EmailConfiguration.Builder().map(dto.getPropertyValues()).build());
+
+            hubManager.sendTestEmail(
+                ctx.getHubContext(),
+                DTOHelper.mapPropertyContainerDTO(dto, null, null)
+            );
             getResponse().setStatus(Status.SUCCESS_ACCEPTED);
             return new EmptyRepresentation();
         } catch (HobsonRuntimeException e) {

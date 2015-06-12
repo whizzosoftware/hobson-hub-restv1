@@ -18,10 +18,17 @@ import com.whizzosoftware.hobson.api.property.PropertyContainerClass;
 import com.whizzosoftware.hobson.api.task.HobsonTask;
 import com.whizzosoftware.hobson.api.task.TaskManager;
 import com.whizzosoftware.hobson.dto.*;
+import com.whizzosoftware.hobson.dto.hub.HobsonHubDTO;
+import com.whizzosoftware.hobson.dto.hub.HubLogDTO;
+import com.whizzosoftware.hobson.dto.plugin.HobsonPluginDTO;
+import com.whizzosoftware.hobson.dto.property.PropertyContainerClassDTO;
+import com.whizzosoftware.hobson.dto.property.PropertyContainerDTO;
+import com.whizzosoftware.hobson.dto.property.PropertyContainerSetDTO;
+import com.whizzosoftware.hobson.dto.task.HobsonTaskDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.DTOHelper;
-import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkProvider;
+import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import org.restlet.data.MediaType;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -47,7 +54,7 @@ public class HubResource extends SelfInjectingServerResource {
     @Inject
     TaskManager taskManager;
     @Inject
-    HATEOASLinkProvider linkHelper;
+    LinkProvider linkProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId Get Hub details
@@ -83,89 +90,89 @@ public class HubResource extends SelfInjectingServerResource {
         HobsonHub hub = hubManager.getHub(ctx.getHubContext());
 
         // create the response DTO
-        HobsonHubDTO dto = new HobsonHubDTO(linkHelper.createHubLink(hub.getContext()), hub.getName(), hub.getVersion());
+        HobsonHubDTO.Builder builder = new HobsonHubDTO.Builder(linkProvider.createHubLink(hub.getContext()))
+            .name(hub.getName())
+            .version(hub.getVersion());
 
         // add action classes
-        ItemListDTO ildto = new ItemListDTO(linkHelper.createTaskActionClassesLink(ctx.getHubContext()));
+        ItemListDTO ildto = new ItemListDTO(linkProvider.createTaskActionClassesLink(ctx.getHubContext()));
         if (expansions.has("actionClasses")) {
             for (PropertyContainerClass tac : taskManager.getAllActionClasses(hub.getContext())) {
-                ildto.add(new PropertyContainerClassDTO(linkHelper.createTaskActionClassLink(tac.getContext())));
+                ildto.add(new PropertyContainerClassDTO.Builder(linkProvider.createTaskActionClassLink(tac.getContext())).build());
             }
         }
-        dto.setActionClasses(ildto);
+        builder.actionClasses(ildto);
 
         // add configuration class attribute
         if (expansions.has("configurationClass")) {
-            dto.setConfigurationClass(
-                new PropertyContainerClassDTO(
-                    linkHelper.createHubConfigurationClassLink(hub.getContext()),
-                    hub.getConfigurationClass().getName(),
-                    DTOHelper.mapTypedPropertyList(hub.getConfigurationClass().getSupportedProperties())
-                )
+            builder.configurationClass(
+                new PropertyContainerClassDTO.Builder(linkProvider.createHubConfigurationClassLink(hub.getContext()))
+                    .name(hub.getConfigurationClass().getName())
+                    .supportedProperties(DTOHelper.mapTypedPropertyList(hub.getConfigurationClass().getSupportedProperties()))
+                    .build()
             );
         } else {
-            dto.setConfigurationClass(new PropertyContainerClassDTO(linkHelper.createHubConfigurationClassLink(hub.getContext())));
+            builder.configurationClass(new PropertyContainerClassDTO.Builder(linkProvider.createHubConfigurationClassLink(hub.getContext())).build());
         }
 
         // add configuration attribute
         if (expansions.has("configuration")) {
             PropertyContainer hubConfig = hubManager.getConfiguration(hub.getContext());
-            dto.setConfiguration(
-                new PropertyContainerDTO(
-                    linkHelper.createHubConfigurationLink(hub.getContext()),
-                    hubConfig.getName(),
-                    new PropertyContainerClassDTO(
-                        linkHelper.createHubConfigurationClassLink(ctx.getHubContext())
-                    ),
-                    hubConfig.getPropertyValues()
-                )
-            );
+            builder.configuration(
+                new PropertyContainerDTO.Builder(linkProvider.createHubConfigurationLink(hub.getContext()))
+                    .name(hubConfig.getName())
+                    .containerClass(
+                        new PropertyContainerClassDTO.Builder(linkProvider.createHubConfigurationClassLink(ctx.getHubContext())).build()
+                    )
+                    .values(hubConfig.getPropertyValues())
+                    .build()
+                );
         } else {
-            dto.setConfiguration(new PropertyContainerDTO(linkHelper.createHubConfigurationLink(hub.getContext())));
+            builder.configuration(new PropertyContainerDTO.Builder(linkProvider.createHubConfigurationLink(hub.getContext())).build());
         }
 
         // add condition classes
-        ildto = new ItemListDTO(linkHelper.createTaskConditionClassesLink(ctx.getHubContext()));
+        ildto = new ItemListDTO(linkProvider.createTaskConditionClassesLink(ctx.getHubContext()));
         if (expansions.has("conditionClasses")) {
             for (PropertyContainerClass tcc : taskManager.getAllConditionClasses(hub.getContext())) {
-                ildto.add(new PropertyContainerClassDTO(linkHelper.createTaskConditionClassLink(tcc.getContext())));
+                ildto.add(new PropertyContainerClassDTO.Builder(linkProvider.createTaskConditionClassLink(tcc.getContext())).build());
             }
         }
-        dto.setConditionClasses(ildto);
+        builder.conditionClasses(ildto);
 
         // add devices attribute
-        ildto = new ItemListDTO(linkHelper.createDevicesLink(ctx.getHubContext()));
-        dto.setDevices(ildto);
+        ildto = new ItemListDTO(linkProvider.createDevicesLink(ctx.getHubContext()));
+        builder.devices(ildto);
 
         // add log attribute
-        dto.setLog(new HubLogDTO(linkHelper.createHubLogLink(ctx.getHubContext())));
+        builder.log(new HubLogDTO(linkProvider.createHubLogLink(ctx.getHubContext())));
 
         // add local plugins attribute
-        ildto = new ItemListDTO(linkHelper.createLocalPluginsLink(ctx.getHubContext()));
-        dto.setLocalPlugins(ildto);
+        ildto = new ItemListDTO(linkProvider.createLocalPluginsLink(ctx.getHubContext()));
+        builder.localPlugins(ildto);
         if (expansions.has("localPlugins")) {
             for (PluginDescriptor pd : pluginManager.getLocalPluginDescriptors(ctx.getHubContext())) {
                 PluginContext pctx = PluginContext.create(ctx.getHubContext(), pd.getId());
-                HobsonPluginDTO.Builder builder = new HobsonPluginDTO.Builder(linkHelper.createLocalPluginLink(pctx));
+                HobsonPluginDTO.Builder builder2 = new HobsonPluginDTO.Builder(linkProvider.createLocalPluginLink(pctx));
                 DTOHelper.populatePluginDTO(
                     pd,
-                    pd.isConfigurable() ? linkHelper.createLocalPluginConfigurationClassLink(pctx) : null,
+                    pd.isConfigurable() ? linkProvider.createLocalPluginConfigurationClassLink(pctx) : null,
                     pd.isConfigurable() ? pluginManager.getPlugin(pctx).getConfigurationClass() : null,
-                    pd.isConfigurable() ? linkHelper.createLocalPluginConfigurationLink(pctx) : null,
+                    pd.isConfigurable() ? linkProvider.createLocalPluginConfigurationLink(pctx) : null,
                     pd.isConfigurable() ? pluginManager.getPluginConfiguration(pctx) : null,
-                    linkHelper.createLocalPluginIconLink(pctx),
-                    builder
+                    linkProvider.createLocalPluginIconLink(pctx),
+                    builder2
                 );
             }
         }
 
         // add remote plugins attribute
-        ildto = new ItemListDTO(linkHelper.createRemotePluginsLink(ctx.getHubContext()));
-        dto.setRemotePlugins(ildto);
+        ildto = new ItemListDTO(linkProvider.createRemotePluginsLink(ctx.getHubContext()));
+        builder.remotePlugins(ildto);
         if (expansions.has("remotePlugins")) {
             for (PluginDescriptor pd : pluginManager.getRemotePluginDescriptors(ctx.getHubContext())) {
                 PluginContext pctx = PluginContext.create(ctx.getHubContext(), pd.getId());
-                HobsonPluginDTO.Builder builder = new HobsonPluginDTO.Builder(linkHelper.createLocalPluginLink(pctx));
+                HobsonPluginDTO.Builder builder2 = new HobsonPluginDTO.Builder(linkProvider.createLocalPluginLink(pctx));
                 DTOHelper.populatePluginDTO(
                     pd,
                     null,
@@ -173,29 +180,30 @@ public class HubResource extends SelfInjectingServerResource {
                     null,
                     null,
                     null,
-                    builder
+                    builder2
                 );
-                builder.addLink("install", linkHelper.createRemotePluginInstallLink(pctx, pd.getVersionString()));
+                builder2.addLink("install", linkProvider.createRemotePluginInstallLink(pctx, pd.getVersionString()));
                 ildto.add(builder.build());
             }
         }
 
         // add tasks
-        ildto = new ItemListDTO(linkHelper.createTasksLink(ctx.getHubContext()));
+        ildto = new ItemListDTO(linkProvider.createTasksLink(ctx.getHubContext()));
         if (expansions.has("tasks")) {
             ildto.updateNumberOfItems();
             for (HobsonTask task : taskManager.getAllTasks(hub.getContext())) {
-                HobsonTaskDTO.Builder builder = new HobsonTaskDTO.Builder(linkHelper.createTaskLink(task.getContext()));
-                builder.name(task.getName())
-                    .conditionSet(new PropertyContainerSetDTO("", null, null))
-                    .actionSet(new PropertyContainerSetDTO("", null, null))
+                HobsonTaskDTO.Builder builder2 = new HobsonTaskDTO.Builder(linkProvider.createTaskLink(task.getContext()));
+                builder2.name(task.getName())
+                    .conditionSet(new PropertyContainerSetDTO.Builder("").build()) // TODO
+                    .actionSet(new PropertyContainerSetDTO.Builder("").build()) // TODO
                     .properties(task.getProperties());
                 ildto.add(builder.build());
             }
         }
-        dto.setTasks(ildto);
+        builder.tasks(ildto);
 
-        JsonRepresentation jr = new JsonRepresentation(dto.toJSON(linkHelper));
+        HobsonHubDTO dto = builder.build();
+        JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
         jr.setMediaType(new MediaType(dto.getMediaType() + "+json"));
         return jr;
     }

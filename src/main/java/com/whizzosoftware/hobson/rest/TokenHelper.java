@@ -70,8 +70,7 @@ public class TokenHelper {
 
             // make sure the token hasn't expired
             if (claims.getExpirationTime().isAfter(NumericDate.now())) {
-                return new HobsonUser.Builder()
-                        .id(claims.getSubject())
+                return new HobsonUser.Builder(claims.getSubject())
                         .firstName(claims.getStringClaimValue(PROP_FIRST_NAME))
                         .lastName(claims.getStringClaimValue(PROP_LAST_NAME))
                         .build();

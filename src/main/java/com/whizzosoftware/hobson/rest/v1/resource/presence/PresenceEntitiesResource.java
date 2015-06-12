@@ -9,12 +9,12 @@ package com.whizzosoftware.hobson.rest.v1.resource.presence;
 
 import com.whizzosoftware.hobson.api.presence.PresenceEntity;
 import com.whizzosoftware.hobson.api.presence.PresenceManager;
-import com.whizzosoftware.hobson.json.JSONSerializationHelper;
+import com.whizzosoftware.hobson.dto.ItemListDTO;
+import com.whizzosoftware.hobson.dto.presence.PresenceEntityDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkProvider;
+import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -31,14 +31,13 @@ import javax.inject.Inject;
  */
 public class PresenceEntitiesResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/presence/entities";
-    public static final String REL = "presenceEntities";
 
     @Inject
     Authorizer authorizer;
     @Inject
     PresenceManager presenceManager;
     @Inject
-    HATEOASLinkProvider linkHelper;
+    LinkProvider linkProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/presence/entities Get presence entities
@@ -68,21 +67,20 @@ public class PresenceEntitiesResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+
         authorizer.authorizeHub(ctx.getHubContext());
-        JSONArray results = new JSONArray();
+
+        ItemListDTO results = new ItemListDTO(linkProvider.createPresenceEntitiesLink(ctx.getHubContext()));
         for (PresenceEntity entity : presenceManager.getAllEntities(ctx.getHubContext())) {
-            results.put(
-                linkHelper.addPresenceEntityLinks(
-                    ctx,
-                    JSONSerializationHelper.createPresenceEntityJSON(
-                        entity,
-                        false
-                    ),
-                    entity.getContext().getEntityId()
-                )
+            results.add(new PresenceEntityDTO.Builder(linkProvider.createPresenceEntityLink(entity.getContext()))
+               .name(entity.getName())
+               .location(entity.getLocation())
+               .lastUpdate(entity.getLastUpdate())
+               .build()
             );
         }
-        return new JsonRepresentation(results);
+
+        return new JsonRepresentation(results.toJSON());
     }
 
     /**

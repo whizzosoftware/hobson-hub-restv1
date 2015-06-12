@@ -10,11 +10,11 @@ package com.whizzosoftware.hobson.rest.v1.resource.device;
 import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.api.property.PropertyContainer;
-import com.whizzosoftware.hobson.dto.PropertyContainerClassDTO;
-import com.whizzosoftware.hobson.dto.PropertyContainerDTO;
+import com.whizzosoftware.hobson.dto.property.PropertyContainerClassDTO;
+import com.whizzosoftware.hobson.dto.property.PropertyContainerDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkProvider;
+import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -37,7 +37,7 @@ public class DeviceConfigurationResource extends SelfInjectingServerResource {
     @Inject
     DeviceManager deviceManager;
     @Inject
-    HATEOASLinkProvider linkHelper;
+    LinkProvider linkProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/devices/:deviceId/configuration Get device configuration
@@ -47,44 +47,34 @@ public class DeviceConfigurationResource extends SelfInjectingServerResource {
      * @apiGroup Devices
      * @apiSuccessExample {json} Success Response:
      * {
-     *   "properties": {
-     *     "name": {
-     *       "name": "Name",
-     *       "description": "The device name",
-     *       "value": "My Device",
-     *       "type": "STRING"
-     *     },
-     *     "username": {
-     *       "name": "User Name",
-     *       "description": "A username",
-     *       "type": "STRING"
-     *     }
+     *   "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-radiora/device1/configuration"
+     *   "cclass": {
+     *     "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-radiora/device1/configurationClass"
      *   },
-     *   "links": {
-     *       "self": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-radiora/device1/configuration"
+     *   "values": {
+     *     "name": "My Device",
+     *     }
      *   }
      * }
      */
     @Override
     protected Representation get() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getHubContext());
-        String pluginId = getAttribute("pluginId");
-        String deviceId = getAttribute("deviceId");
 
-        DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), pluginId, deviceId);
+        authorizer.authorizeHub(ctx.getHubContext());
+
+        DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
         PropertyContainer config = deviceManager.getDeviceConfiguration(dctx);
 
-        PropertyContainerDTO dto = new PropertyContainerDTO(
-            linkHelper.createDeviceConfigurationLink(dctx),
-            config.getName(),
-            new PropertyContainerClassDTO(
-                linkHelper.createDeviceConfigurationClassLink(dctx)
-            ),
-            config.getPropertyValues()
-        );
+        PropertyContainerDTO dto = new PropertyContainerDTO.Builder(linkProvider.createDeviceConfigurationLink(dctx))
+            .name(config.getName())
+            .containerClass(
+                new PropertyContainerClassDTO.Builder(linkProvider.createDeviceConfigurationClassLink(dctx)).build()
+            )
+            .values(config.getPropertyValues())
+            .build();
 
-        return new JsonRepresentation(dto.toJSON(linkHelper));
+        return new JsonRepresentation(dto.toJSON());
     }
 
     /**
@@ -95,13 +85,12 @@ public class DeviceConfigurationResource extends SelfInjectingServerResource {
      * @apiGroup Devices
      * @apiParamExample {json} Example Request:
      * {
-     *   "properties": {
-     *     "name": {
-     *       "value": "My New Device Name"
-     *     },
-     *     "username": {
-     *       "value": "johndoe"
-     *     }
+     *   "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-radiora/device1/configuration",
+     *   "cclass": {
+     *     "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-radiora/device1/configurationClass"
+     *   },
+     *   "values": {
+     *     "name": "My New Device Name",
      *   }
      * }
      * @apiSuccessExample {json} Success Response:
@@ -116,7 +105,7 @@ public class DeviceConfigurationResource extends SelfInjectingServerResource {
         DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
         PropertyContainerDTO dto = new PropertyContainerDTO(JSONHelper.createJSONFromRepresentation(entity));
 
-        deviceManager.setDeviceConfigurationProperties(dctx, dto.getPropertyValues(), true);
+        deviceManager.setDeviceConfigurationProperties(dctx, dto.getValues(), true);
 
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();

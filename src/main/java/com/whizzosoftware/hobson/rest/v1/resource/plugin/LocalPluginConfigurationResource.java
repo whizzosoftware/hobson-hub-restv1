@@ -11,12 +11,12 @@ import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.api.plugin.PluginContext;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
 import com.whizzosoftware.hobson.api.property.PropertyContainer;
-import com.whizzosoftware.hobson.dto.PropertyContainerClassDTO;
-import com.whizzosoftware.hobson.dto.PropertyContainerDTO;
+import com.whizzosoftware.hobson.dto.property.PropertyContainerClassDTO;
+import com.whizzosoftware.hobson.dto.property.PropertyContainerDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.DTOHelper;
-import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkProvider;
+import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -42,7 +42,7 @@ public class LocalPluginConfigurationResource extends SelfInjectingServerResourc
     @Inject
     PluginManager pluginManager;
     @Inject
-    HATEOASLinkProvider linkHelper;
+    LinkProvider linkProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/local/:pluginId/configuration Get plugin configuration
@@ -80,14 +80,14 @@ public class LocalPluginConfigurationResource extends SelfInjectingServerResourc
         PropertyContainer config = pluginManager.getPluginConfiguration(pctx);
 
         return new JsonRepresentation(
-            new PropertyContainerDTO(
-                linkHelper.createLocalPluginConfigurationLink(pctx),
-                config.getName(),
-                new PropertyContainerClassDTO(
-                    linkHelper.createLocalPluginConfigurationClassLink(pctx)
-                ),
-                config.getPropertyValues()
-            ).toJSON(linkHelper)
+            new PropertyContainerDTO.Builder(linkProvider.createLocalPluginConfigurationLink(pctx))
+                .name(config.getName())
+                .containerClass(
+                    new PropertyContainerClassDTO.Builder(linkProvider.createLocalPluginConfigurationClassLink(pctx)).build()
+                )
+                .values(config.getPropertyValues())
+                .build()
+                .toJSON()
         );
     }
 
@@ -117,7 +117,7 @@ public class LocalPluginConfigurationResource extends SelfInjectingServerResourc
         PropertyContainerDTO dto = new PropertyContainerDTO(JSONHelper.createJSONFromRepresentation(entity));
 
         String pluginId = getAttribute("pluginId");
-        pluginManager.setPluginConfiguration(PluginContext.create(ctx.getHubContext(), pluginId), DTOHelper.mapPropertyContainerDTO(dto, hubManager, linkHelper));
+        pluginManager.setPluginConfiguration(PluginContext.create(ctx.getHubContext(), pluginId), DTOHelper.mapPropertyContainerDTO(dto, hubManager, linkProvider));
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();
     }

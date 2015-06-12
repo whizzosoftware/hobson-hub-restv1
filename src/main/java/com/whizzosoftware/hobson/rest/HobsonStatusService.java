@@ -8,7 +8,7 @@
 package com.whizzosoftware.hobson.rest;
 
 import com.whizzosoftware.hobson.api.*;
-import com.whizzosoftware.hobson.json.JSONSerializationHelper;
+import com.whizzosoftware.hobson.dto.ErrorsDTO;
 import org.json.JSONException;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -50,12 +50,12 @@ public class HobsonStatusService extends StatusService {
     public Representation getRepresentation(Status status, Request request, Response response) {
         Integer code = (status != null) ? status.getCode() : null;
         if (status != null && status.getDescription() != null) {
-            return new JsonRepresentation(JSONSerializationHelper.createErrorJSON(code, status.getDescription()));
+            return new JsonRepresentation(new ErrorsDTO.Builder(code, status.getDescription()).build().toJSON());
         } else if (status != null && status.getThrowable() != null) {
-            return new JsonRepresentation(JSONSerializationHelper.createErrorJSON(status.getThrowable()));
+            return new JsonRepresentation(new ErrorsDTO.Builder(status.getThrowable()).build().toJSON());
         } else {
             logger.error("Unknown error servicing request: " + request.getOriginalRef());
-            return new JsonRepresentation(JSONSerializationHelper.createErrorJSON(code, "An unknown error has occurred"));
+            return new JsonRepresentation(new ErrorsDTO.Builder(code, "An unknown error has occurred").build().toJSON());
         }
     }
 }

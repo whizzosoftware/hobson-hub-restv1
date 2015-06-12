@@ -11,11 +11,11 @@ import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.api.task.HobsonTask;
 import com.whizzosoftware.hobson.api.task.TaskContext;
 import com.whizzosoftware.hobson.api.task.TaskManager;
-import com.whizzosoftware.hobson.dto.HobsonTaskDTO;
+import com.whizzosoftware.hobson.dto.task.HobsonTaskDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.DTOHelper;
-import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkProvider;
+import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -40,7 +40,7 @@ public class TaskResource extends SelfInjectingServerResource {
     @Inject
     TaskManager taskManager;
     @Inject
-    HATEOASLinkProvider linkHelper;
+    LinkProvider linkProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/tasks/:taskId Get task details
@@ -83,14 +83,14 @@ public class TaskResource extends SelfInjectingServerResource {
         authorizer.authorizeHub(ctx.getHubContext());
         HobsonTask task = taskManager.getTask(TaskContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("taskId")));
 
-        HobsonTaskDTO dto = new HobsonTaskDTO.Builder(linkHelper.createTaskLink(task.getContext()))
+        HobsonTaskDTO dto = new HobsonTaskDTO.Builder(linkProvider.createTaskLink(task.getContext()))
             .name(task.getName())
             .conditionSet(null)
             .actionSet(null)
             .properties(task.getProperties())
             .build();
 
-        return new JsonRepresentation(dto.toJSON(linkHelper));
+        return new JsonRepresentation(dto.toJSON());
     }
 
     /**
@@ -173,8 +173,8 @@ public class TaskResource extends SelfInjectingServerResource {
             TaskContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("taskId")),
             dto.getName(),
             dto.getDescription(),
-            mapper.mapPropertyContainerSetDTO(dto.getConditionSet(), hubManager, linkHelper),
-            mapper.mapPropertyContainerSetDTO(dto.getActionSet(), hubManager, linkHelper));
+            mapper.mapPropertyContainerSetDTO(dto.getConditionSet(), hubManager, linkProvider),
+            mapper.mapPropertyContainerSetDTO(dto.getActionSet(), hubManager, linkProvider));
 
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();

@@ -3,10 +3,10 @@ package com.whizzosoftware.hobson.rest.v1.resource.task;
 import com.whizzosoftware.hobson.api.property.PropertyContainerSet;
 import com.whizzosoftware.hobson.api.task.TaskManager;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
-import com.whizzosoftware.hobson.dto.PropertyContainerSetDTO;
+import com.whizzosoftware.hobson.dto.property.PropertyContainerSetDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkProvider;
+import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -22,7 +22,7 @@ public class TaskActionSetsResource extends SelfInjectingServerResource {
     @Inject
     TaskManager taskManager;
     @Inject
-    HATEOASLinkProvider linkHelper;
+    LinkProvider linkProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/tasks/actionSets Get all action sets
@@ -55,16 +55,12 @@ public class TaskActionSetsResource extends SelfInjectingServerResource {
 
         authorizer.authorizeHub(ctx.getHubContext());
 
-        ItemListDTO results = new ItemListDTO(linkHelper.createTaskActionSetsLink(ctx.getHubContext()));
+        ItemListDTO results = new ItemListDTO(linkProvider.createTaskActionSetsLink(ctx.getHubContext()));
 
         for (PropertyContainerSet actionSet : taskManager.getAllActionSets(ctx.getHubContext())) {
-            results.add(new PropertyContainerSetDTO(
-                linkHelper.createTaskActionSetLink(ctx.getHubContext(), actionSet.getId()),
-                null, // TODO
-                null // TODO
-            ));
+            results.add(new PropertyContainerSetDTO.Builder(linkProvider.createTaskActionSetLink(ctx.getHubContext(), actionSet.getId())).build());
         }
 
-        return new JsonRepresentation(results.toJSON(linkHelper));
+        return new JsonRepresentation(results.toJSON());
     }
 }

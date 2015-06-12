@@ -7,13 +7,15 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.image;
 
+import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
 import com.whizzosoftware.hobson.api.image.ImageGroup;
 import com.whizzosoftware.hobson.api.image.ImageManager;
-import com.whizzosoftware.hobson.json.JSONSerializationHelper;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkProvider;
+import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -24,14 +26,13 @@ import java.util.List;
 
 public class ImageLibraryRootResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/imageLibrary";
-    public static final String REL = "imageLibrary";
 
     @Inject
     Authorizer authorizer;
     @Inject
     ImageManager imageManager;
     @Inject
-    HATEOASLinkProvider linkHelper;
+    LinkProvider linkProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/imageLibrary Get library groups
@@ -62,12 +63,22 @@ public class ImageLibraryRootResource extends SelfInjectingServerResource {
         JSONArray results = new JSONArray();
         List<ImageGroup> groups = imageManager.getImageLibraryGroups(ctx.getHubContext());
         for (ImageGroup group : groups) {
-            results.put(linkHelper.addImageLibraryGroupLinks(
-                ctx,
-                JSONSerializationHelper.createImageLibraryGroupJSON(group),
-                group.getId()
+            results.put(linkProvider.addImageLibraryGroupLinks(
+                    ctx,
+                    createImageLibraryGroupJSON(group),
+                    group.getId()
             ));
         }
         return new JsonRepresentation(results);
+    }
+
+    private static JSONObject createImageLibraryGroupJSON(ImageGroup group) {
+        try {
+            JSONObject json = new JSONObject();
+            json.put("name", group.getName());
+            return json;
+        } catch (JSONException e) {
+            throw new HobsonInvalidRequestException(e.getMessage());
+        }
     }
 }

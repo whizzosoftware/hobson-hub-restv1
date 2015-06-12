@@ -5,8 +5,10 @@ import com.whizzosoftware.hobson.api.HobsonAuthenticationException;
 import com.whizzosoftware.hobson.api.user.HobsonUser;
 import com.whizzosoftware.hobson.api.user.UserStore;
 import com.whizzosoftware.hobson.dto.AuthResultDTO;
+import com.whizzosoftware.hobson.dto.ItemListDTO;
+import com.whizzosoftware.hobson.dto.PersonDTO;
 import com.whizzosoftware.hobson.rest.TokenHelper;
-import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkProvider;
+import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import org.json.JSONObject;
 import org.restlet.data.MediaType;
@@ -24,7 +26,7 @@ public class LoginResource extends SelfInjectingServerResource {
     @Inject
     TokenHelper tokenHelper;
     @Inject
-    HATEOASLinkProvider linkHelper;
+    LinkProvider linkProvider;
 
     /**
      * @api {post} /api/v1/login Login user
@@ -57,19 +59,26 @@ public class LoginResource extends SelfInjectingServerResource {
     @Override
     protected Representation post(Representation entity) {
         ExpansionFields expansion = new ExpansionFields(getQueryValue("expand"));
+
         JSONObject json = JSONHelper.createJSONFromRepresentation(entity);
 
         if (json.has("username") && json.has("password")) {
             HobsonUser user = userManager.authenticate(json.getString("username"), json.getString("password"));
 
+            PersonDTO.Builder builder = new PersonDTO.Builder(linkProvider.createUserLink(user.getId()));
+            if (expansion.has("user")) {
+                builder
+                    .familyName(user.getLastName())
+                    .givenName(user.getFirstName())
+                    .hubs(new ItemListDTO(linkProvider.createHubsLink(user.getId())));
+            }
+
             AuthResultDTO dto = new AuthResultDTO(
                 tokenHelper.createToken(user.getId()),
-                user,
-                expansion,
-                linkHelper
+                builder.build()
             );
 
-            JsonRepresentation jr = new JsonRepresentation(dto.toJSON(linkHelper));
+            JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
             jr.setMediaType(new MediaType(dto.getMediaType() + "+json"));
             return jr;
         } else {

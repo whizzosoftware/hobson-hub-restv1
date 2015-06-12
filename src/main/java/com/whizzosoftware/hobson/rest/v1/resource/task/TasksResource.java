@@ -11,12 +11,12 @@ import com.whizzosoftware.hobson.ExpansionFields;
 import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.api.task.HobsonTask;
 import com.whizzosoftware.hobson.api.task.TaskManager;
-import com.whizzosoftware.hobson.dto.HobsonTaskDTO;
+import com.whizzosoftware.hobson.dto.task.HobsonTaskDTO;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.DTOHelper;
-import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkProvider;
+import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -43,7 +43,7 @@ public class TasksResource extends SelfInjectingServerResource {
     @Inject
     TaskManager taskManager;
     @Inject
-    HATEOASLinkProvider linkHelper;
+    LinkProvider linkProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/tasks Get all tasks
@@ -70,11 +70,11 @@ public class TasksResource extends SelfInjectingServerResource {
 
         authorizer.authorizeHub(ctx.getHubContext());
 
-        ItemListDTO results = new ItemListDTO(linkHelper.createTasksLink(ctx.getHubContext()));
+        ItemListDTO results = new ItemListDTO(linkProvider.createTasksLink(ctx.getHubContext()));
 
         Collection<HobsonTask> tasks = taskManager.getAllTasks(ctx.getHubContext());
         for (HobsonTask task : tasks) {
-            HobsonTaskDTO.Builder builder = new HobsonTaskDTO.Builder(linkHelper.createTaskLink(task.getContext()));
+            HobsonTaskDTO.Builder builder = new HobsonTaskDTO.Builder(linkProvider.createTaskLink(task.getContext()));
             if (expansions.has("item")) {
                 builder.name(task.getName());
                 builder.description(task.getDescription());
@@ -85,7 +85,7 @@ public class TasksResource extends SelfInjectingServerResource {
             results.add(builder.build());
         }
 
-        return new JsonRepresentation(results.toJSON(linkHelper));
+        return new JsonRepresentation(results.toJSON());
     }
 
     /**
@@ -127,8 +127,8 @@ public class TasksResource extends SelfInjectingServerResource {
             ctx.getHubContext(),
             dto.getName(),
             dto.getDescription(),
-            DTOHelper.mapPropertyContainerSetDTO(dto.getConditionSet(), hubManager, linkHelper),
-            DTOHelper.mapPropertyContainerSetDTO(dto.getActionSet(), hubManager, linkHelper)
+            DTOHelper.mapPropertyContainerSetDTO(dto.getConditionSet(), hubManager, linkProvider),
+            DTOHelper.mapPropertyContainerSetDTO(dto.getActionSet(), hubManager, linkProvider)
         );
 
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);

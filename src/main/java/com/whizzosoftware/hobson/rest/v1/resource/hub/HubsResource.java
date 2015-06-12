@@ -7,26 +7,22 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.hub;
 
-import com.whizzosoftware.hobson.ExpansionFields;
 import com.whizzosoftware.hobson.api.hub.HobsonHub;
+import com.whizzosoftware.hobson.api.hub.HubContext;
 import com.whizzosoftware.hobson.api.hub.HubManager;
-import com.whizzosoftware.hobson.dto.HobsonHubDTO;
+import com.whizzosoftware.hobson.dto.hub.HobsonHubDTO;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
-import com.whizzosoftware.hobson.json.JSONSerializationHelper;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkProvider;
+import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
-import org.json.JSONObject;
 import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
-import org.restlet.routing.Template;
 
 import javax.inject.Inject;
-import java.util.Collections;
 
 public class HubsResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs";
@@ -34,7 +30,7 @@ public class HubsResource extends SelfInjectingServerResource {
     @Inject
     HubManager hubManager;
     @Inject
-    HATEOASLinkProvider linkHelper;
+    LinkProvider linkProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs Get Hubs
@@ -58,14 +54,13 @@ public class HubsResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        ExpansionFields expansion = new ExpansionFields(getQueryValue("expand"));
 
-        ItemListDTO itemList = new ItemListDTO(linkHelper.createHubsLink(ctx.getUserId()));
+        ItemListDTO itemList = new ItemListDTO(linkProvider.createHubsLink(ctx.getUserId()));
         for (HobsonHub hub : hubManager.getHubs(ctx.getUserId())) {
-            itemList.add(new HobsonHubDTO(linkHelper.createHubLink(hub.getContext())));
+            itemList.add(new HobsonHubDTO.Builder(linkProvider.createHubLink(hub.getContext())).build());
         }
 
-        JsonRepresentation jr = new JsonRepresentation(itemList.toJSON(linkHelper));
+        JsonRepresentation jr = new JsonRepresentation(itemList.toJSON());
         jr.setMediaType(new MediaType(itemList.getMediaType() + "+json"));
         return jr;
     }
@@ -91,17 +86,17 @@ public class HubsResource extends SelfInjectingServerResource {
     @Override
     protected Representation post(Representation entity) throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        JSONObject json = JSONHelper.createJSONFromRepresentation(entity);
-        HobsonHub hub = hubManager.addHub(ctx.getHubContext().getUserId(), json.getString("name"));
+        HobsonHubDTO dto = new HobsonHubDTO.Builder(JSONHelper.createJSONFromRepresentation(entity)).build();
+        HobsonHub hub = hubManager.addHub(ctx.getHubContext().getUserId(), dto.getName());
         String hubId = hub.getContext().getHubId();
         getResponse().setStatus(Status.SUCCESS_CREATED);
-        getResponse().setLocationRef(ctx.getApiRoot() + new Template(HubResource.PATH).format(Collections.singletonMap("hubId", hubId)));
-        return new JsonRepresentation(
-            linkHelper.addHubSummaryLinks(
-                ctx,
-                JSONSerializationHelper.createHubSummaryJSON(hub),
-                hubId
-            )
+        String hubLink = linkProvider.createHubLink(HubContext.create(ctx.getUserId(), hubId));
+        getResponse().setLocationRef(hubLink);
+        return new JsonRepresentation(new HobsonHubDTO.Builder(hubLink)
+            .name(hub.getName())
+            .version(hub.getVersion())
+            .build()
+            .toJSON()
         );
     }
 }

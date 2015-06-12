@@ -3,11 +3,11 @@ package com.whizzosoftware.hobson.rest.v1.resource.task;
 import com.whizzosoftware.hobson.api.property.PropertyContainerClass;
 import com.whizzosoftware.hobson.api.task.TaskManager;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
-import com.whizzosoftware.hobson.dto.PropertyContainerClassDTO;
+import com.whizzosoftware.hobson.dto.property.PropertyContainerClassDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.DTOHelper;
-import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkProvider;
+import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -23,7 +23,7 @@ public class TaskActionClassesResource extends SelfInjectingServerResource {
     @Inject
     TaskManager taskManager;
     @Inject
-    HATEOASLinkProvider linkHelper;
+    LinkProvider linkProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/actionClasses Get all action classes
@@ -63,14 +63,14 @@ public class TaskActionClassesResource extends SelfInjectingServerResource {
 
         authorizer.authorizeHub(ctx.getHubContext());
 
-        ItemListDTO results = new ItemListDTO(linkHelper.createTaskActionClassesLink(ctx.getHubContext()));
+        ItemListDTO results = new ItemListDTO(linkProvider.createTaskActionClassesLink(ctx.getHubContext()));
         for (PropertyContainerClass actionClass : taskManager.getAllActionClasses(ctx.getHubContext())) {
-            results.add(new PropertyContainerClassDTO(
-                linkHelper.createTaskActionClassLink(actionClass.getContext()),
-                actionClass.getName(),
-                DTOHelper.mapTypedPropertyList(actionClass.getSupportedProperties())
-            ));
+            results.add(new PropertyContainerClassDTO.Builder(linkProvider.createTaskActionClassLink(actionClass.getContext()))
+                .name(actionClass.getName())
+                .supportedProperties(DTOHelper.mapTypedPropertyList(actionClass.getSupportedProperties()))
+                .build()
+            );
         }
-        return new JsonRepresentation(results.toJSON(linkHelper));
+        return new JsonRepresentation(results.toJSON());
     }
 }

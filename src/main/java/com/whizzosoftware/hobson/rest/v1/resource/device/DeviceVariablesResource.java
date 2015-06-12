@@ -13,11 +13,11 @@ import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.variable.HobsonVariable;
 import com.whizzosoftware.hobson.api.variable.HobsonVariableCollection;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
-import com.whizzosoftware.hobson.dto.HobsonVariableDTO;
+import com.whizzosoftware.hobson.dto.variable.HobsonVariableDTO;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkProvider;
+import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.MediaVariableProxyProvider;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -39,7 +39,7 @@ public class DeviceVariablesResource extends SelfInjectingServerResource {
     @Inject
     VariableManager variableManager;
     @Inject
-    HATEOASLinkProvider linkHelper;
+    LinkProvider linkProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/devices/:deviceId/variables Get all device variables
@@ -68,18 +68,19 @@ public class DeviceVariablesResource extends SelfInjectingServerResource {
         authorizer.authorizeHub(ctx.getHubContext());
 
         DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
-        ItemListDTO results = new ItemListDTO(linkHelper.createDeviceVariablesLink(dctx));
+        ItemListDTO results = new ItemListDTO(linkProvider.createDeviceVariablesLink(dctx));
 
         HobsonVariableCollection c = variableManager.getDeviceVariables(dctx, new MediaVariableProxyProvider(ctx));
         if (c != null) {
             Collection<HobsonVariable> variables = c.getCollection();
             for (HobsonVariable v : variables) {
-                results.add(new HobsonVariableDTO(
-                    linkHelper.createDeviceVariableLink(dctx, v.getName()),
-                    expansions.has("item") ? v : null
-                ));
+                HobsonVariableDTO.Builder builder = new HobsonVariableDTO.Builder(linkProvider.createDeviceVariableLink(dctx, v.getName()));
+                if (expansions.has("item")) {
+                    builder.name(v.getName()).mask(v.getMask()).lastUpdate(v.getLastUpdate());
+                }
+                results.add(builder.build());
             }
-            return new JsonRepresentation(results.toJSON(linkHelper));
+            return new JsonRepresentation(results.toJSON());
         } else {
             throw new HobsonNotFoundException("Unable to find variables for device");
         }

@@ -11,7 +11,7 @@ import com.whizzosoftware.hobson.api.plugin.PluginContext;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkProvider;
+import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.representation.EmptyRepresentation;
@@ -33,7 +33,7 @@ public class RemotePluginInstallResource extends SelfInjectingServerResource {
     @Inject
     PluginManager pluginManager;
     @Inject
-    HATEOASLinkProvider linkHelper;
+    LinkProvider linkProvider;
 
     /**
      * @api {post} /api/v1/users/:userId/hubs/:hubId/plugins/remote/:pluginId/:pluginVersion/install Install plugin
@@ -59,7 +59,7 @@ public class RemotePluginInstallResource extends SelfInjectingServerResource {
         pluginManager.installPlugin(PluginContext.create(ctx.getHubContext(), pluginId), pluginVersion);
 
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
-        getResponse().setLocationRef(ctx.getApiRoot() + new Template(PluginCurrentVersionResource.PATH).format(linkHelper.createSingleEntryMap(ctx, "pluginId", pluginId)));
+        getResponse().setLocationRef(ctx.getApiRoot() + new Template(PluginCurrentVersionResource.PATH).format(linkProvider.createSingleEntryMap(ctx, "pluginId", pluginId)));
 
         return new EmptyRepresentation();
     }

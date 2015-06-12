@@ -3,11 +3,11 @@ package com.whizzosoftware.hobson.rest.v1.resource.task;
 import com.whizzosoftware.hobson.api.property.PropertyContainerClass;
 import com.whizzosoftware.hobson.api.task.TaskManager;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
-import com.whizzosoftware.hobson.dto.PropertyContainerClassDTO;
+import com.whizzosoftware.hobson.dto.property.PropertyContainerClassDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.DTOHelper;
-import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkProvider;
+import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -23,7 +23,7 @@ public class TaskConditionClassesResource extends SelfInjectingServerResource {
     @Inject
     TaskManager taskManager;
     @Inject
-    HATEOASLinkProvider linkHelper;
+    LinkProvider linkProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/conditionClass Get all condition classes
@@ -79,16 +79,15 @@ public class TaskConditionClassesResource extends SelfInjectingServerResource {
 
         authorizer.authorizeHub(ctx.getHubContext());
 
-        ItemListDTO results = new ItemListDTO(linkHelper.createTaskConditionClassesLink(ctx.getHubContext()));
+        ItemListDTO results = new ItemListDTO(linkProvider.createTaskConditionClassesLink(ctx.getHubContext()));
         for (PropertyContainerClass conditionClass : taskManager.getAllConditionClasses(ctx.getHubContext())) {
             results.add(
-                new PropertyContainerClassDTO(
-                    linkHelper.createTaskConditionClassLink(conditionClass.getContext()),
-                    conditionClass.getName(),
-                    DTOHelper.mapTypedPropertyList(conditionClass.getSupportedProperties())
-                )
+                new PropertyContainerClassDTO.Builder(linkProvider.createTaskConditionClassLink(conditionClass.getContext()))
+                    .name(conditionClass.getName())
+                    .supportedProperties(DTOHelper.mapTypedPropertyList(conditionClass.getSupportedProperties()))
+                    .build()
             );
         }
-        return new JsonRepresentation(results.toJSON(linkHelper));
+        return new JsonRepresentation(results.toJSON());
     }
 }

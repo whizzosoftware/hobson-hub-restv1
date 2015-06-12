@@ -8,11 +8,11 @@
 package com.whizzosoftware.hobson.rest.v1.resource.image;
 
 import com.whizzosoftware.hobson.api.image.ImageManager;
-import com.whizzosoftware.hobson.json.JSONSerializationHelper;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkProvider;
+import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import org.json.JSONArray;
+import org.json.JSONObject;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -29,7 +29,7 @@ public class ImageLibraryGroupResource extends SelfInjectingServerResource {
     @Inject
     ImageManager imageManager;
     @Inject
-    HATEOASLinkProvider linkHelper;
+    LinkProvider linkProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/imageLibrary/groups/{groupId} Get library group
@@ -58,8 +58,12 @@ public class ImageLibraryGroupResource extends SelfInjectingServerResource {
         JSONArray results = new JSONArray();
         List<String> ids = imageManager.getImageLibraryImageIds(ctx.getHubContext(), getAttribute("groupId"));
         for (String id : ids) {
-            results.put(linkHelper.addImageLibraryImageLinks(ctx, JSONSerializationHelper.createImageLibraryImageJSON(id), id));
+            results.put(linkProvider.addImageLibraryImageLinks(ctx, createImageLibraryImageJSON(id), id));
         }
         return new JsonRepresentation(results);
+    }
+
+    private JSONObject createImageLibraryImageJSON(String id) {
+        return new JSONObject();
     }
 }

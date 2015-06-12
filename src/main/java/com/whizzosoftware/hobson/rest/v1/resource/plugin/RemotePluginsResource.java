@@ -11,12 +11,12 @@ import com.whizzosoftware.hobson.ExpansionFields;
 import com.whizzosoftware.hobson.api.plugin.PluginContext;
 import com.whizzosoftware.hobson.api.plugin.PluginDescriptor;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
-import com.whizzosoftware.hobson.dto.HobsonPluginDTO;
+import com.whizzosoftware.hobson.dto.plugin.HobsonPluginDTO;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.DTOHelper;
-import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkProvider;
+import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -32,7 +32,7 @@ public class RemotePluginsResource extends SelfInjectingServerResource {
     @Inject
     PluginManager pluginManager;
     @Inject
-    HATEOASLinkProvider linkHelper;
+    LinkProvider linkProvider;
 
     @Override
     protected Representation get() throws ResourceException {
@@ -41,12 +41,12 @@ public class RemotePluginsResource extends SelfInjectingServerResource {
 
         authorizer.authorizeHub(ctx.getHubContext());
 
-        ItemListDTO results = new ItemListDTO(linkHelper.createRemotePluginsLink(ctx.getHubContext()));
+        ItemListDTO results = new ItemListDTO(linkProvider.createRemotePluginsLink(ctx.getHubContext()));
 
         boolean itemExpand = expansions.has("item");
         for (PluginDescriptor pd : pluginManager.getRemotePluginDescriptors(ctx.getHubContext())) {
             PluginContext pctx = PluginContext.create(ctx.getHubContext(), pd.getId());
-            HobsonPluginDTO.Builder builder = new HobsonPluginDTO.Builder(linkHelper.createRemotePluginLink(pctx));
+            HobsonPluginDTO.Builder builder = new HobsonPluginDTO.Builder(linkProvider.createRemotePluginLink(pctx));
             if (itemExpand) {
                 DTOHelper.populatePluginDTO(
                     pd,
@@ -58,10 +58,10 @@ public class RemotePluginsResource extends SelfInjectingServerResource {
                     builder
                 );
             }
-            builder.addLink("install", linkHelper.createRemotePluginInstallLink(pctx, pd.getVersionString()));
+            builder.addLink("install", linkProvider.createRemotePluginInstallLink(pctx, pd.getVersionString()));
             results.add(builder.build());
         }
 
-        return new JsonRepresentation(results.toJSON(linkHelper));
+        return new JsonRepresentation(results.toJSON());
     }
 }

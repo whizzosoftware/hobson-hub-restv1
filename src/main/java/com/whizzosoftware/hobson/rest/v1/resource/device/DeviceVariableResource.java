@@ -7,19 +7,21 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.device;
 
+import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
 import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.event.EventManager;
 import com.whizzosoftware.hobson.api.event.VariableUpdateRequestEvent;
 import com.whizzosoftware.hobson.api.variable.HobsonVariable;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
 import com.whizzosoftware.hobson.api.variable.VariableUpdate;
-import com.whizzosoftware.hobson.dto.HobsonVariableDTO;
-import com.whizzosoftware.hobson.json.JSONSerializationHelper;
+import com.whizzosoftware.hobson.dto.variable.HobsonVariableDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkProvider;
+import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import com.whizzosoftware.hobson.rest.v1.util.MediaVariableProxyProvider;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.restlet.data.Reference;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -45,7 +47,7 @@ public class DeviceVariableResource extends SelfInjectingServerResource {
     @Inject
     EventManager eventManager;
     @Inject
-    HATEOASLinkProvider linkHelper;
+    LinkProvider linkProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/devices/:deviceId/variables/:variableName Get device variable
@@ -72,10 +74,13 @@ public class DeviceVariableResource extends SelfInjectingServerResource {
 
         HobsonVariable var = variableManager.getDeviceVariable(dctx, getAttribute("variableName"), new MediaVariableProxyProvider(ctx));
 
-        return new JsonRepresentation(new HobsonVariableDTO(
-            linkHelper.createDeviceVariableLink(dctx, var.getName()),
-            var
-        ).toJSON(linkHelper));
+        return new JsonRepresentation(new HobsonVariableDTO.Builder(linkProvider.createDeviceVariableLink(dctx, var.getName()))
+            .name(var.getName())
+            .mask(var.getMask())
+            .lastUpdate(var.getLastUpdate())
+            .build()
+            .toJSON()
+        );
     }
 
     /**
@@ -99,7 +104,7 @@ public class DeviceVariableResource extends SelfInjectingServerResource {
 
         DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
 
-        Object value = JSONSerializationHelper.createDeviceVariableValue(JSONHelper.createJSONFromRepresentation(entity));
+        Object value = createDeviceVariableValue(JSONHelper.createJSONFromRepresentation(entity));
         String pluginId = getAttribute("pluginId");
         String deviceId = getAttribute("deviceId");
         String variableName = getAttribute("variableName");
@@ -109,11 +114,19 @@ public class DeviceVariableResource extends SelfInjectingServerResource {
         // TODO: is there a better way to do this? The Restlet request reference scheme is always HTTP for some reason...
         Reference requestRef = getRequest().getResourceRef();
         if (Boolean.getBoolean(System.getProperty("useSSL"))) {
-            getResponse().setLocationRef(new Reference("https", requestRef.getHostDomain(), requestRef.getHostPort(), ctx.getApiRoot() + new Template(DeviceVariableResource.PATH).format(linkHelper.createTripleEntryMap(ctx, "pluginId", pluginId, "deviceId", deviceId, "variableName", variableName)), null, null));
+            getResponse().setLocationRef(new Reference("https", requestRef.getHostDomain(), requestRef.getHostPort(), ctx.getApiRoot() + new Template(DeviceVariableResource.PATH).format(linkProvider.createTripleEntryMap(ctx, "pluginId", pluginId, "deviceId", deviceId, "variableName", variableName)), null, null));
         } else {
             getResponse().setLocationRef(requestRef);
         }
 
         return new EmptyRepresentation();
+    }
+
+    private Object createDeviceVariableValue(JSONObject json) {
+        try {
+            return json.get("value");
+        } catch (JSONException e) {
+            throw new HobsonInvalidRequestException(e.getMessage());
+        }
     }
 }

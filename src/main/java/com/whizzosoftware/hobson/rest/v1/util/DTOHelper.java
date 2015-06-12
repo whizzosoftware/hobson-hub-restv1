@@ -1,16 +1,26 @@
 package com.whizzosoftware.hobson.rest.v1.util;
 
+import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
 import com.whizzosoftware.hobson.api.HobsonRuntimeException;
+import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.hub.HubManager;
+import com.whizzosoftware.hobson.api.hub.PasswordChange;
 import com.whizzosoftware.hobson.api.plugin.HobsonPlugin;
 import com.whizzosoftware.hobson.api.plugin.PluginDescriptor;
 import com.whizzosoftware.hobson.api.plugin.PluginStatus;
 import com.whizzosoftware.hobson.api.plugin.PluginType;
 import com.whizzosoftware.hobson.api.property.*;
 import com.whizzosoftware.hobson.dto.*;
+import com.whizzosoftware.hobson.dto.image.ImageDTO;
+import com.whizzosoftware.hobson.dto.plugin.HobsonPluginDTO;
+import com.whizzosoftware.hobson.dto.property.PropertyContainerClassDTO;
+import com.whizzosoftware.hobson.dto.property.PropertyContainerDTO;
+import com.whizzosoftware.hobson.dto.property.PropertyContainerSetDTO;
+import com.whizzosoftware.hobson.dto.property.TypedPropertyDTO;
 import com.whizzosoftware.hobson.json.TypedPropertyValueSerializer;
 import com.whizzosoftware.hobson.rest.v1.resource.task.TaskActionClassResource;
 import com.whizzosoftware.hobson.rest.v1.resource.task.TaskConditionClassResource;
+import org.json.JSONException;
 import org.restlet.routing.Template;
 
 import java.util.ArrayList;
@@ -28,11 +38,10 @@ public class DTOHelper {
     }
 
     static public PropertyContainerSetDTO mapPropertyContainerSet(PropertyContainerSet pcs) {
-        return new PropertyContainerSetDTO(
-            pcs.getId(),
-            mapPropertyContainer(pcs.getPrimaryProperty()),
-            mapPropertyContainerList(pcs.getProperties())
-        );
+        return new PropertyContainerSetDTO.Builder(pcs.getId())
+            .primaryContainer(mapPropertyContainer(pcs.getPrimaryProperty()))
+            .containers(mapPropertyContainerList(pcs.getProperties()))
+            .build();
     }
 
     static public PropertyContainerSet mapPropertyContainerSetDTO(PropertyContainerSetDTO dto, HubManager hubManager, LinkProvider links) {
@@ -73,7 +82,7 @@ public class DTOHelper {
         return results;
     }
 
-    static public PropertyContainer mapPropertyContainerDTO(PropertyContainerDTO dto, HubManager hubManager, LinkProvider links) {
+    static public PropertyContainer mapPropertyContainerDTO(PropertyContainerDTO dto, HubManager hubManager, final LinkProvider links) {
         PropertyContainer pc = null;
         if (dto != null) {
             pc = new PropertyContainer();
@@ -95,13 +104,18 @@ public class DTOHelper {
             }
 
             // copy property values
-            for (String id : dto.getPropertyValues().keySet()) {
-                Object value = dto.getPropertyValues().get(id);
+            for (String id : dto.getValues().keySet()) {
+                Object value = dto.getValues().get(id);
                 // if there is
                 if (pcc != null) {
                     TypedProperty tp = pcc.getSupportedProperty(id);
                     if (tp != null) {
-                        value = TypedPropertyValueSerializer.createValueObject(null, tp.getType(), value , links);
+                        value = TypedPropertyValueSerializer.createValueObject(null, tp.getType(), value, links != null ? new TypedPropertyValueSerializer.DeviceContextProvider() {
+                            @Override
+                            public DeviceContext createDeviceContext(String id) {
+                                return links.createDeviceContext(id);
+                            }
+                        } : null);
                     }
                 }
                 pc.setPropertyValue(id, value);
@@ -113,8 +127,7 @@ public class DTOHelper {
     static public PropertyContainerDTO mapPropertyContainer(PropertyContainer container) {
         PropertyContainerDTO dto = null;
         if (container != null) {
-            dto = new PropertyContainerDTO((String)null);
-            dto.setPropertyValues(container.getPropertyValues());
+            dto = new PropertyContainerDTO.Builder().values(container.getPropertyValues()).build();
         }
         return dto;
     }
@@ -155,6 +168,15 @@ public class DTOHelper {
     static public TypedProperty mapTypedPropertyDTO(TypedPropertyDTO dto) {
         return new TypedProperty(dto.getId(), dto.getName(), dto.getDescription(), TypedProperty.Type.valueOf(dto.getMediaType()));
     }
+
+    public static PasswordChange mapPasswordChangeDTO(PasswordChangeDTO dto) {
+        try {
+            return new PasswordChange(dto.getCurrentPassword(), dto.getNewPassword());
+        } catch (JSONException e) {
+            throw new HobsonInvalidRequestException(e.getMessage());
+        }
+    }
+
 
     static public TypedPropertyDTO mapTypedProperty(TypedProperty tp) {
         return new TypedPropertyDTO(tp);
@@ -218,25 +240,25 @@ public class DTOHelper {
         builder.name(name).description(description).version(version).type(type).configurable(configurable).status(status);
 
         if (configClassLink != null) {
-            PropertyContainerClassDTO pccdto = new PropertyContainerClassDTO(configClassLink);
+            PropertyContainerClassDTO.Builder pccdtob = new PropertyContainerClassDTO.Builder(configClassLink);
             if (configClass != null) {
                 for (TypedProperty tp : configClass.getSupportedProperties()) {
-                    pccdto.addSupportedProperty(new TypedPropertyDTO(tp));
+                    pccdtob.supportedProperty(new TypedPropertyDTO(tp));
                 }
             }
-            builder.configurationClass(pccdto);
+            builder.configurationClass(pccdtob.build());
         }
 
         if (configLink != null) {
-            PropertyContainerDTO pcdto = new PropertyContainerDTO(configLink);
+            PropertyContainerDTO.Builder pcdtob = new PropertyContainerDTO.Builder(configLink);
             if (config != null) {
-                pcdto.setPropertyValues(config.getPropertyValues());
+                pcdtob.values(config.getPropertyValues());
             }
-            builder.configuration(pcdto);
+            builder.configuration(pcdtob.build());
         }
 
         if (imageLink != null) {
-            builder.image(new ImageDTO(imageLink));
+            builder.image(new ImageDTO.Builder(imageLink).build());
         }
     }
 }

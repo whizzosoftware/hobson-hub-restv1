@@ -65,11 +65,11 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
         router.attach(DeviceConfigurationResource.PATH, DeviceConfigurationResource.class);
         router.attach(DeviceConfigurationClassResource.PATH, DeviceConfigurationClassResource.class);
         router.attach(DeviceTelemetryResource.PATH, DeviceTelemetryResource.class);
+        router.attach(DeviceTelemetryDatasetResource.PATH, DeviceTelemetryDatasetResource.class);
         router.attach(DeviceTelemetryDatasetsResource.PATH, DeviceTelemetryDatasetsResource.class);
         router.attach(DevicesResource.PATH, DevicesResource.class);
         router.attach(DeviceVariableResource.PATH, DeviceVariableResource.class);
         router.attach(DeviceVariablesResource.PATH, DeviceVariablesResource.class);
-        router.attach(EnableDeviceTelemetryResource.PATH, EnableDeviceTelemetryResource.class);
         router.attach(ExecuteTaskResource.PATH, ExecuteTaskResource.class);
         router.attach(GlobalVariableResource.PATH, GlobalVariableResource.class);
         router.attach(GlobalVariablesResource.PATH, GlobalVariablesResource.class);

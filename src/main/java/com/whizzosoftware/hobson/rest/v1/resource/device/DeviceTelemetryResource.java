@@ -12,17 +12,14 @@ import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
 import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.api.device.HobsonDevice;
-import com.whizzosoftware.hobson.api.telemetry.TelemetryInterval;
 import com.whizzosoftware.hobson.api.telemetry.TelemetryManager;
-import com.whizzosoftware.hobson.api.telemetry.TemporalValue;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
-import com.whizzosoftware.hobson.dto.DeviceTelemetryDTO;
+import com.whizzosoftware.hobson.dto.telemetry.DeviceTelemetryDTO;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
-import com.whizzosoftware.hobson.dto.TelemetryDatasetDTO;
-import com.whizzosoftware.hobson.json.JSONSerializationHelper;
+import com.whizzosoftware.hobson.dto.telemetry.TelemetryDatasetDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.HATEOASLinkProvider;
+import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import org.json.JSONObject;
 import org.restlet.data.Status;
@@ -32,8 +29,6 @@ import org.restlet.representation.EmptyRepresentation;
 import org.restlet.representation.Representation;
 
 import javax.inject.Inject;
-import java.util.Collection;
-import java.util.Map;
 
 /**
  * A REST resource that returns device telemetry data.
@@ -52,10 +47,10 @@ public class DeviceTelemetryResource extends SelfInjectingServerResource {
     @Inject
     VariableManager variableManager;
     @Inject
-    HATEOASLinkProvider linkHelper;
+    LinkProvider linkProvider;
 
     /**
-     * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/devices/:deviceId/telemetry Get device variable telemetry info
+     * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/devices/:deviceId/telemetry Get device telemetry info
      * @apiVersion 0.1.8
      * @apiName GetDeviceTelemetry
      * @apiDescription Retrieves telemetry information for a specific device.
@@ -64,8 +59,8 @@ public class DeviceTelemetryResource extends SelfInjectingServerResource {
      * {
      *   "capable": true,
      *   "enabled": true,
-     *   "data": {
-     *     "@id": "/api/v1/users/local/hubs/local/plugins/plugin1/devices/device1/telemetry/data"
+     *   "datasets": {
+     *     "@id": "/api/v1/users/local/hubs/local/plugins/plugin1/devices/device1/telemetry/datasets"
      *   }
      * }
      */
@@ -80,18 +75,18 @@ public class DeviceTelemetryResource extends SelfInjectingServerResource {
 
         HobsonDevice device = deviceManager.getDevice(dctx);
 
-        ItemListDTO datasets = new ItemListDTO(linkHelper.createDeviceTelemetryDatasetsLink(dctx));
-        DeviceTelemetryDTO.Builder builder = new DeviceTelemetryDTO.Builder(linkHelper.createDeviceTelemetryLink(dctx));
+        ItemListDTO datasets = new ItemListDTO(linkProvider.createDeviceTelemetryDatasetsLink(dctx));
+        DeviceTelemetryDTO.Builder builder = new DeviceTelemetryDTO.Builder(linkProvider.createDeviceTelemetryLink(dctx));
         builder.capable(device.isTelemetryCapable()).enabled(telemetryManager.isDeviceTelemetryEnabled(dctx)).datasets(datasets);
 
         if (expansions.has("datasets")) {
             String[] vars = device.getTelemetryVariableNames();
             for (String var : vars) {
-                datasets.add(new TelemetryDatasetDTO.Builder(linkHelper.createDeviceTelemetryDatasetLink(dctx, var)).build());
+                datasets.add(new TelemetryDatasetDTO.Builder(linkProvider.createDeviceTelemetryDatasetLink(dctx, var)).build());
             }
         }
 
-        return new JsonRepresentation(builder.build().toJSON(linkHelper));
+        return new JsonRepresentation(builder.build().toJSON());
     }
 
     /**
