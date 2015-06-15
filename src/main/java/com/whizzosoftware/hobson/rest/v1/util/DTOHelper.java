@@ -179,7 +179,7 @@ public class DTOHelper {
 
 
     static public TypedPropertyDTO mapTypedProperty(TypedProperty tp) {
-        return new TypedPropertyDTO(tp);
+        return new TypedPropertyDTO.Builder(tp.getId()).name(tp.getName()).description(tp.getDescription()).type(tp.getType()).build();
     }
 
     static public PropertyContainerClassContext createPropertyContainerClassContext(String id) {
@@ -243,7 +243,7 @@ public class DTOHelper {
             PropertyContainerClassDTO.Builder pccdtob = new PropertyContainerClassDTO.Builder(configClassLink);
             if (configClass != null) {
                 for (TypedProperty tp : configClass.getSupportedProperties()) {
-                    pccdtob.supportedProperty(new TypedPropertyDTO(tp));
+                    pccdtob.supportedProperty(mapTypedProperty(tp));
                 }
             }
             builder.configurationClass(pccdtob.build());

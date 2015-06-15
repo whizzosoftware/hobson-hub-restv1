@@ -86,7 +86,6 @@ public class DeviceTelemetryDatasetsResource extends SelfInjectingServerResource
                 for (TemporalValue tv : data) {
                     dataDto.add(new TemporalValueDTO(tv.getTime(), tv.getValue()));
                 }
-                dataDto.updateNumberOfItems();
                 builder.data(dataDto);
             }
             datasets.add(builder.build());

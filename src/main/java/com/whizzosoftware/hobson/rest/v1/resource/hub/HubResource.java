@@ -190,7 +190,6 @@ public class HubResource extends SelfInjectingServerResource {
         // add tasks
         ildto = new ItemListDTO(linkProvider.createTasksLink(ctx.getHubContext()));
         if (expansions.has("tasks")) {
-            ildto.updateNumberOfItems();
             for (HobsonTask task : taskManager.getAllTasks(hub.getContext())) {
                 HobsonTaskDTO.Builder builder2 = new HobsonTaskDTO.Builder(linkProvider.createTaskLink(task.getContext()));
                 builder2.name(task.getName())
