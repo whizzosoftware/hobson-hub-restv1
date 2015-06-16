@@ -78,6 +78,7 @@ public class DeviceVariableResource extends SelfInjectingServerResource {
             .name(var.getName())
             .mask(var.getMask())
             .lastUpdate(var.getLastUpdate())
+            .value(var.getValue())
             .build()
             .toJSON()
         );
