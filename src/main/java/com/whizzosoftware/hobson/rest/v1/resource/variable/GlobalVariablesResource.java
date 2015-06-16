@@ -7,6 +7,7 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.variable;
 
+import com.whizzosoftware.hobson.rest.ExpansionFields;
 import com.whizzosoftware.hobson.api.variable.HobsonVariable;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
 import com.whizzosoftware.hobson.dto.variable.HobsonVariableDTO;
@@ -42,18 +43,10 @@ public class GlobalVariablesResource extends SelfInjectingServerResource {
      *   "itemListElement": [
      *     {
      *       "item": {
-     *         "lastUpdate": 1433642655612,
-     *         "name": "sunset",
-     *         "value": "20:24-06",
-     *         "mask": "READ_ONLY",
      *         "@id": "/api/v1/users/local/hubs/local/globalVariables/sunset"
      *     },
      *     {
      *       "item": {
-     *         "lastUpdate": 1433642655612,
-     *         "name": "sunrise",
-     *         "value": "05:33-06",
-     *         "mask": "READ_ONLY",
      *         "@id":"/api/v1/users/local/hubs/local/globalVariables/sunrise"}}],"@id":"/api/v1/users/local/hubs/local/globalVariables"
      *     }
      *   ]
@@ -62,18 +55,20 @@ public class GlobalVariablesResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
 
         authorizer.authorizeHub(ctx.getHubContext());
 
         ItemListDTO results = new ItemListDTO(linkProvider.createGlobalVariablesLink(ctx.getHubContext()));
         for (HobsonVariable v : variableManager.getGlobalVariables(ctx.getHubContext())) {
-            results.add(
-                new HobsonVariableDTO.Builder(linkProvider.createGlobalVariableLink(ctx.getHubContext(), v.getName()))
-                    .name(v.getName())
+            HobsonVariableDTO.Builder builder = new HobsonVariableDTO.Builder(linkProvider.createGlobalVariableLink(ctx.getHubContext(), v.getName()));
+            if (expansions.has("item")) {
+                builder.name(v.getName())
                     .mask(v.getMask())
                     .lastUpdate(v.getLastUpdate())
-                    .build()
-            );
+                    .value(v.getValue());
+            }
+            results.add(builder.build());
         }
 
         return new JsonRepresentation(results.toJSON());

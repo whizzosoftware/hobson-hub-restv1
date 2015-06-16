@@ -7,7 +7,6 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.hub;
 
-import com.whizzosoftware.hobson.ExpansionFields;
 import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.api.property.PropertyContainer;
 import com.whizzosoftware.hobson.dto.property.PropertyContainerClassDTO;

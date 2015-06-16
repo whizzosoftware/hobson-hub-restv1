@@ -57,6 +57,7 @@ public class GlobalVariableResource extends SelfInjectingServerResource {
                 .name(v.getName())
                 .mask(v.getMask())
                 .lastUpdate(v.getLastUpdate())
+                .value(v.getValue())
                 .build()
                 .toJSON()
         );
