@@ -38,8 +38,8 @@ public class BearerTokenVerifier implements Verifier {
                         new User(
                             user.getId(),
                             token,
-                            user.getFirstName(),
-                            user.getLastName(),
+                            user.getGivenName(),
+                            user.getFamilyName(),
                             null
                         )
                     );

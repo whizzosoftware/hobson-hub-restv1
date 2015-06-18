@@ -53,6 +53,7 @@ public class DTOHelper {
             for (PropertyContainerClass tac : taskManager.getAllActionClasses(hub.getContext())) {
                 ildto.add(new PropertyContainerClassDTO.Builder(linkProvider.createTaskActionClassLink(tac.getContext())).build());
             }
+            ildto.updateNumberOfItems();
         }
         builder.actionClasses(ildto);
 
@@ -90,6 +91,7 @@ public class DTOHelper {
             for (PropertyContainerClass tcc : taskManager.getAllConditionClasses(hub.getContext())) {
                 ildto.add(new PropertyContainerClassDTO.Builder(linkProvider.createTaskConditionClassLink(tcc.getContext())).build());
             }
+            ildto.updateNumberOfItems();
         }
         builder.conditionClasses(ildto);
 
@@ -117,6 +119,7 @@ public class DTOHelper {
                         builder2
                 );
             }
+            ildto.updateNumberOfItems();
         }
 
         // add remote plugins attribute
@@ -138,6 +141,7 @@ public class DTOHelper {
                 builder2.addLink("install", linkProvider.createRemotePluginInstallLink(pctx, pd.getVersionString()));
                 ildto.add(builder.build());
             }
+            ildto.updateNumberOfItems();
         }
 
         // add tasks
@@ -146,11 +150,12 @@ public class DTOHelper {
             for (HobsonTask task : taskManager.getAllTasks(hub.getContext())) {
                 HobsonTaskDTO.Builder builder2 = new HobsonTaskDTO.Builder(linkProvider.createTaskLink(task.getContext()));
                 builder2.name(task.getName())
-                        .conditionSet(new PropertyContainerSetDTO.Builder("").build()) // TODO
-                        .actionSet(new PropertyContainerSetDTO.Builder("").build()) // TODO
-                        .properties(task.getProperties());
-                ildto.add(builder.build());
+                    .conditionSet(new PropertyContainerSetDTO.Builder("").build()) // TODO
+                    .actionSet(new PropertyContainerSetDTO.Builder("").build()) // TODO
+                    .properties(task.getProperties());
+                ildto.add(builder2.build());
             }
+            ildto.updateNumberOfItems();
         }
         builder.tasks(ildto);
 

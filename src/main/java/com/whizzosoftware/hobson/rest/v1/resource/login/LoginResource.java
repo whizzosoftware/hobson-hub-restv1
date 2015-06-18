@@ -64,8 +64,8 @@ public class LoginResource extends SelfInjectingServerResource {
             PersonDTO.Builder builder = new PersonDTO.Builder(linkProvider.createUserLink(user.getId()));
             if (expansion.has("user")) {
                 builder
-                    .familyName(user.getLastName())
-                    .givenName(user.getFirstName())
+                    .familyName(user.getFamilyName())
+                    .givenName(user.getGivenName())
                     .hubs(new ItemListDTO(linkProvider.createHubsLink(user.getId())));
             }
 

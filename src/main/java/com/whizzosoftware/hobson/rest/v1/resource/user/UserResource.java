@@ -11,6 +11,7 @@ import com.whizzosoftware.hobson.api.HobsonAuthorizationException;
 import com.whizzosoftware.hobson.api.HobsonRuntimeException;
 import com.whizzosoftware.hobson.api.user.HobsonUser;
 import com.whizzosoftware.hobson.api.user.UserStore;
+import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.dto.PersonDTO;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
@@ -41,7 +42,10 @@ public class UserResource extends SelfInjectingServerResource {
      * {
      *   "@id": "/api/v1/users/local",
      *   "firstName": "Local",
-     *   "lastName": "User"
+     *   "lastName": "User",
+     *   "hubs": {
+     *     "@id": "/api/v1/users/local/hubs"
+     *   }
      * }
      */
     @Override
@@ -51,7 +55,11 @@ public class UserResource extends SelfInjectingServerResource {
         if (user != null) {
             if (user.getIdentifier().equals(ctx.getUserId())) {
                 HobsonUser hu = userStore.getUser(user.getIdentifier());
-                PersonDTO dto = new PersonDTO.Builder(linkProvider.createUserLink(hu.getId())).build();
+                PersonDTO dto = new PersonDTO.Builder(linkProvider.createUserLink(hu.getId()))
+                    .givenName(hu.getGivenName())
+                    .familyName(hu.getFamilyName())
+                    .hubs(new ItemListDTO(linkProvider.createHubsLink(hu.getId())))
+                    .build();
                 JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
                 jr.setMediaType(new MediaType(dto.getMediaType() + "+json"));
                 return jr;
