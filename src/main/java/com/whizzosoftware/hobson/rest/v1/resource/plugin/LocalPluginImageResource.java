@@ -27,8 +27,8 @@ import java.io.InputStream;
  *
  * @author Dan Noguerol
  */
-public class LocalPluginIconResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/{pluginId}/icon";
+public class LocalPluginImageResource extends SelfInjectingServerResource {
+    public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/{pluginId}/image";
 
     @Inject
     Authorizer authorizer;
@@ -36,10 +36,10 @@ public class LocalPluginIconResource extends SelfInjectingServerResource {
     PluginManager pluginManager;
 
     /**
-     * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/icon Get plugin icon
+     * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/image Get local plugin image
      * @apiVersion 0.5.0
-     * @apiName GetPluginIcon
-     * @apiDescription Retrieves the icon for a plugin
+     * @apiName GetPluginImage
+     * @apiDescription Retrieves the image for a plugin
      * @apiGroup Plugin
      * @apiSuccessExample {json} Success Response:
      *   HTTP/1.1 200 OK
@@ -55,7 +55,7 @@ public class LocalPluginIconResource extends SelfInjectingServerResource {
         String s = getQueryValue("base64");
         final boolean base64 = (s != null) && Boolean.parseBoolean(s);
 
-        ImageInputStream iis = pluginManager.getPluginIcon(PluginContext.create(ctx.getHubContext(), pluginId));
+        ImageInputStream iis = pluginManager.getLocalPluginIcon(PluginContext.create(ctx.getHubContext(), pluginId));
         InputStream is = iis.getInputStream();
         if (base64) {
             is = new Base64InputStream(is, true);

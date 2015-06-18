@@ -37,11 +37,10 @@ public class GlobalVariableResource extends SelfInjectingServerResource {
      * @apiGroup Variables
      * @apiSuccessExample {json} Success Response:
      * {
+     *   "@id": "/api/v1/users/local/hubs/local/variables/tempF",
      *   "value": 82.4,
+     *   "mask":"READ_ONLY",
      *   "lastUpdated": 199231313,
-     *   "links": {
-     *     "self": "/api/v1/users/local/hubs/local/variables/tempF"
-     *   }
      * }
      */
     @Override

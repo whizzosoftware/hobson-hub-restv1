@@ -55,6 +55,9 @@ public class DeviceTelemetryResource extends SelfInjectingServerResource {
      * @apiName GetDeviceTelemetry
      * @apiDescription Retrieves telemetry information for a specific device.
      * @apiGroup Devices
+     * @apiSuccess {Boolean} capable Indicates if the device can provide telemetry data.
+     * @apiSuccess {Boolean} enabled Indicates if the device is currently providing telemetry data.
+     * @apiSuccess {Object} datasets The data sets the device can provide.
      * @apiSuccessExample {json} Success Response:
      * {
      *   "capable": true,

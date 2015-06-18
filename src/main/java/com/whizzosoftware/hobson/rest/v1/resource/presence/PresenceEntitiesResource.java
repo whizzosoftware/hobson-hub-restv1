@@ -43,26 +43,25 @@ public class PresenceEntitiesResource extends SelfInjectingServerResource {
      * @api {get} /api/v1/users/:userId/hubs/:hubId/presence/entities Get presence entities
      * @apiVersion 0.1.3
      * @apiName GetAllPresenceEntities
-     * @apiDescription Retrieves a summary list of all presence entities.
+     * @apiDescription Retrieves a list of all presence entities.
      * @apiGroup Presence
      *
      * @apiSuccessExample {json} Success Response:
-     * [
-     *   {
-     *     "name": "John's Mobile Phone",
-     *     "location": "home"
-     *     "links": {
-     *         "self": "/api/v1/users/local/hubs/local/presence/entities/beef-cafe-beeeef-cafe
+     * {
+     *   "numberOfItems": 2,
+     *   "itemListElement": [
+     *     {
+     *       "item": {
+     *         "@id": "/api/v1/users/local/hubs/local/presence/entities/beef-cafe-beeeef-cafe",
+     *       }
+     *     },
+     *     {
+     *       "item": {
+     *         "@id": "/api/v1/users/local/hubs/local/presence/entities/cafe-beef-cafe-beeeef",
+     *       }
      *     }
-     *   },
-     *   {
-     *     "name": "Jane's Car",
-     *     "location": "office"
-     *     "links": {
-     *         "self": "/api/v1/users/local/hubs/local/presence/entities/cafe-beef-cafe-beeeef
-     *     }
-     *   }
-     * ]
+     *   ]
+     * }
      */
     @Override
     protected Representation get() {

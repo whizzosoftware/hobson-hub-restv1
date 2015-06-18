@@ -5,7 +5,9 @@ import com.whizzosoftware.hobson.api.task.TaskManager;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.dto.property.PropertyContainerSetDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
+import com.whizzosoftware.hobson.rest.ExpansionFields;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.v1.util.DTOHelper;
 import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -30,35 +32,40 @@ public class TaskActionSetsResource extends SelfInjectingServerResource {
      * @apiName GetAllActionSets
      * @apiDescription Retrieves a summary list of all available action sets (regardless of plugin).
      * @apiGroup Tasks
-     *
+     * @apiParam (Query Parameters) {String} expand A comma-separated list of attributes to expand (the only supported value is "item").
      * @apiSuccessExample {json} Success Response:
-     * [
-     *   {
-     *     "id": "sendEmail",
-     *     "name": "Send E-mail",
-     *     "links": {
-     *       "self": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-api/actions/sendEmail"
+     * {
+     *   "@id": "/api/v1/users/local/hubs/local/tasks/actionSets",
+     *   "numberOfItems": 1,
+     *   "itemListElement": [
+     *     {
+     *       "item": {
+     *         "@id": "/api/v1/users/local/hubs/local/tasks/actionSets/dc419994-987f-4bff-81f9-e5bce53733f3"
+     *       }
      *     }
-     *   },
-     *   {
-     *     "id": "log",
-     *     "name": "Log Message",
-     *     "links": {
-     *       "self": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-api/actions/log"
-     *     }
-     *   }
-     * ]
+     *   ]
+     * }
      */
     @Override
     protected Representation get() throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
 
         authorizer.authorizeHub(ctx.getHubContext());
 
         ItemListDTO results = new ItemListDTO(linkProvider.createTaskActionSetsLink(ctx.getHubContext()));
+        boolean expandItems = expansions.has("item");
 
         for (PropertyContainerSet actionSet : taskManager.getAllActionSets(ctx.getHubContext())) {
-            results.add(new PropertyContainerSetDTO.Builder(linkProvider.createTaskActionSetLink(ctx.getHubContext(), actionSet.getId())).build());
+            PropertyContainerSetDTO.Builder builder = new PropertyContainerSetDTO.Builder(
+                linkProvider.createTaskActionSetLink(ctx.getHubContext(), actionSet.getId())
+            );
+            if (expandItems) {
+                builder
+                    .primaryContainer(DTOHelper.mapPropertyContainer(actionSet.getPrimaryProperty()))
+                    .containers(DTOHelper.mapPropertyContainerList(actionSet.getProperties()));
+            }
+            results.add(builder.build());
         }
 
         return new JsonRepresentation(results.toJSON());

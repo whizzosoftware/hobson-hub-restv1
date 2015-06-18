@@ -10,11 +10,9 @@ package com.whizzosoftware.hobson.rest.v1.util;
 import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.hub.HubContext;
 import com.whizzosoftware.hobson.api.plugin.PluginContext;
-import com.whizzosoftware.hobson.api.plugin.PluginDescriptor;
 import com.whizzosoftware.hobson.api.presence.PresenceEntityContext;
 import com.whizzosoftware.hobson.api.property.PropertyContainerClassContext;
 import com.whizzosoftware.hobson.api.task.TaskContext;
-import com.whizzosoftware.hobson.dto.plugin.HobsonPluginDTO;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.resource.activity.ActivityLogResource;
 import com.whizzosoftware.hobson.rest.v1.resource.hub.HubLogResource;
@@ -32,8 +30,6 @@ import com.whizzosoftware.hobson.rest.v1.resource.variable.GlobalVariablesResour
 import org.json.JSONObject;
 import org.restlet.routing.Template;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -287,12 +283,13 @@ public class LinkProvider {
         return t.format(values);
     }
 
-    public String createRemotePluginLink(PluginContext context) {
+    public String createRemotePluginLink(PluginContext context, String version) {
         Template t = new Template(apiRoot + RemotePluginResource.PATH);
         Map<String,String> values = new HashMap<>();
         values.put("userId", context.getUserId());
         values.put("hubId", context.getHubId());
         values.put("pluginId", context.getPluginId());
+        values.put("pluginVersion", version);
         return t.format(values);
     }
 
@@ -415,18 +412,8 @@ public class LinkProvider {
         return t.format(values);
     }
 
-    public void addRemotePluginLinks(HobsonRestContext ctx, PluginDescriptor pd, HobsonPluginDTO dto) {
-        String encodedId;
-        try {
-            encodedId = URLEncoder.encode(pd.getId(), "UTF8");
-        } catch (UnsupportedEncodingException e) {
-            encodedId = pd.getId();
-        }
-        dto.addLink("install", ctx.getApiRoot() + new Template(RemotePluginInstallResource.PATH).format(createDoubleEntryMap(ctx, "pluginId", encodedId, "pluginVersion", pd.getVersionString())));
-    }
-
     public String createLocalPluginIconLink(PluginContext context) {
-        Template t = new Template(apiRoot + LocalPluginIconResource.PATH);
+        Template t = new Template(apiRoot + LocalPluginImageResource.PATH);
         Map<String,String> values = new HashMap<>();
         values.put("userId", context.getUserId());
         values.put("hubId", context.getHubId());
@@ -513,6 +500,15 @@ public class LinkProvider {
         values.put("userId", context.getUserId());
         values.put("hubId", context.getHubId());
         values.put("entityId", context.getEntityId());
+        return t.format(values);
+    }
+
+    public String createLocalPluginReloadLink(PluginContext context) {
+        Template t = new Template(apiRoot + LocalPluginReloadResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", context.getUserId());
+        values.put("hubId", context.getHubId());
+        values.put("pluginId", context.getPluginId());
         return t.format(values);
     }
 }

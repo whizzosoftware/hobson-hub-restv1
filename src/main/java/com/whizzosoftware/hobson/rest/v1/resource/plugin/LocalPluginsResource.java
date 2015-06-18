@@ -34,6 +34,30 @@ public class LocalPluginsResource extends SelfInjectingServerResource {
     @Inject
     LinkProvider linkProvider;
 
+    /**
+     * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/local Get local plugins
+     * @apiVersion 0.5.0
+     * @apiName GetLocalPlugins
+     * @apiDescription Retrieves all locally installed plugins.
+     * @apiGroup Plugin
+     * @apiSuccessExample {json} Success Response:
+     * {
+     *   "@id": "/api/v1/users/local/hubs/local/plugins/local",
+     *   "numberOfItems": 2,
+     *   "itemListElement": [
+     *     {
+     *       "item": {
+     *         "@id": "/api/v1/users/local/hubs/local/plugins/local/com.whizzosoftware.hobson.hub.hobson-hub-core"
+     *       }
+     *     },
+     *     {
+     *       "item": {
+     *         "@id": "/api/v1/users/local/hubs/local/plugins/local/com.whizzosoftware.hobson.hub.hobson-hub-actions"
+     *       }
+     *     }
+     *   ],
+     * }
+     */
     @Override
     protected Representation get() throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
@@ -49,14 +73,15 @@ public class LocalPluginsResource extends SelfInjectingServerResource {
             HobsonPluginDTO.Builder builder = new HobsonPluginDTO.Builder(linkProvider.createLocalPluginLink(pctx));
             if (itemExpand) {
                 DTOHelper.populatePluginDTO(
-                        pd,
-                        pd.isConfigurable() ? linkProvider.createLocalPluginConfigurationClassLink(pctx) : null,
-                        pd.isConfigurable() ? pluginManager.getPlugin(pctx).getConfigurationClass() : null,
-                        pd.isConfigurable() ? linkProvider.createLocalPluginConfigurationLink(pctx) : null,
-                        pd.isConfigurable() ? pluginManager.getPluginConfiguration(pctx) : null,
-                        linkProvider.createLocalPluginIconLink(pctx),
-                        builder
+                    pd,
+                    pd.isConfigurable() ? linkProvider.createLocalPluginConfigurationClassLink(pctx) : null,
+                    pd.isConfigurable() ? pluginManager.getLocalPlugin(pctx).getConfigurationClass() : null,
+                    pd.isConfigurable() ? linkProvider.createLocalPluginConfigurationLink(pctx) : null,
+                    pd.isConfigurable() ? pluginManager.getLocalPluginConfiguration(pctx) : null,
+                    linkProvider.createLocalPluginIconLink(pctx),
+                    builder
                 );
+                builder.addLink("reload", linkProvider.createLocalPluginReloadLink(pctx));
             }
             results.add(builder.build());
         }

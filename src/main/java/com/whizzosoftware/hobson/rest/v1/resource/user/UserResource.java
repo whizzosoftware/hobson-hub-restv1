@@ -39,16 +39,9 @@ public class UserResource extends SelfInjectingServerResource {
      * @apiGroup User
      * @apiSuccessExample Success Response:
      * {
+     *   "@id": "/api/v1/users/local",
      *   "firstName": "Local",
-     *   "lastName": "User",
-     *   "_links": {
-     *     "self": {
-     *       "href": "/api/v1/users/local"
-     *     },
-     *     "hubs": {
-     *       "href": "/api/v1/users/local/hubs"
-     *     }
-     *   }
+     *   "lastName": "User"
      * }
      */
     @Override

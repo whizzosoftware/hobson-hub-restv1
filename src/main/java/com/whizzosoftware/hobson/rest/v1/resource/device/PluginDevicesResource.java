@@ -45,17 +45,18 @@ public class PluginDevicesResource extends SelfInjectingServerResource {
      * @apiName GetAllPluginDevices
      * @apiDescription Retrieves all devices published by a specific plugin.
      * @apiGroup Devices
+     * @apiParam (Query Parameters) {String} expand A comma-separated list of attributes to expand (the only supported value is "item").
      * @apiSuccessExample {json} Success Response:
      * {
      *   "numberOfItems": 2,
      *   "itemListElement": [
      *     {
      *       "item": {
-     *         "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.server-radiora/devices/1"
+     *         "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-radiora/devices/device1"
      *     },
      *     {
      *       "item": {
-     *         "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.server-radiora/devices/2"
+     *         "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-radiora/devices/device2"
      *     }
      *   ]
      * }

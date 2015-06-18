@@ -5,6 +5,7 @@ import com.whizzosoftware.hobson.api.task.TaskManager;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.dto.property.PropertyContainerClassDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
+import com.whizzosoftware.hobson.rest.ExpansionFields;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.DTOHelper;
 import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
@@ -31,45 +32,44 @@ public class TaskActionClassesResource extends SelfInjectingServerResource {
      * @apiName GetAllActionClasses
      * @apiDescription Retrieves a list of all available action classes (regardless of plugin).
      * @apiGroup Tasks
-     *
+     * @apiParam (Query Parameters) {String} expand A comma-separated list of attributes to expand (the only supported value is "item").
      * @apiSuccessExample {json} Success Response:
-     * [
-     *   {
-     *     "name": "Log a message",
-     *     "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-core/actionClasses/log",
-     *     "plugin": {
-     *       "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-core"
-     *     }
-     *   },
-     *   {
-     *     "name": "Turn on bulbs or switches",
-     *     "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-core/actionClasses/turnOn",
-     *     "plugin": {
-     *       "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-core"
-     *     },
-     *     "propertyDescriptors": [
-     *       {
-     *         "description": "The devices to send the command to",
-     *         "name": "Devices",
-     *         "type": "DEVICES"
+     * {
+     *   "@id": "/api/v1/users/local/hubs/local/tasks/actionClasses",
+     *   "numberOfItems": 2,
+     *   "itemListElement": [
+     *     {
+     *       "item": {
+     *         "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-actions/actionClasses/turnOn"
      *       }
-     *     ]
-     *   }
-     * ]
+     *     },
+     *     {
+     *       "item": {
+     *         "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-actions/actionClasses/log"
+     *       }
+     *     }
+     *   ]
+     * }
      */
     @Override
     protected Representation get() throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
 
         authorizer.authorizeHub(ctx.getHubContext());
 
+        boolean expandItems = expansions.has("item");
+
         ItemListDTO results = new ItemListDTO(linkProvider.createTaskActionClassesLink(ctx.getHubContext()));
         for (PropertyContainerClass actionClass : taskManager.getAllActionClasses(ctx.getHubContext())) {
-            results.add(new PropertyContainerClassDTO.Builder(linkProvider.createTaskActionClassLink(actionClass.getContext()))
-                .name(actionClass.getName())
-                .supportedProperties(DTOHelper.mapTypedPropertyList(actionClass.getSupportedProperties()))
-                .build()
+            PropertyContainerClassDTO.Builder builder = new PropertyContainerClassDTO.Builder(
+                linkProvider.createTaskActionClassLink(actionClass.getContext())
             );
+            if (expandItems) {
+                builder.name(actionClass.getName())
+                    .supportedProperties(DTOHelper.mapTypedPropertyList(actionClass.getSupportedProperties()));
+            }
+            results.add(builder.build());
         }
         return new JsonRepresentation(results.toJSON());
     }

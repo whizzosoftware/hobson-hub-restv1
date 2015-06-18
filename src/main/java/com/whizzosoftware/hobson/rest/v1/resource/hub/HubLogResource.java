@@ -7,6 +7,7 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.hub;
 
+import com.whizzosoftware.hobson.api.HobsonRuntimeException;
 import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.api.hub.LineRange;
 import com.whizzosoftware.hobson.rest.Authorizer;
@@ -21,6 +22,7 @@ import org.restlet.resource.ResourceException;
 import org.restlet.util.Series;
 
 import javax.inject.Inject;
+import java.io.IOException;
 
 /**
  * A REST resource for retrieving content from the Hub log.
@@ -29,7 +31,6 @@ import javax.inject.Inject;
  */
 public class HubLogResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/log";
-    public static final String REL = "log";
 
     @Inject
     Authorizer authorizer;
@@ -37,19 +38,37 @@ public class HubLogResource extends SelfInjectingServerResource {
     HubManager hubManager;
 
     /**
-     * @api {get} /api/v1/users/local/hubs/local/log Get log content
+     * @api {get} /api/v1/users/local/hubs/local/log Get Hub log
      * @apiHeader {String} Range the byte range to return in RFC 7233 format
      * @apiVersion 0.1.7
-     * @apiName GetLog
+     * @apiName GetHubLog
      * @apiDescription Retrieves content from the Hub log file.
-     * @apiGroup Logging
+     * @apiGroup Hub
      * @apiExample Example request:
      * GET /api/v1/users/local/hubs/local/log HTTP/1.1
      * Range: lines=0-100
      * @apiSuccessExample Success Response:
-     * HTTP/1.1 206 Partial Content
-     * Content-Range: lines 0-100/5280
-     * ... Log data ...
+     * {
+     *   "numberOfItems": "24",
+     *   "itemListElement": [
+     *     {
+     *       "item": {
+     *         "time": "1434537854597",
+     *         "thread": "qtp2146976730-31",
+     *         "level": "INFO",
+     *         "message": "Initialized jose4j in 205ms"
+     *       }
+     *     },
+     *     {
+     *       "item": {
+     *         "time": "1434537854597",
+     *         "thread": "qtp2146976730-31",
+     *         "level": "INFO",
+     *         "message": "JWE compression algorithms: [DEF]"
+     *       }
+     *     }
+     *   ]
+     * }
      */
     @Override
     protected Representation get() throws ResourceException {
@@ -70,13 +89,22 @@ public class HubLogResource extends SelfInjectingServerResource {
 
         AppendableRepresentation ar = new AppendableRepresentation();
         ar.setMediaType(MediaType.APPLICATION_JSON);
-        LineRange lineRange = hubManager.getLog(ctx.getHubContext(), startLine, endLine, ar);
 
-        headers = getResponse().getHeaders();
-        headers.add(new Header("Range", lineRange.toString()));
+        try {
+            ar.append("{\"itemListElement\":");
 
-        getResponse().setStatus(Status.SUCCESS_PARTIAL_CONTENT);
+            LineRange lineRange = hubManager.getLog(ctx.getHubContext(), startLine, endLine, ar);
 
-        return ar;
+            ar.append(", \"numberOfItems\": \"").append(Long.toString(lineRange.getLineCount())).append("\"}");
+
+            headers = getResponse().getHeaders();
+            headers.add(new Header("Range", lineRange.toString()));
+
+            getResponse().setStatus(Status.SUCCESS_OK);
+
+            return ar;
+        } catch (IOException e) {
+            throw new HobsonRuntimeException("An error occurred creating JSON response", e);
+        }
     }
 }

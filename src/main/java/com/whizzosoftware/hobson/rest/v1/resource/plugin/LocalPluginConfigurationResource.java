@@ -45,14 +45,20 @@ public class LocalPluginConfigurationResource extends SelfInjectingServerResourc
     LinkProvider linkProvider;
 
     /**
-     * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/local/:pluginId/configuration Get plugin configuration
-     * @apiVersion 0.1.6
-     * @apiName GetPluginConfiguration
-     * @apiDescription Retrieves a plugin's configuration.
+     * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/local/:pluginId/configuration Get local plugin configuration
+     * @apiVersion 0.5.0
+     * @apiName GetLocalPluginConfiguration
+     * @apiDescription Retrieves a local plugin's configuration.
      * @apiGroup Plugin
+     * @apiSuccess {Object} cclass The configuration class associated with the configuration
+     * @apiSuccess {Object} values The configuration values
      * @apiSuccessExample {json} Success Response:
      * {
-     *   "properties": {
+     *   "@id": "/api/v1/users/local/hubs/local/plugins/local/com.whizzosoftware.hobson.hub.hobson-hub-radiora/configuration",
+     *   "cclass": {
+     *     "@id": "/api/v1/users/local/hubs/local/plugins/local/com.whizzosoftware.hobson.hub.hobson-hub-radiora/configurationClass"
+     *   },
+     *   "values": {
      *     "serial.port": {
      *       "name": "Serial Port",
      *       "description": "The serial port the RA-RS232 controller is connected to (should not be used with Serial Hostname)",
@@ -64,9 +70,6 @@ public class LocalPluginConfigurationResource extends SelfInjectingServerResourc
      *       "value": "192.168.0.200",
      *       "type": "STRING",
      *     }
-     *   },
-     *   "links": {
-     *       "self": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-radiora/configuration"
      *   }
      * }
      */
@@ -77,7 +80,7 @@ public class LocalPluginConfigurationResource extends SelfInjectingServerResourc
         authorizer.authorizeHub(ctx.getHubContext());
 
         PluginContext pctx = PluginContext.create(ctx.getHubContext(), pluginId);
-        PropertyContainer config = pluginManager.getPluginConfiguration(pctx);
+        PropertyContainer config = pluginManager.getLocalPluginConfiguration(pctx);
 
         return new JsonRepresentation(
             new PropertyContainerDTO.Builder(linkProvider.createLocalPluginConfigurationLink(pctx))
@@ -92,17 +95,18 @@ public class LocalPluginConfigurationResource extends SelfInjectingServerResourc
     }
 
     /**
-     * @api {put} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/configuration Set plugin configuration
+     * @api {put} /api/v1/users/:userId/hubs/:hubId/plugins/local/:pluginId/configuration Set local plugin configuration
      * @apiVersion 0.1.6
-     * @apiName SetPluginConfiguration
-     * @apiDescription Sets a plugin's configuration.
+     * @apiName SetLocalPluginConfiguration
+     * @apiDescription Sets a local plugin's configuration.
      * @apiGroup Plugin
      * @apiExample {json} Example Request:
      * {
-     *   "properties": {
-     *     "serial.hostname": {
-     *       "value": "192.168.0.200"
-     *     }
+     *   "cclass": {
+     *     "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-radiora/configurationClass"
+     *   },
+     *   "values": {
+     *     "serial.hostname": "192.168.0.200"
      *   }
      * }
      * @apiSuccessExample {json} Success Response
@@ -117,7 +121,7 @@ public class LocalPluginConfigurationResource extends SelfInjectingServerResourc
         PropertyContainerDTO dto = new PropertyContainerDTO(JSONHelper.createJSONFromRepresentation(entity));
 
         String pluginId = getAttribute("pluginId");
-        pluginManager.setPluginConfiguration(PluginContext.create(ctx.getHubContext(), pluginId), DTOHelper.mapPropertyContainerDTO(dto, hubManager, linkProvider));
+        pluginManager.setLocalPluginConfiguration(PluginContext.create(ctx.getHubContext(), pluginId), DTOHelper.mapPropertyContainerDTO(dto, hubManager, linkProvider));
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();
     }

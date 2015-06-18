@@ -3,21 +3,25 @@ package com.whizzosoftware.hobson.rest.v1.util;
 import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
 import com.whizzosoftware.hobson.api.HobsonRuntimeException;
 import com.whizzosoftware.hobson.api.device.DeviceContext;
+import com.whizzosoftware.hobson.api.hub.HobsonHub;
 import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.api.hub.PasswordChange;
-import com.whizzosoftware.hobson.api.plugin.HobsonPlugin;
-import com.whizzosoftware.hobson.api.plugin.PluginDescriptor;
-import com.whizzosoftware.hobson.api.plugin.PluginStatus;
-import com.whizzosoftware.hobson.api.plugin.PluginType;
+import com.whizzosoftware.hobson.api.plugin.*;
 import com.whizzosoftware.hobson.api.property.*;
+import com.whizzosoftware.hobson.api.task.HobsonTask;
+import com.whizzosoftware.hobson.api.task.TaskManager;
 import com.whizzosoftware.hobson.dto.*;
+import com.whizzosoftware.hobson.dto.hub.HobsonHubDTO;
+import com.whizzosoftware.hobson.dto.hub.HubLogDTO;
 import com.whizzosoftware.hobson.dto.image.ImageDTO;
 import com.whizzosoftware.hobson.dto.plugin.HobsonPluginDTO;
 import com.whizzosoftware.hobson.dto.property.PropertyContainerClassDTO;
 import com.whizzosoftware.hobson.dto.property.PropertyContainerDTO;
 import com.whizzosoftware.hobson.dto.property.PropertyContainerSetDTO;
 import com.whizzosoftware.hobson.dto.property.TypedPropertyDTO;
+import com.whizzosoftware.hobson.dto.task.HobsonTaskDTO;
 import com.whizzosoftware.hobson.json.TypedPropertyValueSerializer;
+import com.whizzosoftware.hobson.rest.ExpansionFields;
 import com.whizzosoftware.hobson.rest.v1.resource.task.TaskActionClassResource;
 import com.whizzosoftware.hobson.rest.v1.resource.task.TaskConditionClassResource;
 import org.json.JSONException;
@@ -35,6 +39,122 @@ public class DTOHelper {
     static {
         actionClassesTemplate = new Template("/api/v1" + TaskActionClassResource.PATH);
         conditionClassesTemplate = new Template("/api/v1" + TaskConditionClassResource.PATH);
+    }
+
+    static public HobsonHubDTO createHubDTO(HobsonHub hub, ExpansionFields expansions, LinkProvider linkProvider, HubManager hubManager, PluginManager pluginManager, TaskManager taskManager) {
+        // create the response DTO
+        HobsonHubDTO.Builder builder = new HobsonHubDTO.Builder(linkProvider.createHubLink(hub.getContext()))
+                .name(hub.getName())
+                .version(hub.getVersion());
+
+        // add action classes
+        ItemListDTO ildto = new ItemListDTO(linkProvider.createTaskActionClassesLink(hub.getContext()));
+        if (expansions.has("actionClasses")) {
+            for (PropertyContainerClass tac : taskManager.getAllActionClasses(hub.getContext())) {
+                ildto.add(new PropertyContainerClassDTO.Builder(linkProvider.createTaskActionClassLink(tac.getContext())).build());
+            }
+        }
+        builder.actionClasses(ildto);
+
+        // add configuration class attribute
+        if (expansions.has("configurationClass")) {
+            builder.configurationClass(
+                    new PropertyContainerClassDTO.Builder(linkProvider.createHubConfigurationClassLink(hub.getContext()))
+                            .name(hub.getConfigurationClass().getName())
+                            .supportedProperties(DTOHelper.mapTypedPropertyList(hub.getConfigurationClass().getSupportedProperties()))
+                            .build()
+            );
+        } else {
+            builder.configurationClass(new PropertyContainerClassDTO.Builder(linkProvider.createHubConfigurationClassLink(hub.getContext())).build());
+        }
+
+        // add configuration attribute
+        if (expansions.has("configuration")) {
+            PropertyContainer hubConfig = hubManager.getConfiguration(hub.getContext());
+            builder.configuration(
+                    new PropertyContainerDTO.Builder(linkProvider.createHubConfigurationLink(hub.getContext()))
+                            .name(hubConfig.getName())
+                            .containerClass(
+                                    new PropertyContainerClassDTO.Builder(linkProvider.createHubConfigurationClassLink(hub.getContext())).build()
+                            )
+                            .values(hubConfig.getPropertyValues())
+                            .build()
+            );
+        } else {
+            builder.configuration(new PropertyContainerDTO.Builder(linkProvider.createHubConfigurationLink(hub.getContext())).build());
+        }
+
+        // add condition classes
+        ildto = new ItemListDTO(linkProvider.createTaskConditionClassesLink(hub.getContext()));
+        if (expansions.has("conditionClasses")) {
+            for (PropertyContainerClass tcc : taskManager.getAllConditionClasses(hub.getContext())) {
+                ildto.add(new PropertyContainerClassDTO.Builder(linkProvider.createTaskConditionClassLink(tcc.getContext())).build());
+            }
+        }
+        builder.conditionClasses(ildto);
+
+        // add devices attribute
+        ildto = new ItemListDTO(linkProvider.createDevicesLink(hub.getContext()));
+        builder.devices(ildto);
+
+        // add log attribute
+        builder.log(new HubLogDTO(linkProvider.createHubLogLink(hub.getContext())));
+
+        // add local plugins attribute
+        ildto = new ItemListDTO(linkProvider.createLocalPluginsLink(hub.getContext()));
+        builder.localPlugins(ildto);
+        if (expansions.has("localPlugins")) {
+            for (PluginDescriptor pd : pluginManager.getLocalPluginDescriptors(hub.getContext())) {
+                PluginContext pctx = PluginContext.create(hub.getContext(), pd.getId());
+                HobsonPluginDTO.Builder builder2 = new HobsonPluginDTO.Builder(linkProvider.createLocalPluginLink(pctx));
+                DTOHelper.populatePluginDTO(
+                        pd,
+                        pd.isConfigurable() ? linkProvider.createLocalPluginConfigurationClassLink(pctx) : null,
+                        pd.isConfigurable() ? pluginManager.getLocalPlugin(pctx).getConfigurationClass() : null,
+                        pd.isConfigurable() ? linkProvider.createLocalPluginConfigurationLink(pctx) : null,
+                        pd.isConfigurable() ? pluginManager.getLocalPluginConfiguration(pctx) : null,
+                        linkProvider.createLocalPluginIconLink(pctx),
+                        builder2
+                );
+            }
+        }
+
+        // add remote plugins attribute
+        ildto = new ItemListDTO(linkProvider.createRemotePluginsLink(hub.getContext()));
+        builder.remotePlugins(ildto);
+        if (expansions.has("remotePlugins")) {
+            for (PluginDescriptor pd : pluginManager.getRemotePluginDescriptors(hub.getContext())) {
+                PluginContext pctx = PluginContext.create(hub.getContext(), pd.getId());
+                HobsonPluginDTO.Builder builder2 = new HobsonPluginDTO.Builder(linkProvider.createLocalPluginLink(pctx));
+                DTOHelper.populatePluginDTO(
+                        pd,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        builder2
+                );
+                builder2.addLink("install", linkProvider.createRemotePluginInstallLink(pctx, pd.getVersionString()));
+                ildto.add(builder.build());
+            }
+        }
+
+        // add tasks
+        ildto = new ItemListDTO(linkProvider.createTasksLink(hub.getContext()));
+        if (expansions.has("tasks")) {
+            for (HobsonTask task : taskManager.getAllTasks(hub.getContext())) {
+                HobsonTaskDTO.Builder builder2 = new HobsonTaskDTO.Builder(linkProvider.createTaskLink(task.getContext()));
+                builder2.name(task.getName())
+                        .conditionSet(new PropertyContainerSetDTO.Builder("").build()) // TODO
+                        .actionSet(new PropertyContainerSetDTO.Builder("").build()) // TODO
+                        .properties(task.getProperties());
+                ildto.add(builder.build());
+            }
+        }
+        builder.tasks(ildto);
+
+        return builder.build();
     }
 
     static public PropertyContainerSetDTO mapPropertyContainerSet(PropertyContainerSet pcs) {
@@ -234,6 +354,10 @@ public class DTOHelper {
             imageLink,
             builder
         );
+    }
+
+    static public void populateRemotePluginDTO(PluginDescriptor pd, HobsonPluginDTO.Builder builder) {
+        builder.name(pd.getName()).description(pd.getDescription());
     }
 
     static public void populatePluginDTO(String name, String description, String version, PluginType type, Boolean configurable, PluginStatus status, String configClassLink, PropertyContainerClass configClass, String configLink, PropertyContainer config, String imageLink, HobsonPluginDTO.Builder builder) {

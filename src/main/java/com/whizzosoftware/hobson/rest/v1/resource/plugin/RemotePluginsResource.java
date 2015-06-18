@@ -34,6 +34,30 @@ public class RemotePluginsResource extends SelfInjectingServerResource {
     @Inject
     LinkProvider linkProvider;
 
+    /**
+     * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/remote Get remote plugins
+     * @apiVersion 0.5.0
+     * @apiName GetRemotePlugins
+     * @apiDescription Retrieves all remotely available plugins.
+     * @apiGroup Plugin
+     * @apiSuccessExample {json} Success Response:
+     * {
+     *   "@id": "/api/v1/users/local/hubs/local/plugins/remote",
+     *   "numberOfItems": 2,
+     *   "itemListElement": [
+     *     {
+     *       "item": {
+     *         "@id": "/api/v1/users/local/hubs/local/plugins/remote/com.whizzosoftware.hobson.hub.hobson-hub-lutron-radiora"
+     *       }
+     *     },
+     *     {
+     *       "item": {
+     *         "@id": "/api/v1/users/local/hubs/local/plugins/remote/com.whizzosoftware.hobson.hub.hobson-hub-philips-hue"
+     *       }
+     *     }
+     *   ]
+     * }
+     */
     @Override
     protected Representation get() throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
@@ -46,19 +70,11 @@ public class RemotePluginsResource extends SelfInjectingServerResource {
         boolean itemExpand = expansions.has("item");
         for (PluginDescriptor pd : pluginManager.getRemotePluginDescriptors(ctx.getHubContext())) {
             PluginContext pctx = PluginContext.create(ctx.getHubContext(), pd.getId());
-            HobsonPluginDTO.Builder builder = new HobsonPluginDTO.Builder(linkProvider.createRemotePluginLink(pctx));
+            HobsonPluginDTO.Builder builder = new HobsonPluginDTO.Builder(linkProvider.createRemotePluginLink(pctx, pd.getVersionString()));
             if (itemExpand) {
-                DTOHelper.populatePluginDTO(
-                    pd,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    builder
-                );
+                DTOHelper.populateRemotePluginDTO(pd, builder);
+                builder.addLink("install", linkProvider.createRemotePluginInstallLink(pctx, pd.getVersionString()));
             }
-            builder.addLink("install", linkProvider.createRemotePluginInstallLink(pctx, pd.getVersionString()));
             results.add(builder.build());
         }
 

@@ -5,11 +5,10 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
-package com.whizzosoftware.hobson.rest.v1.resource;
+package com.whizzosoftware.hobson.rest.v1.resource.hub;
 
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.resource.hub.HubResource;
 import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.representation.EmptyRepresentation;
@@ -25,7 +24,6 @@ import javax.inject.Inject;
  */
 public class ShutdownResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/shutdown";
-    public static final String REL = "shutdown";
 
     @Inject
     Authorizer authorizer;

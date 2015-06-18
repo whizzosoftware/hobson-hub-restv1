@@ -8,11 +8,14 @@
 package com.whizzosoftware.hobson.rest.v1.resource.task;
 
 import com.whizzosoftware.hobson.api.hub.HubManager;
+import com.whizzosoftware.hobson.api.property.PropertyContainerSet;
 import com.whizzosoftware.hobson.api.task.HobsonTask;
 import com.whizzosoftware.hobson.api.task.TaskContext;
 import com.whizzosoftware.hobson.api.task.TaskManager;
+import com.whizzosoftware.hobson.dto.property.PropertyContainerSetDTO;
 import com.whizzosoftware.hobson.dto.task.HobsonTaskDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
+import com.whizzosoftware.hobson.rest.ExpansionFields;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.DTOHelper;
 import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
@@ -44,118 +47,86 @@ public class TaskResource extends SelfInjectingServerResource {
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/tasks/:taskId Get task details
-     * @apiVersion 0.1.3
+     * @apiVersion 0.5.0
      * @apiName GetTask
      * @apiDescription Retrieves details about a specific task.
      * @apiGroup Tasks
+     * @apiParam (Query Parameters) {String} expand A comma-separated list of attributes to expand (the only supported value is "actionSet").
      * @apiSuccessExample {json} Success Response:
-     * [
-     *   {
-     *     "name": "My Task",
-     *     "type": "EVENT",
-     *     "provider": "com.whizzosoftware.hobson.hub-rules",
-     *     "conditions": [{
-     *       "event": "variableUpdate",
-     *       "pluginId": "com.whizzosoftware.hobson.hub.hobson-hub-sample",
-     *       "deviceId": "switch",
-     *       "name": "on",
-     *       "comparator": "=",
-     *       "value": true,
-     *       "changeId": "turnOn"
-     *     }],
-     *     "actions": [{
-     *       "pluginId": "com.whizzosoftware.hobson.hub-actions",
-     *       "actionId": "log",
-     *       "name": "My Action 1",
-     *       "properties": {
-     *         "message": "Sample log entry"
+     * {
+     *   "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-scheduler/tasks/112c8933-f487-4eb5-ba44-1ea8d4691fd9",
+     *   "name": "My Task",
+     *   "conditionSet": {
+     *     "trigger": {
+     *       "cclass": {
+     *         "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-scheduler/conditionClasses/schedule"
+     *       },
+     *       "values": {
+     *         "date": "20140701",
+     *         "time": "100000Z",
+     *         "recurrence": "FREQ=MONTHLY;BYDAY=FR;BYMONTHDAY=13"
      *       }
-     *     }],
-     *     "links": {
-     *       "self": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.server-rules/tasks/efc02d7a-d0e0-46fb-9cc3-2ca70a66dc05"
-     *     },
+     *     }
+     *   },
+     *   "actionSet": {
+     *     "@id": "/api/v1/users/local/hubs/local/tasks/actionSets/dc419994-987f-4bff-81f9-e5bce53733f3"
+     *   },
+     *   "properties": {
+     *     "scheduled": false,
+     *     "nextRunTime": 1447408800000
      *   }
-     * ]
+     * }
      */
     @Override
     protected Representation get() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
+
         authorizer.authorizeHub(ctx.getHubContext());
+
         HobsonTask task = taskManager.getTask(TaskContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("taskId")));
 
-        HobsonTaskDTO dto = new HobsonTaskDTO.Builder(linkProvider.createTaskLink(task.getContext()))
-            .name(task.getName())
-            .conditionSet(null)
-            .actionSet(null)
-            .properties(task.getProperties())
-            .build();
+        HobsonTaskDTO.Builder builder = new HobsonTaskDTO.Builder(linkProvider.createTaskLink(task.getContext()));
+        builder.name(task.getName())
+            .conditionSet(DTOHelper.mapPropertyContainerSet(task.getConditionSet()))
+            .properties(task.getProperties());
 
-        return new JsonRepresentation(dto.toJSON());
+        PropertyContainerSetDTO.Builder asBuilder = new PropertyContainerSetDTO.Builder(
+            linkProvider.createTaskActionSetLink(ctx.getHubContext(), task.getActionSet().getId())
+        );
+        if (expansions.has("actionSet")) {
+            PropertyContainerSet pcs = taskManager.getActionSet(ctx.getHubContext(), task.getActionSet().getId());
+            asBuilder.primaryContainer(DTOHelper.mapPropertyContainer(pcs.getPrimaryProperty()))
+                .containers(DTOHelper.mapPropertyContainerList(pcs.getProperties()));
+        }
+        builder.actionSet(asBuilder.build());
+
+        return new JsonRepresentation(builder.build().toJSON());
     }
 
     /**
      * @api {put} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/tasks/:taskId Update task
-     * @apiVersion 0.1.3
+     * @apiVersion 0.5.0
      * @apiName UpdateTask
      * @apiDescription Updated an existing task.
      * @apiGroup Tasks
      * @apiExample Example Request (simple event task):
      * {
-     *   "name": "My Event Task",
-     *   "provider": "com.whizzosoftware.hobson.hub.hobson-hub-rules",
-     *   "conditions": [{
-     *     "event": "variableUpdate",
-     *     "pluginId": "com.whizzosoftware.hobson.hub.hobson-hub-zwave",
-     *     "deviceId": "zwave-32",
-     *     "changeId": "turnOff"
-     *   }],
-     *   "actions": [{
-     *     "pluginId": "com.whizzosoftware.hobson.hub.hobson-hub-actions",
-     *     "actionId": "log",
-     *     "name": "My Action 1",
-     *     "properties": {
-     *       "message": "Event task fired"
+     *   "name": "My Task",
+     *   "conditionSet": {
+     *     "trigger": {
+     *       "cclass": {
+     *         "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-scheduler/conditionClasses/schedule"
+     *       },
+     *       "values": {
+     *         "date": "20140701",
+     *         "time": "100000Z",
+     *         "recurrence": "FREQ=MONTHLY;BYDAY=FR;BYMONTHDAY=13"
+     *       }
      *     }
-     *   }]
-     * }
-     * @apiExample Example Request (advanced event task):
-     * {
-     *   "name": "My Event Task",
-     *   "provider": "com.whizzosoftware.hobson.hub.hobson-hub-rules",
-     *   "conditions": [{
-     *     "event": "variableUpdate",
-     *     "pluginId": "com.whizzosoftware.hobson.hub.hobson-hub-zwave",
-     *     "deviceId": "zwave-32",
-     *     "variable": {
-     *       "name": "on",
-     *       "comparator": "eq",
-     *       "value": true
-     *     }
-     *   }],
-     *   "actions": [{
-     *     "pluginId": "com.whizzosoftware.hobson.hub.hobson-hub-actions",
-     *     "actionId": "log",
-     *     "name": "My Action 1",
-     *     "properties": {
-     *       "message": "Event task fired"
-     *     }
-     *   }]
-     * }
-     * @apiExample Example Request (scheduled task):
-     * {
-     *   "name": "My Scheduled Task",
-     *   "provider": "com.whizzosoftware.hobson.hub.hobson-hub-scheduler",
-     *   "conditions": [{
-     *     "start": "20140701T100000",
-     *     "recurrence": "FREQ=MINUTELY;INTERVAL=1"
-     *   }],
-     *   "actions": [{
-     *     "pluginId": "com.whizzosoftware.hobson.hub.hobson-hub-actions",
-     *     "actionId": "log",
-     *     "name": "My Action 2",
-     *   }],
-     *   "properties": {
-     *     "nextRunTime": 1234567890
+     *   },
+     *   "actionSet": {
+     *     "@id": "/api/v1/users/local/hubs/local/tasks/actionSets/dc419994-987f-4bff-81f9-e5bce53733f3"
      *   }
      * }
      * @apiSuccessExample Success Response:

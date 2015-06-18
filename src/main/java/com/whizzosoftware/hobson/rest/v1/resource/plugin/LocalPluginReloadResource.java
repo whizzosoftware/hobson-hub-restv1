@@ -23,8 +23,8 @@ import javax.inject.Inject;
  *
  * @author Dan Noguerol
  */
-public class PluginReloadResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/{pluginId}/reload";
+public class LocalPluginReloadResource extends SelfInjectingServerResource {
+    public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/local/{pluginId}/reload";
 
     @Inject
     Authorizer authorizer;
@@ -32,10 +32,10 @@ public class PluginReloadResource extends SelfInjectingServerResource {
     PluginManager pluginManager;
 
     /**
-     * @api {post} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/reload Reload plugin
+     * @api {post} /api/v1/users/:userId/hubs/:hubId/plugins/local/:pluginId/reload Reload local plugin
      * @apiVersion 0.1.6
-     * @apiName ReloadPlugin
-     * @apiDescription Reload a plugin.
+     * @apiName ReloadLocalPlugin
+     * @apiDescription Reload a locally installed plugin.
      * @apiGroup Plugin
      * @apiSuccessExample Success Response:
      * HTTP/1.1 202 Accepted
@@ -44,7 +44,7 @@ public class PluginReloadResource extends SelfInjectingServerResource {
     protected Representation post(Representation entity) {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
         authorizer.authorizeHub(ctx.getHubContext());
-        pluginManager.reloadPlugin(PluginContext.create(ctx.getHubContext(), getAttribute("pluginId")));
+        pluginManager.reloadLocalPlugin(PluginContext.create(ctx.getHubContext(), getAttribute("pluginId")));
 
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();

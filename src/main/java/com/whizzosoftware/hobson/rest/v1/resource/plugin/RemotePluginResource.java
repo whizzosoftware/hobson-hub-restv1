@@ -7,17 +7,61 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.plugin;
 
+import com.whizzosoftware.hobson.api.plugin.PluginContext;
+import com.whizzosoftware.hobson.api.plugin.PluginDescriptor;
+import com.whizzosoftware.hobson.api.plugin.PluginManager;
+import com.whizzosoftware.hobson.dto.plugin.HobsonPluginDTO;
+import com.whizzosoftware.hobson.rest.Authorizer;
+import com.whizzosoftware.hobson.rest.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.v1.util.DTOHelper;
+import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import org.restlet.ext.guice.SelfInjectingServerResource;
-import org.restlet.representation.EmptyRepresentation;
+import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
 
-public class RemotePluginResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/remote/{pluginId}";
+import javax.inject.Inject;
 
+public class RemotePluginResource extends SelfInjectingServerResource {
+    public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/remote/{pluginId}/{pluginVersion}";
+
+    @Inject
+    Authorizer authorizer;
+    @Inject
+    PluginManager pluginManager;
+    @Inject
+    LinkProvider linkProvider;
+
+    /**
+     * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/remote/:pluginId/:pluginVersion Get remote plugin details
+     * @apiVersion 0.5.0
+     * @apiName GetRemotePlugin
+     * @apiDescription Retrieves details of a remote plugin.
+     * @apiGroup Plugin
+     * @apiSuccessExample {json} Success Response:
+     * {
+     *   "@id": "/api/v1/users/local/hubs/local/plugins/local/com.whizzosoftware.hobson.hub.hobson-hub-radiora",
+     *   "description": "Provides the ability to control Lutron RadioRA Classic lighting systems.",
+     *   "links": {
+     *     "install": "/api/v1/users/local/hubs/local/plugins/local/com.whizzosoftware.hobson.hub.hobson-hub-radiora/0.5.0/install"
+     *   },
+     *   "name": "RadioRa Plugin",
+     *   "version": "0.5.0"
+     * }
+     */
     @Override
     protected Representation get() throws ResourceException {
-        // TODO
-        return new EmptyRepresentation();
+        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+
+        authorizer.authorizeHub(ctx.getHubContext());
+
+        String version = getQueryValue("pluginVersion");
+        PluginContext pctx = PluginContext.create(ctx.getHubContext(), getQueryValue("pluginId"));
+        PluginDescriptor pd = pluginManager.getRemotePluginDescriptor(pctx, version);
+
+        HobsonPluginDTO.Builder builder = new HobsonPluginDTO.Builder(linkProvider.createRemotePluginLink(pctx, version));
+        DTOHelper.populateRemotePluginDTO(pd, builder);
+
+        return new JsonRepresentation(builder.build().toJSON());
     }
 }

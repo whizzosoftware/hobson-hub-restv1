@@ -45,6 +45,8 @@ public class DeviceConfigurationResource extends SelfInjectingServerResource {
      * @apiName GetDeviceConfig
      * @apiDescription Retrieves the current configuration for a device.
      * @apiGroup Devices
+     * @apiSuccess {Object} cclass The configuration class associated with the configuration
+     * @apiSuccess {Object} values The configuration values
      * @apiSuccessExample {json} Success Response:
      * {
      *   "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-radiora/device1/configuration"
@@ -53,7 +55,6 @@ public class DeviceConfigurationResource extends SelfInjectingServerResource {
      *   },
      *   "values": {
      *     "name": "My Device",
-     *     }
      *   }
      * }
      */

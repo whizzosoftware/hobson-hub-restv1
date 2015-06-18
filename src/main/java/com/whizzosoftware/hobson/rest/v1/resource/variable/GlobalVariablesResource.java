@@ -47,7 +47,7 @@ public class GlobalVariablesResource extends SelfInjectingServerResource {
      *     },
      *     {
      *       "item": {
-     *         "@id":"/api/v1/users/local/hubs/local/globalVariables/sunrise"}}],"@id":"/api/v1/users/local/hubs/local/globalVariables"
+     *         "@id": "/api/v1/users/local/hubs/local/globalVariables/sunrise"
      *     }
      *   ]
      * }

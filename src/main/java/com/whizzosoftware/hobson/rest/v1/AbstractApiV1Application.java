@@ -11,7 +11,7 @@ import com.whizzosoftware.hobson.rest.BearerTokenVerifier;
 import com.whizzosoftware.hobson.rest.HobsonApiApplication;
 import com.whizzosoftware.hobson.rest.HobsonStatusService;
 import com.whizzosoftware.hobson.rest.v1.resource.hub.HubLogResource;
-import com.whizzosoftware.hobson.rest.v1.resource.ShutdownResource;
+import com.whizzosoftware.hobson.rest.v1.resource.hub.ShutdownResource;
 import com.whizzosoftware.hobson.rest.v1.resource.login.LoginResource;
 import com.whizzosoftware.hobson.rest.v1.resource.task.*;
 import com.whizzosoftware.hobson.rest.v1.resource.activity.ActivityLogResource;
@@ -87,7 +87,8 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
         router.attach(LocalPluginResource.PATH, LocalPluginResource.class);
         router.attach(LocalPluginConfigurationResource.PATH, LocalPluginConfigurationResource.class);
         router.attach(LocalPluginConfigurationClassResource.PATH, LocalPluginConfigurationClassResource.class);
-        router.attach(LocalPluginIconResource.PATH, LocalPluginIconResource.class);
+        router.attach(LocalPluginImageResource.PATH, LocalPluginImageResource.class);
+        router.attach(LocalPluginReloadResource.PATH, LocalPluginReloadResource.class);
         router.attach(HubLogResource.PATH, HubLogResource.class);
         router.attach(LoginResource.PATH, LoginResource.class);
         router.attach(MediaProxyResource.PATH, MediaProxyResource.class);

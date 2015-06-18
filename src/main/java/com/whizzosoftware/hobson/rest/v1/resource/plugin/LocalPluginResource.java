@@ -33,6 +33,39 @@ public class LocalPluginResource extends SelfInjectingServerResource {
     @Inject
     LinkProvider linkProvider;
 
+    /**
+     * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/local/:pluginId Get local plugin details
+     * @apiVersion 0.5.0
+     * @apiName GetLocalPlugin
+     * @apiDescription Retrieves details of a local plugin.
+     * @apiGroup Plugin
+     * @apiSuccess {Boolean} configurable Indicates whether the plugin has configurable properties.
+     * @apiSuccess {Object} configuration The current configuration values for the plugin.
+     * @apiSuccess {Object} configurationClass The plugin's configuration class.
+     * @apiSuccess {Object} image The image associated with the plugin.
+     * @apiSuccess {String} name The plugin name.
+     * @apiSuccess {Object} status The current plugin status (comprised of a code and an optional message).
+     * @apiSuccessExample {json} Success Response:
+     * {
+     *   "@id": "/api/v1/users/local/hubs/local/plugins/local/com.whizzosoftware.hobson.hub.hobson-hub-radiora",
+     *   "configurable": true,
+     *   "configuration": {
+     *     "@id": "/api/v1/users/local/hubs/local/plugins/local/com.whizzosoftware.hobson.hub.hobson-hub-lutron-radiora/configuration"
+     *   },
+     *   "configurationClass": {
+     *     "@id": "/api/v1/users/local/hubs/local/plugins/local/com.whizzosoftware.hobson.hub.hobson-hub-lutron-radiora/configurationClass"
+     *   },
+     *   "image": {
+     *     "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-lutron-radiora/image"
+     *   },
+     *   "name": "RadioRa Plugin",
+     *   "status": {
+     *     "code": "NOT_CONFIGURED",
+     *     "message": "Neither serial port nor serial hostname are configured"
+     *   },
+     *   "version": "0.5.0"
+     * }
+     */
     @Override
     protected Representation get() throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
@@ -41,7 +74,7 @@ public class LocalPluginResource extends SelfInjectingServerResource {
         authorizer.authorizeHub(ctx.getHubContext());
 
         PluginContext pctx = PluginContext.create(ctx.getHubContext(), getAttribute("pluginId"));
-        HobsonPlugin plugin = pluginManager.getPlugin(pctx);
+        HobsonPlugin plugin = pluginManager.getLocalPlugin(pctx);
 
         HobsonPluginDTO.Builder builder = new HobsonPluginDTO.Builder(linkProvider.createLocalPluginLink(pctx));
 
@@ -50,7 +83,7 @@ public class LocalPluginResource extends SelfInjectingServerResource {
                 plugin.isConfigurable() ? linkProvider.createLocalPluginConfigurationClassLink(pctx) : null,
                 plugin.isConfigurable() && expansions.has("configurationClass") ? plugin.getConfigurationClass() : null,
                 plugin.isConfigurable() ? linkProvider.createLocalPluginConfigurationLink(pctx) : null,
-                plugin.isConfigurable() && expansions.has("configuration") ? pluginManager.getPluginConfiguration(pctx) : null,
+                plugin.isConfigurable() && expansions.has("configuration") ? pluginManager.getLocalPluginConfiguration(pctx) : null,
                 linkProvider.createLocalPluginIconLink(pctx),
                 builder
         );

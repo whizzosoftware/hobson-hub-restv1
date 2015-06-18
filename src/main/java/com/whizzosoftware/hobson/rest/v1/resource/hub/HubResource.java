@@ -60,9 +60,20 @@ public class HubResource extends SelfInjectingServerResource {
      * @api {get} /api/v1/users/:userId/hubs/:hubId Get Hub details
      * @apiVersion 0.1.6
      * @apiName GetHubDetails
-     * @apiParam (Query Parameters) {String} expand A comma-separated list of fields to expand in the response. Valid field values are "configurationClass, configuration, actionClasses, conditionClasses".
+     * @apiParam (Query Parameters) {String} expand A comma-separated list of attributes to expand (supported values are "actionClasses", "conditionClasses", "configuration", "configurationClass", "devices", "log", "localPlugins", "remotePlugins", "tasks").
      * @apiDescription Retrieves details about a Hub. This provides the API version number as well as links to other relevant resources.
      * @apiGroup Hub
+     * @apiSuccess {Object} actionClasses The action classes published to the Hub.
+     * @apiSuccess {Object} conditionClasses The condition classes published to the Hub.
+     * @apiSuccess {Object} configuration The current Hub configuration values.
+     * @apiSuccess {Object} configurationClass The Hub configuration class.
+     * @apiSuccess {Object} devices The devices published to the Hub.
+     * @apiSuccess {Object} log The Hub log.
+     * @apiSuccess {String} name The name of the Hub.
+     * @apiSuccess {Object} localPlugins The plugins locally installed on the Hub.
+     * @apiSuccess {Object} remotePlugins The plugins remotely available to install on the Hub.
+     * @apiSuccess {Object} tasks The tasks that have been created on the Hub.
+     * @apiSuccess {String} version The current Hub version.
      * @apiSuccessExample Success Response:
      * {
      *   "@id": "/api/v1/users/local/hubs/local",
@@ -89,119 +100,15 @@ public class HubResource extends SelfInjectingServerResource {
 
         HobsonHub hub = hubManager.getHub(ctx.getHubContext());
 
-        // create the response DTO
-        HobsonHubDTO.Builder builder = new HobsonHubDTO.Builder(linkProvider.createHubLink(hub.getContext()))
-            .name(hub.getName())
-            .version(hub.getVersion());
+        HobsonHubDTO dto = DTOHelper.createHubDTO(
+            hub,
+            expansions,
+            linkProvider,
+            hubManager,
+            pluginManager,
+            taskManager
+        );
 
-        // add action classes
-        ItemListDTO ildto = new ItemListDTO(linkProvider.createTaskActionClassesLink(ctx.getHubContext()));
-        if (expansions.has("actionClasses")) {
-            for (PropertyContainerClass tac : taskManager.getAllActionClasses(hub.getContext())) {
-                ildto.add(new PropertyContainerClassDTO.Builder(linkProvider.createTaskActionClassLink(tac.getContext())).build());
-            }
-        }
-        builder.actionClasses(ildto);
-
-        // add configuration class attribute
-        if (expansions.has("configurationClass")) {
-            builder.configurationClass(
-                new PropertyContainerClassDTO.Builder(linkProvider.createHubConfigurationClassLink(hub.getContext()))
-                    .name(hub.getConfigurationClass().getName())
-                    .supportedProperties(DTOHelper.mapTypedPropertyList(hub.getConfigurationClass().getSupportedProperties()))
-                    .build()
-            );
-        } else {
-            builder.configurationClass(new PropertyContainerClassDTO.Builder(linkProvider.createHubConfigurationClassLink(hub.getContext())).build());
-        }
-
-        // add configuration attribute
-        if (expansions.has("configuration")) {
-            PropertyContainer hubConfig = hubManager.getConfiguration(hub.getContext());
-            builder.configuration(
-                new PropertyContainerDTO.Builder(linkProvider.createHubConfigurationLink(hub.getContext()))
-                    .name(hubConfig.getName())
-                    .containerClass(
-                        new PropertyContainerClassDTO.Builder(linkProvider.createHubConfigurationClassLink(ctx.getHubContext())).build()
-                    )
-                    .values(hubConfig.getPropertyValues())
-                    .build()
-                );
-        } else {
-            builder.configuration(new PropertyContainerDTO.Builder(linkProvider.createHubConfigurationLink(hub.getContext())).build());
-        }
-
-        // add condition classes
-        ildto = new ItemListDTO(linkProvider.createTaskConditionClassesLink(ctx.getHubContext()));
-        if (expansions.has("conditionClasses")) {
-            for (PropertyContainerClass tcc : taskManager.getAllConditionClasses(hub.getContext())) {
-                ildto.add(new PropertyContainerClassDTO.Builder(linkProvider.createTaskConditionClassLink(tcc.getContext())).build());
-            }
-        }
-        builder.conditionClasses(ildto);
-
-        // add devices attribute
-        ildto = new ItemListDTO(linkProvider.createDevicesLink(ctx.getHubContext()));
-        builder.devices(ildto);
-
-        // add log attribute
-        builder.log(new HubLogDTO(linkProvider.createHubLogLink(ctx.getHubContext())));
-
-        // add local plugins attribute
-        ildto = new ItemListDTO(linkProvider.createLocalPluginsLink(ctx.getHubContext()));
-        builder.localPlugins(ildto);
-        if (expansions.has("localPlugins")) {
-            for (PluginDescriptor pd : pluginManager.getLocalPluginDescriptors(ctx.getHubContext())) {
-                PluginContext pctx = PluginContext.create(ctx.getHubContext(), pd.getId());
-                HobsonPluginDTO.Builder builder2 = new HobsonPluginDTO.Builder(linkProvider.createLocalPluginLink(pctx));
-                DTOHelper.populatePluginDTO(
-                    pd,
-                    pd.isConfigurable() ? linkProvider.createLocalPluginConfigurationClassLink(pctx) : null,
-                    pd.isConfigurable() ? pluginManager.getPlugin(pctx).getConfigurationClass() : null,
-                    pd.isConfigurable() ? linkProvider.createLocalPluginConfigurationLink(pctx) : null,
-                    pd.isConfigurable() ? pluginManager.getPluginConfiguration(pctx) : null,
-                    linkProvider.createLocalPluginIconLink(pctx),
-                    builder2
-                );
-            }
-        }
-
-        // add remote plugins attribute
-        ildto = new ItemListDTO(linkProvider.createRemotePluginsLink(ctx.getHubContext()));
-        builder.remotePlugins(ildto);
-        if (expansions.has("remotePlugins")) {
-            for (PluginDescriptor pd : pluginManager.getRemotePluginDescriptors(ctx.getHubContext())) {
-                PluginContext pctx = PluginContext.create(ctx.getHubContext(), pd.getId());
-                HobsonPluginDTO.Builder builder2 = new HobsonPluginDTO.Builder(linkProvider.createLocalPluginLink(pctx));
-                DTOHelper.populatePluginDTO(
-                    pd,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    builder2
-                );
-                builder2.addLink("install", linkProvider.createRemotePluginInstallLink(pctx, pd.getVersionString()));
-                ildto.add(builder.build());
-            }
-        }
-
-        // add tasks
-        ildto = new ItemListDTO(linkProvider.createTasksLink(ctx.getHubContext()));
-        if (expansions.has("tasks")) {
-            for (HobsonTask task : taskManager.getAllTasks(hub.getContext())) {
-                HobsonTaskDTO.Builder builder2 = new HobsonTaskDTO.Builder(linkProvider.createTaskLink(task.getContext()));
-                builder2.name(task.getName())
-                    .conditionSet(new PropertyContainerSetDTO.Builder("").build()) // TODO
-                    .actionSet(new PropertyContainerSetDTO.Builder("").build()) // TODO
-                    .properties(task.getProperties());
-                ildto.add(builder.build());
-            }
-        }
-        builder.tasks(ildto);
-
-        HobsonHubDTO dto = builder.build();
         JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
         jr.setMediaType(new MediaType(dto.getMediaType() + "+json"));
         return jr;

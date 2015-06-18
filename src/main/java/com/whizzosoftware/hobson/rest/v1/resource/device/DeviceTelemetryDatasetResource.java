@@ -42,6 +42,8 @@ public class DeviceTelemetryDatasetResource extends SelfInjectingServerResource 
      * @apiName GetDeviceTelemetryDataset
      * @apiDescription Retrieves a specific device telemetry dataset.
      * @apiGroup Devices
+     * @apiSuccess {String} name The name of the data set.
+     * @apiSuccess {Object} data The data in the set.
      * @apiSuccessExample {json} Success Response:
      * {
      *   "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-sample/devices/thermostat/telemetry/datasets/tempF"

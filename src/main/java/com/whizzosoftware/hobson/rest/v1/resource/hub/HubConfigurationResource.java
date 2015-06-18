@@ -41,10 +41,12 @@ public class HubConfigurationResource extends SelfInjectingServerResource {
      * @apiName GetHubConfiguration
      * @apiDescription Retrieves current configuration settings for a Hub.
      * @apiGroup Hub
+     * @apiSuccess {Object} cclass The configuration class associated with the Hub
+     * @apiSuccess {Object} values The configuration values
      * @apiSuccessExample Success Response:
      * {
      *   "@id": "/api/v1/users/local/hubs/local/configuration",
-     *   "class": {
+     *   "cclass": {
      *     "@id": "/api/v1/users/local/hubs/local/configurationClass"
      *   },
      *   "values": {

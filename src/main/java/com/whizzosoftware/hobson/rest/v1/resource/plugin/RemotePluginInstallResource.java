@@ -36,17 +36,17 @@ public class RemotePluginInstallResource extends SelfInjectingServerResource {
     LinkProvider linkProvider;
 
     /**
-     * @api {post} /api/v1/users/:userId/hubs/:hubId/plugins/remote/:pluginId/:pluginVersion/install Install plugin
+     * @api {post} /api/v1/users/:userId/hubs/:hubId/plugins/remote/:pluginId/:pluginVersion/install Install remote plugin
      * @apiVersion 0.1.6
-     * @apiName InstallPlugin
+     * @apiName InstallRemotePlugin
      * @apiDescription Install a plugin from the Hobson plugin repository.
      *
-     * The response header Location provides a polling URI to determine when the plugin version has changed,
-     * indicating a successful installation.
+     * The response header Location provides a polling URI to determine when a local version for the plugin becomes
+     * available.
      * @apiGroup Plugin
      * @apiSuccessExample {json} Success Response:
      * HTTP/1.1 202 Accepted
-     * Location: http://localhost:8080/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-radiora/currentVersion
+     * Location: http://localhost:8080/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-radiora
      */
     @Override
     protected Representation post(Representation entity) {
@@ -56,10 +56,10 @@ public class RemotePluginInstallResource extends SelfInjectingServerResource {
         String pluginId = getAttribute("pluginId");
         String pluginVersion = getAttribute("pluginVersion");
 
-        pluginManager.installPlugin(PluginContext.create(ctx.getHubContext(), pluginId), pluginVersion);
+        pluginManager.installRemotePlugin(PluginContext.create(ctx.getHubContext(), pluginId), pluginVersion);
 
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
-        getResponse().setLocationRef(ctx.getApiRoot() + new Template(PluginCurrentVersionResource.PATH).format(linkProvider.createSingleEntryMap(ctx, "pluginId", pluginId)));
+        getResponse().setLocationRef(ctx.getApiRoot() + new Template(LocalPluginResource.PATH).format(linkProvider.createSingleEntryMap(ctx, "pluginId", pluginId)));
 
         return new EmptyRepresentation();
     }

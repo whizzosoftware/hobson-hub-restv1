@@ -34,7 +34,6 @@ import java.util.Collection;
  */
 public class TasksResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/tasks";
-    public static final String REL = "tasks";
 
     @Inject
     Authorizer authorizer;
@@ -57,7 +56,7 @@ public class TasksResource extends SelfInjectingServerResource {
      *   "itemListElement": [
      *     {
      *       "item": {
-     *         "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.server-rules/tasks/efc02d7a-d0e0-46fb-9cc3-2ca70a66dc05",
+     *         "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-scheduler/tasks/112c8933-f487-4eb5-ba44-1ea8d4691fd9",
      *       }
      *     }
      *   ]
@@ -71,11 +70,12 @@ public class TasksResource extends SelfInjectingServerResource {
         authorizer.authorizeHub(ctx.getHubContext());
 
         ItemListDTO results = new ItemListDTO(linkProvider.createTasksLink(ctx.getHubContext()));
+        boolean expandItems = expansions.has("item");
 
         Collection<HobsonTask> tasks = taskManager.getAllTasks(ctx.getHubContext());
         for (HobsonTask task : tasks) {
             HobsonTaskDTO.Builder builder = new HobsonTaskDTO.Builder(linkProvider.createTaskLink(task.getContext()));
-            if (expansions.has("item")) {
+            if (expandItems) {
                 builder.name(task.getName());
                 builder.description(task.getDescription());
                 builder.conditionSet(DTOHelper.mapPropertyContainerSet(task.getConditionSet()));
@@ -96,20 +96,30 @@ public class TasksResource extends SelfInjectingServerResource {
      * @apiGroup Tasks
      * @apiExample Example Request (scheduled task):
      * {
-     *   "name": "My Scheduled Task",
-     *   "triggerCondition": {
-     *     "pluginId": "com.whizzosoftware.hobson.hub.hobson-hub.scheduler",
-     *     "date": "20140701",
-     *     "time": "100000",
-     *     "recurrence": "FREQ=MINUTELY;INTERVAL=1"
+     *   "name": "My Task",
+     *   "conditionSet": {
+     *     "trigger": {
+     *       "cclass": {
+     *         "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-scheduler/conditionClasses/schedule"
+     *       },
+     *       "values": {
+     *         "date": "20140701",
+     *         "time": "100000Z",
+     *         "recurrence": "FREQ=MONTHLY;BYDAY=FR;BYMONTHDAY=13"
+     *       }
+     *     }
      *   },
-     *   "actions": [{
-     *     "pluginId": "com.whizzosoftware.hobson.hub.hobson-hub-actions",
-     *     "actionId": "log",
-     *     "name": "My Action 2",
-     *   }],
-     *   "properties": {
-     *     "nextRunTime": 1234567890
+     *   "actionSet": {
+     *     "actions": [
+     *       {
+     *         "cclass": {
+     *           "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-actions/actionClasses/log"
+     *         },
+     *         "values": {
+     *           "message": "Foo"
+     *         }
+     *       }
+     *     ]
      *   }
      * }
      * @apiSuccessExample Success Response:

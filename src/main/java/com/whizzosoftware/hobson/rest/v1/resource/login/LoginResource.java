@@ -48,11 +48,7 @@ public class LoginResource extends SelfInjectingServerResource {
      * {
      *   "token": "eyJraWQiOiJSU0EiLCJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJIb2Jzb24iLCJzdWIiOiJsb2NhbCIsImV4cCI6MTQzMjY4NjQ4MX0.mTravshTbaAuEtKp8aezgmNy5mUHqH3W85vutyR7zI-Q_AC_pQ1DT9wayIvYcpkXR8p54pBc5Ju7LAwfPuQzzFhKnmKTSYTfZlE0gQsELK4pfH3FWzxfb8qdYTAy_f4q7gPiAMUPCORCd4d30H0PIGEgEv5-PjcF5UBQpa6JT1NCkeBczLDCFrxq7XfJCBUosHpO9OQTLzBVaJh83wSia4CRP-cfBphQDSVy-hFQ9Qo6YUUVj4l_f0znlEXQSN7VWepDB81ixU5IomEdU3mH50g5uSFu3CHnenkz-BgVokXa2Ge8OUl7MaMDHkWwdnfahcgFmrcZHdiyXyLf8qulGA",
      *   "user": {
-     *     "_links": {
-     *       "self": {
-     *         "href": "/api/v1/users/local"
-     *       }
-     *     }
+     *     "@id": "/api/v1/users/local"
      *   }
      * }
      */
