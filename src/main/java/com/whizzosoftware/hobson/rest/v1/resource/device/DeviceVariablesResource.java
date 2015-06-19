@@ -76,7 +76,7 @@ public class DeviceVariablesResource extends SelfInjectingServerResource {
             for (HobsonVariable v : variables) {
                 HobsonVariableDTO.Builder builder = new HobsonVariableDTO.Builder(linkProvider.createDeviceVariableLink(dctx, v.getName()));
                 if (expansions.has("item")) {
-                    builder.name(v.getName()).mask(v.getMask()).lastUpdate(v.getLastUpdate());
+                    builder.name(v.getName()).mask(v.getMask()).lastUpdate(v.getLastUpdate()).value(v.getValue());
                 }
                 results.add(builder.build());
             }
