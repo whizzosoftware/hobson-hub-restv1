@@ -26,6 +26,7 @@ import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceEntitiesResou
 import com.whizzosoftware.hobson.rest.v1.resource.user.UserResource;
 import com.whizzosoftware.hobson.rest.v1.resource.variable.GlobalVariableResource;
 import com.whizzosoftware.hobson.rest.v1.resource.variable.GlobalVariablesResource;
+import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.Restlet;
@@ -45,8 +46,6 @@ import java.util.ArrayList;
  * @author Dan Noguerol
  */
 abstract public class AbstractApiV1Application extends ResourceInjectingApplication implements HobsonApiApplication {
-    public static final String PATH = "/api/v1";
-
     /**
      * Constructor that creates an challenge-based authenticator using the fully-qualified class name specified in
      * the "hobson.rest.verifier" system property to instantiate a verifier.
@@ -131,7 +130,7 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
     }
 
     public String getApiRoot() {
-        return PATH;
+        return LinkProvider.API_ROOT;
     }
 
     abstract protected String getRealmName();

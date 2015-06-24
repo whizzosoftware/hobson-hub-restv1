@@ -39,6 +39,7 @@ import java.util.Map;
  * @author Dan Noguerol
  */
 public class LinkProvider {
+    public static final String API_ROOT = "/api/v1";
     public static final int ACTION_CONTAINER = 0;
     public static final int CONDITION_CONTAINER = 1;
     public static final int HUB_CONFIG_CONTAINER = 2;
@@ -47,7 +48,7 @@ public class LinkProvider {
     private String apiRoot;
 
     public LinkProvider() {
-        this.apiRoot = "/api/v1";
+        this.apiRoot = API_ROOT;
     }
 
     public JSONObject addImageLibraryGroupLinks(HobsonRestContext ctx, JSONObject json, String groupId) {

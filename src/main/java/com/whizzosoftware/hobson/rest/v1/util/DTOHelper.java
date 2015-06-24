@@ -37,8 +37,8 @@ public class DTOHelper {
     private static Template conditionClassesTemplate;
 
     static {
-        actionClassesTemplate = new Template("/api/v1" + TaskActionClassResource.PATH);
-        conditionClassesTemplate = new Template("/api/v1" + TaskConditionClassResource.PATH);
+        actionClassesTemplate = new Template(LinkProvider.API_ROOT + TaskActionClassResource.PATH);
+        conditionClassesTemplate = new Template(LinkProvider.API_ROOT + TaskConditionClassResource.PATH);
     }
 
     static public HobsonHubDTO createHubDTO(HobsonHub hub, ExpansionFields expansions, LinkProvider linkProvider, HubManager hubManager, PluginManager pluginManager, TaskManager taskManager) {
