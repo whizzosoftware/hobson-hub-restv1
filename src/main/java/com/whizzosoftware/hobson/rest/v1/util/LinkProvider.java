@@ -80,15 +80,6 @@ public class LinkProvider {
         return map;
     }
 
-    public Map<String,Object> createDoubleEntryMap(HobsonRestContext ctx, String key1, String value1, String key2, String value2) {
-        Map<String,Object> map = new HashMap<>();
-        map.put("userId", ctx.getUserId());
-        map.put("hubId", ctx.getHubId());
-        map.put(key1, value1);
-        map.put(key2, value2);
-        return map;
-    }
-
     public Map<String,Object> createTripleEntryMap(HobsonRestContext ctx, String key1, String value1, String key2, String value2, String key3, String value3) {
         Map<String,Object> map = new HashMap<>();
         map.put("userId", ctx.getUserId());
@@ -99,13 +90,6 @@ public class LinkProvider {
         return map;
     }
 
-    public HubContext createHubContext(String link) {
-        Template t = new Template(apiRoot + HubResource.PATH);
-        Map<String,Object> vars = new HashMap<>();
-        t.parse(link, vars);
-        return HubContext.create((String)vars.get("userId"), (String)vars.get("hubId"));
-    }
-
     public String createTaskLink(TaskContext ctx) {
         Template t = new Template(apiRoot + TaskResource.PATH);
         Map<String,String> values = new HashMap<>();
@@ -114,10 +98,6 @@ public class LinkProvider {
         values.put("pluginId", ctx.getPluginId());
         values.put("taskId", ctx.getTaskId());
         return t.format(values);
-    }
-
-    public TaskContext createTaskContext(String string) {
-        return null;
     }
 
     public String createTaskConditionClassesLink(HubContext ctx) {
