@@ -235,7 +235,7 @@ public class DTOHelper {
                 if (pcc != null) {
                     TypedProperty tp = pcc.getSupportedProperty(id);
                     if (tp != null) {
-                        value = TypedPropertyValueSerializer.createValueObject(null, tp.getType(), value, links != null ? new TypedPropertyValueSerializer.DeviceContextProvider() {
+                        value = TypedPropertyValueSerializer.createValueObject(tp.getType(), value, links != null ? new TypedPropertyValueSerializer.DeviceContextProvider() {
                             @Override
                             public DeviceContext createDeviceContext(String id) {
                                 return links.createDeviceContext(id);
