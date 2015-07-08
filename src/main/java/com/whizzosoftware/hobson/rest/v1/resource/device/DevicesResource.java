@@ -24,12 +24,19 @@ import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.DTOHelper;
 import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.MediaVariableProxyProvider;
+import org.restlet.data.Status;
+import org.restlet.data.Tag;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
+import org.restlet.representation.EmptyRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
 
 import javax.inject.Inject;
+import java.util.Collection;
+import java.util.List;
+import java.util.TreeMap;
+import java.util.zip.CRC32;
 
 /**
  * A REST resource that returns device information.
@@ -81,9 +88,15 @@ public class DevicesResource extends SelfInjectingServerResource {
 
         ItemListDTO results = new ItemListDTO(linkProvider.createDevicesLink(ctx.getHubContext()));
 
+        Collection<HobsonDevice> devices = deviceManager.getAllDevices(ctx.getHubContext());
+        TreeMap<String,Long> etagMap = new TreeMap<>();
+
+        // TODO: refactor so the JSON isn't built if the ETag matches
+
         boolean itemExpand = expansions.has("item");
-        for (HobsonDevice device : deviceManager.getAllDevices(ctx.getHubContext())) {
+        for (HobsonDevice device : devices) {
             HobsonDeviceDTO.Builder builder = new HobsonDeviceDTO.Builder(linkProvider.createDeviceLink(device.getContext()));
+            long lastVariableUpdate = 0;
             if (itemExpand) {
                 builder.name(device.getName());
                 builder.type(device.getType());
@@ -110,6 +123,9 @@ public class DevicesResource extends SelfInjectingServerResource {
                     if (expansions.has("preferredVariable")) {
                         HobsonVariable pv = variableManager.getDeviceVariable(device.getContext(), device.getPreferredVariableName(), new MediaVariableProxyProvider(ctx));
                         vbuilder.name(pv.getName()).mask(pv.getMask()).lastUpdate(pv.getLastUpdate()).value(pv.getValue());
+                        if (pv.getLastUpdate() > lastVariableUpdate) {
+                            lastVariableUpdate = pv.getLastUpdate();
+                        }
                     }
                     builder.preferredVariable(vbuilder.build());
                 }
@@ -124,12 +140,37 @@ public class DevicesResource extends SelfInjectingServerResource {
                             .value(v.getValue())
                             .build()
                         );
+                        if (v.getLastUpdate() > lastVariableUpdate) {
+                            lastVariableUpdate = v.getLastUpdate();
+                        }
                     }
                 }
                 builder.variables(vdto);
+
             }
             results.add(builder.build());
+            etagMap.put(device.getContext().toString(), lastVariableUpdate);
         }
-        return new JsonRepresentation(results.toJSON());
+
+        // the ETag is a CRC calculated from all devices' contexts and last variable updates
+        CRC32 crc = new CRC32();
+        for (String dctx : etagMap.keySet()) {
+            String s = dctx + Long.toString(etagMap.get(dctx));
+            crc.update(s.getBytes());
+        }
+        Tag etag = new Tag(Long.toString(crc.getValue()));
+
+        // check if ETag matches request
+        List<Tag> requestTags = getRequest().getConditions().getNoneMatch();
+        Representation r;
+        if (requestTags.size() == 0 || !requestTags.get(0).equals(etag)) {
+            r = new JsonRepresentation(results.toJSON());
+        } else {
+            getResponse().setStatus(Status.REDIRECTION_NOT_MODIFIED);
+            r = new EmptyRepresentation();
+        }
+
+        r.setTag(etag);
+        return r;
     }
 }
