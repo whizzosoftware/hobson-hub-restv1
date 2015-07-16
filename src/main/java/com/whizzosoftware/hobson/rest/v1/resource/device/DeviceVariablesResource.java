@@ -7,6 +7,7 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.device;
 
+import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
 import com.whizzosoftware.hobson.rest.ExpansionFields;
 import com.whizzosoftware.hobson.api.HobsonNotFoundException;
 import com.whizzosoftware.hobson.api.device.DeviceContext;
@@ -17,14 +18,21 @@ import com.whizzosoftware.hobson.dto.variable.HobsonVariableDTO;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.MediaVariableProxyProvider;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
+import org.restlet.representation.EmptyRepresentation;
 import org.restlet.representation.Representation;
 
 import javax.inject.Inject;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A REST resource that retrieves device variable information.
@@ -83,6 +91,50 @@ public class DeviceVariablesResource extends SelfInjectingServerResource {
             return new JsonRepresentation(results.toJSON());
         } else {
             throw new HobsonNotFoundException("Unable to find variables for device");
+        }
+    }
+
+    /**
+     * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/devices/:deviceId/variables Set device variables
+     * @apiVersion 0.5.0
+     * @apiName SetDeviceVariables
+     * @apiDescription Updates the values of multiple device variables.
+     * @apiGroup Variables
+     * @apiExample Example Request:
+     * {
+     *   "values": {
+     *     "on": true,
+     *     "level", 100
+     *   }
+     * }
+     * @apiSuccessExample Success Response:
+     * HTTP/1.1 202 Accepted
+     */
+    @Override
+    protected Representation put(Representation entity) {
+        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+
+        authorizer.authorizeHub(ctx.getHubContext());
+
+        DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
+
+        variableManager.setDeviceVariables(dctx, createDeviceVariableValues(JSONHelper.createJSONFromRepresentation(entity)));
+
+        getResponse().setStatus(Status.SUCCESS_ACCEPTED);
+        return new EmptyRepresentation();
+    }
+
+    private Map<String,Object> createDeviceVariableValues(JSONObject json) {
+        try {
+            Map<String,Object> map = new HashMap<>();
+            JSONObject values = json.getJSONObject("values");
+            for (Object o : values.keySet()) {
+                String key = (String)o;
+                map.put(key, values.get(key));
+            }
+            return map;
+        } catch (JSONException e) {
+            throw new HobsonInvalidRequestException(e.getMessage());
         }
     }
 }
