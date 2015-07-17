@@ -61,6 +61,7 @@ public class DevicesResource extends SelfInjectingServerResource {
      * @apiName GetAllDevices
      * @apiDescription Retrieves a summary list of devices published by all plugins.
      * @apiGroup Devices
+     * @apiParam (Query Parameters) {String} var Filter the list of devices to only those that publish the specified variable name
      * @apiParam (Query Parameters) {String} expand A comma-separated list of attributes to expand (the only supported value is "item").
      * @apiSuccessExample {json} Success Response:
      * {
@@ -83,6 +84,7 @@ public class DevicesResource extends SelfInjectingServerResource {
     protected Representation get() throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
         ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
+        String varFilter = getQueryValue("var");
 
         authorizer.authorizeHub(ctx.getHubContext());
 
@@ -95,61 +97,63 @@ public class DevicesResource extends SelfInjectingServerResource {
 
         boolean itemExpand = expansions.has("item");
         for (HobsonDevice device : devices) {
-            HobsonDeviceDTO.Builder builder = new HobsonDeviceDTO.Builder(linkProvider.createDeviceLink(device.getContext()));
-            long lastVariableUpdate = 0;
-            if (itemExpand) {
-                builder.name(device.getName());
-                builder.type(device.getType());
+            if (varFilter == null || variableManager.hasDeviceVariable(device.getContext(), varFilter)) {
+                HobsonDeviceDTO.Builder builder = new HobsonDeviceDTO.Builder(linkProvider.createDeviceLink(device.getContext()));
+                long lastVariableUpdate = 0;
+                if (itemExpand) {
+                    builder.name(device.getName());
+                    builder.type(device.getType());
 
-                // set configurationClass attribute
-                PropertyContainerClassDTO.Builder pccdtob = new PropertyContainerClassDTO.Builder(linkProvider.createDeviceConfigurationClassLink(device.getContext()));
-                if (expansions.has("configurationClass")) {
-                    PropertyContainerClass pccc = device.getConfigurationClass();
-                    pccdtob.supportedProperties(DTOHelper.mapTypedPropertyList(pccc.getSupportedProperties()));
-                }
-                builder.configurationClass(pccdtob.build());
+                    // set configurationClass attribute
+                    PropertyContainerClassDTO.Builder pccdtob = new PropertyContainerClassDTO.Builder(linkProvider.createDeviceConfigurationClassLink(device.getContext()));
+                    if (expansions.has("configurationClass")) {
+                        PropertyContainerClass pccc = device.getConfigurationClass();
+                        pccdtob.supportedProperties(DTOHelper.mapTypedPropertyList(pccc.getSupportedProperties()));
+                    }
+                    builder.configurationClass(pccdtob.build());
 
-                // set configuration attribute
-                PropertyContainerDTO.Builder pcdtob = new PropertyContainerDTO.Builder(linkProvider.createDeviceConfigurationLink(device.getContext()));
-                if (expansions.has("configuration")) {
-                    PropertyContainer config = deviceManager.getDeviceConfiguration(device.getContext());
-                    pcdtob.values(config.getPropertyValues());
-                }
-                builder.configuration(pcdtob.build());
+                    // set configuration attribute
+                    PropertyContainerDTO.Builder pcdtob = new PropertyContainerDTO.Builder(linkProvider.createDeviceConfigurationLink(device.getContext()));
+                    if (expansions.has("configuration")) {
+                        PropertyContainer config = deviceManager.getDeviceConfiguration(device.getContext());
+                        pcdtob.values(config.getPropertyValues());
+                    }
+                    builder.configuration(pcdtob.build());
 
-                // set preferredVariable attribute
-                if (device.hasPreferredVariableName()) {
-                    HobsonVariableDTO.Builder vbuilder = new HobsonVariableDTO.Builder(linkProvider.createDeviceVariableLink(device.getContext(), device.getPreferredVariableName()));
-                    if (expansions.has("preferredVariable")) {
-                        HobsonVariable pv = variableManager.getDeviceVariable(device.getContext(), device.getPreferredVariableName(), new MediaVariableProxyProvider(ctx));
-                        vbuilder.name(pv.getName()).mask(pv.getMask()).lastUpdate(pv.getLastUpdate()).value(pv.getValue());
-                        if (pv.getLastUpdate() > lastVariableUpdate) {
-                            lastVariableUpdate = pv.getLastUpdate();
+                    // set preferredVariable attribute
+                    if (device.hasPreferredVariableName()) {
+                        HobsonVariableDTO.Builder vbuilder = new HobsonVariableDTO.Builder(linkProvider.createDeviceVariableLink(device.getContext(), device.getPreferredVariableName()));
+                        if (expansions.has("preferredVariable")) {
+                            HobsonVariable pv = variableManager.getDeviceVariable(device.getContext(), device.getPreferredVariableName(), new MediaVariableProxyProvider(ctx));
+                            vbuilder.name(pv.getName()).mask(pv.getMask()).lastUpdate(pv.getLastUpdate()).value(pv.getValue());
+                            if (pv.getLastUpdate() > lastVariableUpdate) {
+                                lastVariableUpdate = pv.getLastUpdate();
+                            }
+                        }
+                        builder.preferredVariable(vbuilder.build());
+                    }
+
+                    // set variables attribute
+                    ItemListDTO vdto = new ItemListDTO(linkProvider.createDeviceVariablesLink(device.getContext()));
+                    if (expansions.has("variables")) {
+                        for (HobsonVariable v : variableManager.getDeviceVariables(device.getContext(), new MediaVariableProxyProvider(ctx)).getCollection()) {
+                            vdto.add(new HobsonVariableDTO.Builder(linkProvider.createDeviceVariableLink(device.getContext(), v.getName()))
+                                            .name(v.getName())
+                                            .mask(v.getMask())
+                                            .value(v.getValue())
+                                            .build()
+                            );
+                            if (v.getLastUpdate() > lastVariableUpdate) {
+                                lastVariableUpdate = v.getLastUpdate();
+                            }
                         }
                     }
-                    builder.preferredVariable(vbuilder.build());
-                }
+                    builder.variables(vdto);
 
-                // set variables attribute
-                ItemListDTO vdto = new ItemListDTO(linkProvider.createDeviceVariablesLink(device.getContext()));
-                if (expansions.has("variables")) {
-                    for (HobsonVariable v : variableManager.getDeviceVariables(device.getContext(), new MediaVariableProxyProvider(ctx)).getCollection()) {
-                        vdto.add(new HobsonVariableDTO.Builder(linkProvider.createDeviceVariableLink(device.getContext(), v.getName()))
-                            .name(v.getName())
-                            .mask(v.getMask())
-                            .value(v.getValue())
-                            .build()
-                        );
-                        if (v.getLastUpdate() > lastVariableUpdate) {
-                            lastVariableUpdate = v.getLastUpdate();
-                        }
-                    }
                 }
-                builder.variables(vdto);
-
+                results.add(builder.build());
+                etagMap.put(device.getContext().toString(), lastVariableUpdate);
             }
-            results.add(builder.build());
-            etagMap.put(device.getContext().toString(), lastVariableUpdate);
         }
 
         // the ETag is a CRC calculated from all devices' contexts and last variable updates

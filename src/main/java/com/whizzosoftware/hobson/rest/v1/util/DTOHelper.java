@@ -304,7 +304,7 @@ public class DTOHelper {
 
 
     static public TypedPropertyDTO mapTypedProperty(TypedProperty tp) {
-        return new TypedPropertyDTO.Builder(tp.getId()).name(tp.getName()).description(tp.getDescription()).type(tp.getType()).build();
+        return new TypedPropertyDTO.Builder(tp.getId()).name(tp.getName()).description(tp.getDescription()).type(tp.getType()).constraints(tp.getConstraints()).build();
     }
 
     static public PropertyContainerClassContext createPropertyContainerClassContext(String id) {
