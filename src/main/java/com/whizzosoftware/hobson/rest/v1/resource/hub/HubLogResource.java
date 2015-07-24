@@ -14,6 +14,7 @@ import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import org.restlet.data.Header;
 import org.restlet.data.MediaType;
+import org.restlet.data.Range;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.representation.AppendableRepresentation;
@@ -97,8 +98,9 @@ public class HubLogResource extends SelfInjectingServerResource {
 
             ar.append(", \"numberOfItems\": \"").append(Long.toString(lineRange.getLineCount())).append("\"}");
 
-            headers = getResponse().getHeaders();
-            headers.add(new Header("Range", lineRange.toString()));
+            Range range = new Range(lineRange.getStartLine(), lineRange.getLineCount());
+            range.setUnitName("lines");
+            ar.setRange(range);
 
             getResponse().setStatus(Status.SUCCESS_OK);
 
