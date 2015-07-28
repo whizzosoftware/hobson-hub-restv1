@@ -96,7 +96,7 @@ public class HubLogResource extends SelfInjectingServerResource {
 
             LineRange lineRange = hubManager.getLog(ctx.getHubContext(), startLine, endLine, ar);
 
-            ar.append(", \"numberOfItems\": \"").append(Long.toString(lineRange.getLineCount())).append("\"}");
+            ar.append(", \"numberOfItems\": \"").append(Long.toString(lineRange.getLineCount() + 1)).append("\"}");
 
             Range range = new Range(lineRange.getStartLine(), lineRange.getLineCount());
             range.setUnitName("lines");
