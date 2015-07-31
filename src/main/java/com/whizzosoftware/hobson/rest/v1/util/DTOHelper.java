@@ -362,7 +362,7 @@ public class DTOHelper {
     }
 
     static public void populateRemotePluginDTO(PluginDescriptor pd, HobsonPluginDTO.Builder builder) {
-        builder.name(pd.getName()).description(pd.getDescription()).version(pd.getVersionString());
+        builder.name(pd.getName()).description(pd.getDescription()).version(pd.getVersionString()).type(pd.getType());
     }
 
     static public void populatePluginDTO(String name, String description, String version, PluginType type, Boolean configurable, PluginStatus status, String configClassLink, PropertyContainerClass configClass, String configLink, PropertyContainer config, String imageLink, HobsonPluginDTO.Builder builder) {
