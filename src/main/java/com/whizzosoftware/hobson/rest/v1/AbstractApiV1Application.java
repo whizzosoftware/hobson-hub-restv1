@@ -74,11 +74,12 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
         router.attach(GlobalVariablesResource.PATH, GlobalVariablesResource.class);
         router.attach(HubConfigurationResource.PATH, HubConfigurationResource.class);
         router.attach(HubConfigurationClassResource.PATH, HubConfigurationClassResource.class);
-        router.attach(HubEnableRemoteRepositoryResource.PATH, HubEnableRemoteRepositoryResource.class);
         router.attach(HubImageResource.PATH, HubImageResource.class);
         router.attach(HubResource.PATH, HubResource.class);
         router.attach(HubPasswordResource.PATH, HubPasswordResource.class);
         router.attach(HubSendTestEmailResource.PATH, HubSendTestEmailResource.class);
+        router.attach(HubRemoteRepositoriesResource.PATH, HubRemoteRepositoriesResource.class);
+        router.attach(HubRemoteRepositoryResource.PATH, HubRemoteRepositoryResource.class);
         router.attach(HubsResource.PATH, HubsResource.class);
         router.attach(ImageLibraryGroupResource.PATH, ImageLibraryGroupResource.class);
         router.attach(ImageLibraryImageResource.PATH, ImageLibraryImageResource.class);

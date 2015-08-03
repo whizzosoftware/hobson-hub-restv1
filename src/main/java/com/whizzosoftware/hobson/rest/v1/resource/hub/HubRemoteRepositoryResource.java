@@ -9,10 +9,8 @@ package com.whizzosoftware.hobson.rest.v1.resource.hub;
 
 import com.whizzosoftware.hobson.api.HobsonRuntimeException;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
-import com.whizzosoftware.hobson.dto.plugin.EnableRemoteRepositoryDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.representation.EmptyRepresentation;
@@ -20,14 +18,11 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
 
 import javax.inject.Inject;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 
-/**
- * A resource for enabling/disabling remote plugin repositories.
- *
- * @author Dan Noguerol
- */
-public class HubEnableRemoteRepositoryResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/enableRemoteRepository";
+public class HubRemoteRepositoryResource extends SelfInjectingServerResource {
+    public static final String PATH = "/users/{userId}/hubs/{hubId}/repositories/{repositoryId}";
 
     @Inject
     Authorizer authorizer;
@@ -35,28 +30,26 @@ public class HubEnableRemoteRepositoryResource extends SelfInjectingServerResour
     PluginManager pluginManager;
 
     /**
-     * @api {post} /api/v1/users/:userId/hubs/:hubId/enableRemoteRepository Enable/disable remote repository
+     * @api {delete} /api/v1/users/:userId/hubs/:hubId/repositories Delete remote repository
      * @apiVersion 0.5.0
-     * @apiName EnableRemoteRepository
-     * @apiDescription Enables or disables a remote repository specified by a URL.
+     * @apiName DeleteRemoteRepository
+     * @apiDescription Removes a remote repository from the Hub's configuration.
      * @apiGroup Hub
-     * @apiParamExample {json} Example Request:
-     * {
-     *   "url": "http://your-repo-url-here",
-     *   "enabled": true
-     * }
      * @apiSuccessExample {json} Success Response:
      * HTTP/1.1 202 Accepted
      */
     @Override
-    protected Representation post(Representation entity) throws ResourceException {
+    protected Representation delete() throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
         authorizer.authorizeHub(ctx.getHubContext());
         if (pluginManager != null) {
-            EnableRemoteRepositoryDTO dto = new EnableRemoteRepositoryDTO(JSONHelper.createJSONFromRepresentation(entity));
-            pluginManager.enableRemoteRepository(dto.getUrl(), dto.isEnabled());
-            getResponse().setStatus(Status.SUCCESS_ACCEPTED);
-            return new EmptyRepresentation();
+            try {
+                pluginManager.removeRemoteRepository(URLDecoder.decode(getAttribute("repositoryId"), "UTF-8"));
+                getResponse().setStatus(Status.SUCCESS_ACCEPTED);
+                return new EmptyRepresentation();
+            } catch (UnsupportedEncodingException e) {
+                throw new HobsonRuntimeException("URL decoding failed", e);
+            }
         } else {
             throw new HobsonRuntimeException("No plugin manager found");
         }

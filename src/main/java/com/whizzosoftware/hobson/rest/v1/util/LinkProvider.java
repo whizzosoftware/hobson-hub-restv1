@@ -122,7 +122,7 @@ public class LinkProvider {
         Template t = new Template(apiRoot + TaskConditionClassResource.PATH);
         Map<String,Object> vars = new HashMap<>();
         t.parse(link, vars);
-        return PropertyContainerClassContext.create(PluginContext.create(HubContext.create((String) vars.get("userId"), (String) vars.get("hubId")), (String)vars.get("pluginId")), (String)vars.get("conditionClassId"));
+        return PropertyContainerClassContext.create(PluginContext.create(HubContext.create((String) vars.get("userId"), (String) vars.get("hubId")), (String) vars.get("pluginId")), (String) vars.get("conditionClassId"));
     }
 
     public String createTaskActionClassesLink(HubContext ctx) {
@@ -147,7 +147,7 @@ public class LinkProvider {
         Template t = new Template(apiRoot + TaskActionClassResource.PATH);
         Map<String,Object> vars = new HashMap<>();
         t.parse(link, vars);
-        return PropertyContainerClassContext.create((String)vars.get("userId"), (String)vars.get("hubId"), (String)vars.get("pluginId"), (String)vars.get("actionClassId"));
+        return PropertyContainerClassContext.create((String) vars.get("userId"), (String) vars.get("hubId"), (String) vars.get("pluginId"), (String) vars.get("actionClassId"));
     }
 
     public String createTaskActionSetLink(HubContext ctx, String actionSetId) {
@@ -382,7 +382,7 @@ public class LinkProvider {
         Template t = new Template(apiRoot + DeviceResource.PATH);
         Map<String,Object> vars = new HashMap<>();
         t.parse(link, vars);
-        return DeviceContext.create(HubContext.create((String)vars.get("userId"), (String)vars.get("hubId")), (String)vars.get("pluginId"), (String)vars.get("deviceId"));
+        return DeviceContext.create(HubContext.create((String) vars.get("userId"), (String) vars.get("hubId")), (String) vars.get("pluginId"), (String) vars.get("deviceId"));
     }
 
     public String createHubLogLink(HubContext context) {
@@ -490,6 +490,23 @@ public class LinkProvider {
         values.put("userId", context.getUserId());
         values.put("hubId", context.getHubId());
         values.put("pluginId", context.getPluginId());
+        return t.format(values);
+    }
+
+    public String createRepositoryLink(HubContext context, String uri) {
+        Template t = new Template(apiRoot + HubRemoteRepositoryResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", context.getUserId());
+        values.put("hubId", context.getHubId());
+        values.put("repositoryId", uri);
+        return t.format(values);
+    }
+
+    public String createRepositoriesLink(HubContext context) {
+        Template t = new Template(apiRoot + HubRemoteRepositoriesResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", context.getUserId());
+        values.put("hubId", context.getHubId());
         return t.format(values);
     }
 }
