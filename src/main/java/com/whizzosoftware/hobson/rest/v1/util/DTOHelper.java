@@ -329,6 +329,7 @@ public class DTOHelper {
 
     static public void populatePluginDTO(HobsonPlugin plugin, String configClassLink, PropertyContainerClass configClass, String configLink, PropertyContainer config, String imageLink, HobsonPluginDTO.Builder builder) {
         populatePluginDTO(
+            plugin.getContext().getPluginId(),
             plugin.getName(),
             null,
             plugin.getVersion(),
@@ -346,6 +347,7 @@ public class DTOHelper {
 
     static public void populatePluginDTO(PluginDescriptor pd, String configClassLink, PropertyContainerClass configClass, String configLink, PropertyContainer config, String imageLink, HobsonPluginDTO.Builder builder) {
         populatePluginDTO(
+            pd.getId(),
             pd.getName(),
             pd.getDescription(),
             pd.getVersionString(),
@@ -362,11 +364,11 @@ public class DTOHelper {
     }
 
     static public void populateRemotePluginDTO(PluginDescriptor pd, HobsonPluginDTO.Builder builder) {
-        builder.name(pd.getName()).description(pd.getDescription()).version(pd.getVersionString()).type(pd.getType());
+        builder.pluginId(pd.getId()).name(pd.getName()).description(pd.getDescription()).version(pd.getVersionString()).type(pd.getType());
     }
 
-    static public void populatePluginDTO(String name, String description, String version, PluginType type, Boolean configurable, PluginStatus status, String configClassLink, PropertyContainerClass configClass, String configLink, PropertyContainer config, String imageLink, HobsonPluginDTO.Builder builder) {
-        builder.name(name).description(description).version(version).type(type).configurable(configurable).status(status);
+    static public void populatePluginDTO(String pluginId, String name, String description, String version, PluginType type, Boolean configurable, PluginStatus status, String configClassLink, PropertyContainerClass configClass, String configLink, PropertyContainer config, String imageLink, HobsonPluginDTO.Builder builder) {
+        builder.pluginId(pluginId).name(name).description(description).version(version).type(type).configurable(configurable).status(status);
 
         if (configClassLink != null) {
             PropertyContainerClassDTO.Builder pccdtob = new PropertyContainerClassDTO.Builder(configClassLink);
