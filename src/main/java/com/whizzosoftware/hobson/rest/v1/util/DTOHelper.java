@@ -88,7 +88,7 @@ public class DTOHelper {
         // add condition classes
         ildto = new ItemListDTO(linkProvider.createTaskConditionClassesLink(hub.getContext()));
         if (expansions.has("conditionClasses")) {
-            for (PropertyContainerClass tcc : taskManager.getAllConditionClasses(hub.getContext())) {
+            for (PropertyContainerClass tcc : taskManager.getAllConditionClasses(hub.getContext(), false)) {
                 ildto.add(new PropertyContainerClassDTO.Builder(linkProvider.createTaskConditionClassLink(tcc.getContext())).build());
             }
             ildto.updateNumberOfItems();
