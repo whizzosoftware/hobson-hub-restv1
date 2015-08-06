@@ -59,9 +59,10 @@ public class TaskActionClassesResource extends SelfInjectingServerResource {
         authorizer.authorizeHub(ctx.getHubContext());
 
         boolean expandItems = expansions.has("item");
+        boolean applyConstraints = Boolean.parseBoolean(getQueryValue("constraints"));
 
         ItemListDTO results = new ItemListDTO(linkProvider.createTaskActionClassesLink(ctx.getHubContext()));
-        for (PropertyContainerClass actionClass : taskManager.getAllActionClasses(ctx.getHubContext())) {
+        for (PropertyContainerClass actionClass : taskManager.getAllActionClasses(ctx.getHubContext(), applyConstraints)) {
             PropertyContainerClassDTO.Builder builder = new PropertyContainerClassDTO.Builder(
                 linkProvider.createTaskActionClassLink(actionClass.getContext())
             );

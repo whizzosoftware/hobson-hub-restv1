@@ -50,7 +50,7 @@ public class DTOHelper {
         // add action classes
         ItemListDTO ildto = new ItemListDTO(linkProvider.createTaskActionClassesLink(hub.getContext()));
         if (expansions.has("actionClasses")) {
-            for (PropertyContainerClass tac : taskManager.getAllActionClasses(hub.getContext())) {
+            for (PropertyContainerClass tac : taskManager.getAllActionClasses(hub.getContext(), false)) {
                 ildto.add(new PropertyContainerClassDTO.Builder(linkProvider.createTaskActionClassLink(tac.getContext())).build());
             }
             ildto.updateNumberOfItems();
