@@ -68,6 +68,7 @@ public class TaskActionClassesResource extends SelfInjectingServerResource {
             );
             if (expandItems) {
                 builder.name(actionClass.getName())
+                    .descriptionTemplate(actionClass.getDescriptionTemplate())
                     .supportedProperties(DTOHelper.mapTypedPropertyList(actionClass.getSupportedProperties()));
             }
             results.add(builder.build());

@@ -95,7 +95,6 @@ public class LinkProvider {
         Map<String,String> values = new HashMap<>();
         values.put("userId", ctx.getUserId());
         values.put("hubId", ctx.getHubId());
-        values.put("pluginId", ctx.getPluginId());
         values.put("taskId", ctx.getTaskId());
         return t.format(values);
     }

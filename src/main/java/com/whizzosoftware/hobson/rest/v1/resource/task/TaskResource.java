@@ -84,11 +84,11 @@ public class TaskResource extends SelfInjectingServerResource {
 
         authorizer.authorizeHub(ctx.getHubContext());
 
-        HobsonTask task = taskManager.getTask(TaskContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("taskId")));
+        HobsonTask task = taskManager.getTask(TaskContext.create(ctx.getHubContext(), getAttribute("taskId")));
 
         HobsonTaskDTO.Builder builder = new HobsonTaskDTO.Builder(linkProvider.createTaskLink(task.getContext()));
         builder.name(task.getName())
-            .conditionSet(DTOHelper.mapPropertyContainerSet(task.getConditionSet()))
+            .conditions(DTOHelper.mapPropertyContainerList(task.getConditions()))
             .properties(task.getProperties());
 
         PropertyContainerSetDTO.Builder asBuilder = new PropertyContainerSetDTO.Builder(
@@ -96,8 +96,7 @@ public class TaskResource extends SelfInjectingServerResource {
         );
         if (expansions.has("actionSet")) {
             PropertyContainerSet pcs = taskManager.getActionSet(ctx.getHubContext(), task.getActionSet().getId());
-            asBuilder.primaryContainer(DTOHelper.mapPropertyContainer(pcs.getPrimaryProperty()))
-                .containers(DTOHelper.mapPropertyContainerList(pcs.getProperties()));
+            asBuilder.containers(DTOHelper.mapPropertyContainerList(pcs.getProperties()));
         }
         builder.actionSet(asBuilder.build());
 
@@ -141,10 +140,10 @@ public class TaskResource extends SelfInjectingServerResource {
 
         HobsonTaskDTO dto = new HobsonTaskDTO.Builder(JSONHelper.createJSONFromRepresentation(entity)).build();
         taskManager.updateTask(
-            TaskContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("taskId")),
+            TaskContext.create(ctx.getHubContext(), getAttribute("taskId")),
             dto.getName(),
             dto.getDescription(),
-            mapper.mapPropertyContainerSetDTO(dto.getConditionSet(), hubManager, linkProvider),
+            mapper.mapPropertyContainerDTOList(dto.getConditions(), hubManager, linkProvider),
             mapper.mapPropertyContainerSetDTO(dto.getActionSet(), hubManager, linkProvider));
 
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
@@ -164,7 +163,7 @@ public class TaskResource extends SelfInjectingServerResource {
     protected Representation delete() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
         authorizer.authorizeHub(ctx.getHubContext());
-        taskManager.deleteTask(TaskContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("taskId")));
+        taskManager.deleteTask(TaskContext.create(ctx.getHubContext(), getAttribute("taskId")));
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();
     }

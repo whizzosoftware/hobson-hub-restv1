@@ -78,7 +78,7 @@ public class TasksResource extends SelfInjectingServerResource {
             if (expandItems) {
                 builder.name(task.getName());
                 builder.description(task.getDescription());
-                builder.conditionSet(DTOHelper.mapPropertyContainerSet(task.getConditionSet()));
+                builder.conditions(DTOHelper.mapPropertyContainerList(task.getConditions()));
                 builder.actionSet(DTOHelper.mapPropertyContainerSet(task.getActionSet()));
                 builder.properties(task.getProperties());
             }
@@ -97,8 +97,8 @@ public class TasksResource extends SelfInjectingServerResource {
      * @apiExample Example Request (scheduled task):
      * {
      *   "name": "My Task",
-     *   "conditionSet": {
-     *     "trigger": {
+     *   "conditions": [
+     *     {
      *       "cclass": {
      *         "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-scheduler/conditionClasses/schedule"
      *       },
@@ -108,7 +108,7 @@ public class TasksResource extends SelfInjectingServerResource {
      *         "recurrence": "FREQ=MONTHLY;BYDAY=FR;BYMONTHDAY=13"
      *       }
      *     }
-     *   },
+     *   ],
      *   "actionSet": {
      *     "actions": [
      *       {
@@ -137,7 +137,7 @@ public class TasksResource extends SelfInjectingServerResource {
             ctx.getHubContext(),
             dto.getName(),
             dto.getDescription(),
-            DTOHelper.mapPropertyContainerSetDTO(dto.getConditionSet(), hubManager, linkProvider),
+            DTOHelper.mapPropertyContainerDTOList(dto.getConditions(), hubManager, linkProvider),
             DTOHelper.mapPropertyContainerSetDTO(dto.getActionSet(), hubManager, linkProvider)
         );
 

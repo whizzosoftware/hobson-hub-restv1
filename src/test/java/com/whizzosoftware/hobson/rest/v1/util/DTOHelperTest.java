@@ -13,22 +13,12 @@ public class DTOHelperTest {
     public void testMapPropertyContainerSetDTO() {
         PropertyContainerSetDTO dto = new PropertyContainerSetDTO.Builder(new JSONObject(new JSONTokener("{\"trigger\":{\"cclass\":{\"@id\":\"/api/v1/users/user1/hubs/hub1/plugins/com.whizzosoftware.hobson.hub.hobson-hub-scheduler/conditionClasses/schedule\"},\"values\":{\"date\":\"20150428\",\"time\":\"100000Z\"}}}")), new PropertyContainerMappingContext() {
             @Override
-            public String getPrimaryContainerName() {
-                return "trigger";
-            }
-
-            @Override
             public String getContainersName() {
                 return "conditions";
             }
         }).build();
         PropertyContainerSet tcs = DTOHelper.mapPropertyContainerSetDTO(dto, null, null);
         assertNotNull(tcs);
-        assertTrue(tcs.hasPrimaryProperty());
-        assertNotNull(tcs.getPrimaryProperty().getContainerClassContext());
-        assertEquals("user1", tcs.getPrimaryProperty().getContainerClassContext().getUserId());
-        assertEquals("hub1", tcs.getPrimaryProperty().getContainerClassContext().getHubId());
-        System.out.println(tcs);
     }
 }
 

@@ -1,9 +1,10 @@
 package com.whizzosoftware.hobson.rest.v1.resource.task;
 
-import com.whizzosoftware.hobson.api.property.PropertyContainerClass;
 import com.whizzosoftware.hobson.api.task.TaskManager;
+import com.whizzosoftware.hobson.api.task.condition.ConditionClassType;
+import com.whizzosoftware.hobson.api.task.condition.TaskConditionClass;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
-import com.whizzosoftware.hobson.dto.property.PropertyContainerClassDTO;
+import com.whizzosoftware.hobson.dto.task.TaskConditionClassDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.ExpansionFields;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
@@ -60,14 +61,20 @@ public class TaskConditionClassesResource extends SelfInjectingServerResource {
 
         boolean expandItems = expansions.has("item");
         boolean applyConstraints = Boolean.parseBoolean(getQueryValue("constraints"));
+        ConditionClassType type = null;
+        String s = getQueryValue("type");
+        if (s != null) {
+            type = ConditionClassType.valueOf(s);
+        }
 
         ItemListDTO results = new ItemListDTO(linkProvider.createTaskConditionClassesLink(ctx.getHubContext()));
-        for (PropertyContainerClass conditionClass : taskManager.getAllConditionClasses(ctx.getHubContext(), applyConstraints)) {
-            PropertyContainerClassDTO.Builder builder = new PropertyContainerClassDTO.Builder(
-                    linkProvider.createTaskActionClassLink(conditionClass.getContext())
+        for (TaskConditionClass conditionClass : taskManager.getAllConditionClasses(ctx.getHubContext(), type, applyConstraints)) {
+            TaskConditionClassDTO.Builder builder = new TaskConditionClassDTO.Builder(
+                    linkProvider.createTaskConditionClassLink(conditionClass.getContext())
             );
             if (expandItems) {
-                builder.name(conditionClass.getName())
+                builder.type(conditionClass.getType().toString()).name(conditionClass.getName())
+                        .descriptionTemplate(conditionClass.getDescriptionTemplate())
                         .supportedProperties(DTOHelper.mapTypedPropertyList(conditionClass.getSupportedProperties()));
             }
             results.add(builder.build());

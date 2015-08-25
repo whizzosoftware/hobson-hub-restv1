@@ -27,10 +27,7 @@ import com.whizzosoftware.hobson.rest.v1.resource.task.TaskConditionClassResourc
 import org.json.JSONException;
 import org.restlet.routing.Template;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class DTOHelper {
     private static Template actionClassesTemplate;
@@ -88,7 +85,7 @@ public class DTOHelper {
         // add condition classes
         ildto = new ItemListDTO(linkProvider.createTaskConditionClassesLink(hub.getContext()));
         if (expansions.has("conditionClasses")) {
-            for (PropertyContainerClass tcc : taskManager.getAllConditionClasses(hub.getContext(), false)) {
+            for (PropertyContainerClass tcc : taskManager.getAllConditionClasses(hub.getContext(), null, false)) {
                 ildto.add(new PropertyContainerClassDTO.Builder(linkProvider.createTaskConditionClassLink(tcc.getContext())).build());
             }
             ildto.updateNumberOfItems();
@@ -150,7 +147,7 @@ public class DTOHelper {
             for (HobsonTask task : taskManager.getAllTasks(hub.getContext())) {
                 HobsonTaskDTO.Builder builder2 = new HobsonTaskDTO.Builder(linkProvider.createTaskLink(task.getContext()));
                 builder2.name(task.getName())
-                    .conditionSet(new PropertyContainerSetDTO.Builder("").build()) // TODO
+                    .conditions(Collections.singletonList(new PropertyContainerDTO.Builder("").build())) // TODO
                     .actionSet(new PropertyContainerSetDTO.Builder("").build()) // TODO
                     .properties(task.getProperties());
                 ildto.add(builder2.build());
@@ -162,9 +159,9 @@ public class DTOHelper {
         return builder.build();
     }
 
+
     static public PropertyContainerSetDTO mapPropertyContainerSet(PropertyContainerSet pcs) {
         return new PropertyContainerSetDTO.Builder(pcs.getId())
-            .primaryContainer(mapPropertyContainer(pcs.getPrimaryProperty()))
             .containers(mapPropertyContainerList(pcs.getProperties()))
             .build();
     }
@@ -175,7 +172,6 @@ public class DTOHelper {
                 PropertyContainerSet pcs = new PropertyContainerSet();
                 pcs.setId(dto.getId());
                 pcs.setName(dto.getName());
-                pcs.setPrimaryProperty(mapPropertyContainerDTO(dto.getPrimaryContainer(), hubManager, links));
                 pcs.setProperties(mapPropertyContainerDTOList(dto.getContainers(), hubManager, links));
                 return pcs;
             } else {

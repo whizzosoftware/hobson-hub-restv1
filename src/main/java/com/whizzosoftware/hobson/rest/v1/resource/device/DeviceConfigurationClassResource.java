@@ -66,6 +66,7 @@ public class DeviceConfigurationClassResource extends SelfInjectingServerResourc
 
         PropertyContainerClassDTO dto = new PropertyContainerClassDTO.Builder(linkProvider.createDeviceConfigurationClassLink(dctx))
             .name(pcc.getName())
+            .descriptionTemplate(pcc.getDescriptionTemplate())
             .supportedProperties(DTOHelper.mapTypedPropertyList(pcc.getSupportedProperties()))
             .build();
 
