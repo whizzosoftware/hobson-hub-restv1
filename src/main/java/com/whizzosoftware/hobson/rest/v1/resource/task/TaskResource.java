@@ -34,7 +34,7 @@ import javax.inject.Inject;
  * @author Dan Noguerol
  */
 public class TaskResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/{pluginId}/tasks/{taskId}";
+    public static final String PATH = "/users/{userId}/hubs/{hubId}/tasks/{taskId}";
 
     @Inject
     Authorizer authorizer;
@@ -46,7 +46,7 @@ public class TaskResource extends SelfInjectingServerResource {
     LinkProvider linkProvider;
 
     /**
-     * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/tasks/:taskId Get task details
+     * @api {get} /api/v1/users/:userId/hubs/:hubId/tasks/:taskId Get task details
      * @apiVersion 0.5.0
      * @apiName GetTask
      * @apiDescription Retrieves details about a specific task.
@@ -104,7 +104,7 @@ public class TaskResource extends SelfInjectingServerResource {
     }
 
     /**
-     * @api {put} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/tasks/:taskId Update task
+     * @api {put} /api/v1/users/:userId/hubs/:hubId/tasks/:taskId Update task
      * @apiVersion 0.5.0
      * @apiName UpdateTask
      * @apiDescription Updated an existing task.
@@ -151,7 +151,7 @@ public class TaskResource extends SelfInjectingServerResource {
     }
 
     /**
-     * @api {delete} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/tasks/:taskId Delete task
+     * @api {delete} /api/v1/users/:userId/hubs/:hubId/tasks/:taskId Delete task
      * @apiVersion 0.1.3
      * @apiName DeleteTask
      * @apiDescription Deletes a specific task.
