@@ -60,6 +60,8 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
         // create the router with all of our resource classes attached
         Router router = newRouter();
         router.attach(ActivityLogResource.PATH, ActivityLogResource.class);
+        router.attach(DeviceBootstrapsResource.PATH, DeviceBootstrapsResource.class);
+        router.attach(DeviceBootstrapResource.PATH, DeviceBootstrapResource.class);
         router.attach(DeviceResource.PATH, DeviceResource.class);
         router.attach(DeviceConfigurationResource.PATH, DeviceConfigurationResource.class);
         router.attach(DeviceConfigurationClassResource.PATH, DeviceConfigurationClassResource.class);
@@ -95,6 +97,7 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
         router.attach(MediaProxyResource.PATH, MediaProxyResource.class);
         router.attach(PluginDevicesResource.PATH, PluginDevicesResource.class);
         router.attach(PresenceEntitiesResource.PATH, PresenceEntitiesResource.class);
+        router.attach(RegisterDeviceResource.PATH, RegisterDeviceResource.class);
         router.attach(RemotePluginsResource.PATH, RemotePluginsResource.class);
         router.attach(RemotePluginResource.PATH, RemotePluginResource.class);
         router.attach(RemotePluginInstallResource.PATH, RemotePluginInstallResource.class);

@@ -508,4 +508,21 @@ public class LinkProvider {
         values.put("hubId", context.getHubId());
         return t.format(values);
     }
+
+    public String createDeviceBootstrapsLink(HubContext context) {
+        Template t = new Template(apiRoot + DeviceBootstrapsResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", context.getUserId());
+        values.put("hubId", context.getHubId());
+        return t.format(values);
+    }
+
+    public String createDeviceBootstrapLink(HubContext context, String bootstrapId) {
+        Template t = new Template(apiRoot + DeviceBootstrapResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", context.getUserId());
+        values.put("hubId", context.getHubId());
+        values.put("bootstrapId", bootstrapId);
+        return t.format(values);
+    }
 }

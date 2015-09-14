@@ -98,7 +98,7 @@ public class HubLogResource extends SelfInjectingServerResource {
 
             ar.append(", \"numberOfItems\": \"").append(Long.toString(lineRange.getLineCount() + 1)).append("\"}");
 
-            Range range = new Range(lineRange.getStartLine(), lineRange.getLineCount());
+            Range range = new Range(lineRange.getStartLine(), lineRange.getLineCount() > 0 ? lineRange.getLineCount() : 0);
             range.setUnitName("lines");
             ar.setRange(range);
 
