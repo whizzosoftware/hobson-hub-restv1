@@ -17,6 +17,7 @@ import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
+import org.restlet.representation.EmptyRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
 
@@ -68,5 +69,43 @@ public class DeviceBootstrapResource extends SelfInjectingServerResource {
         } else {
             throw new HobsonNotFoundException("Device bootstrap not found");
         }
+    }
+
+    /**
+     * @api {post} /api/v1/users/:userId/hubs/:hubId/deviceBootstraps/{bootstrapId} Reset device bootstrap
+     * @apiVersion 0.5.0
+     * @apiName ResetDeviceBootstrap
+     * @apiDescription Resets the device bootstrap to its initially created state.
+     * @apiGroup Devices
+     * @apiSuccessExample {json} Success Response:
+     * HTTP/1.1 202 Accepted
+     */
+    @Override
+    protected Representation post(Representation entity) throws ResourceException {
+        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+
+        authorizer.authorizeHub(ctx.getHubContext());
+
+        deviceManager.resetDeviceBootstrap(ctx.getHubContext(), getAttribute("bootstrapId"));
+        return new EmptyRepresentation();
+    }
+
+    /**
+     * @api {delete} /api/v1/users/:userId/hubs/:hubId/deviceBootstraps/{bootstrapId} Delete device bootstrap
+     * @apiVersion 0.5.0
+     * @apiName DeleteDeviceBootstrap
+     * @apiDescription Deletes the device bootstrap.
+     * @apiGroup Devices
+     * @apiSuccessExample {json} Success Response:
+     * HTTP/1.1 202 Accepted
+     */
+    @Override
+    protected Representation delete() throws ResourceException {
+        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+
+        authorizer.authorizeHub(ctx.getHubContext());
+
+        deviceManager.deleteDeviceBootstrap(ctx.getHubContext(), getAttribute("bootstrapId"));
+        return new EmptyRepresentation();
     }
 }
