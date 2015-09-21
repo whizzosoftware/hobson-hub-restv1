@@ -8,6 +8,7 @@
 package com.whizzosoftware.hobson.rest.v1.resource.device;
 
 import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
+import com.whizzosoftware.hobson.api.device.DeviceAlreadyBoostrappedException;
 import com.whizzosoftware.hobson.api.device.DeviceBootstrap;
 import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
@@ -66,7 +67,7 @@ public class RegisterDeviceResource extends SelfInjectingServerResource {
         JSONObject json = JSONHelper.createJSONFromRepresentation(entity);
         DeviceBootstrap db = deviceManager.registerDeviceBootstrap(ctx.getHubContext(), json.getString("deviceId"));
 
-        if (db != null) {
+        try {
             return new JsonRepresentation(
                 new DeviceBootstrapDTO.Builder(linkProvider.createDeviceBootstrapLink(ctx.getHubContext(), db.getId()))
                     .deviceId(db.getId())
@@ -76,7 +77,7 @@ public class RegisterDeviceResource extends SelfInjectingServerResource {
                     .build()
                     .toJSON()
             );
-        } else {
+        } catch (DeviceAlreadyBoostrappedException e) {
             throw new HobsonInvalidRequestException("Unable to register device");
         }
     }
