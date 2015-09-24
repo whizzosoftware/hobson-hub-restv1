@@ -100,7 +100,8 @@ public class DeviceResource extends SelfInjectingServerResource {
 
         HobsonDeviceDTO.Builder builder = new HobsonDeviceDTO.Builder(linkProvider.createDeviceLink(device.getContext()))
             .name(device.getName())
-            .type(device.getType());
+            .type(device.getType())
+            .checkInTime(device.getLastCheckIn());
 
         // set configurationClass attribute
         PropertyContainerClassDTO.Builder pccdtob = new PropertyContainerClassDTO.Builder(linkProvider.createDeviceConfigurationClassLink(device.getContext()));

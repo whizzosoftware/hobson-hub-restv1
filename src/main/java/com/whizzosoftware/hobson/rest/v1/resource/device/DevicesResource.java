@@ -103,6 +103,7 @@ public class DevicesResource extends SelfInjectingServerResource {
                 if (itemExpand) {
                     builder.name(device.getName());
                     builder.type(device.getType());
+                    builder.checkInTime(device.getLastCheckIn());
 
                     // set configurationClass attribute
                     PropertyContainerClassDTO.Builder pccdtob = new PropertyContainerClassDTO.Builder(linkProvider.createDeviceConfigurationClassLink(device.getContext()));
