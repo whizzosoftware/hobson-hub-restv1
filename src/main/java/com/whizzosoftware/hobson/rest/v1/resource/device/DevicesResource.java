@@ -154,7 +154,7 @@ public class DevicesResource extends SelfInjectingServerResource {
 
                 }
                 results.add(builder.build());
-                etagMap.put(device.getContext().toString(), lastVariableUpdate);
+                etagMap.put(device.getContext().toString(), device.isAvailable() ? lastVariableUpdate : -1);
             }
         }
 
