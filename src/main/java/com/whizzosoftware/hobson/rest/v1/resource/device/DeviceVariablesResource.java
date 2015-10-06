@@ -55,6 +55,7 @@ public class DeviceVariablesResource extends SelfInjectingServerResource {
      * @apiName GetAllDeviceVariables
      * @apiDescription Retrieves a summary list of all variables for a specific device.
      * @apiGroup Variables
+     * @apiParam (Query Parameters) {String} expand A comma-separated list of attributes to expand (supported values are "item").
      * @apiSuccessExample {json} Success Response:
      * {
      *   "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.server-radiora/devices/9/variables",

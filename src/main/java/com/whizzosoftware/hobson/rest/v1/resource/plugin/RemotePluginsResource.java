@@ -40,6 +40,7 @@ public class RemotePluginsResource extends SelfInjectingServerResource {
      * @apiName GetRemotePlugins
      * @apiDescription Retrieves all remotely available plugins.
      * @apiGroup Plugin
+     * @apiParam (Query Parameters) {String} expand A comma-separated list of attributes to expand (supported values are "item").
      * @apiSuccessExample {json} Success Response:
      * {
      *   "@id": "/api/v1/users/local/hubs/local/plugins/remote",

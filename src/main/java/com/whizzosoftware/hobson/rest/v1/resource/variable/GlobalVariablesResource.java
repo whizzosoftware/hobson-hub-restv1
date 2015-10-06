@@ -37,6 +37,7 @@ public class GlobalVariablesResource extends SelfInjectingServerResource {
      * @apiName GetAllGlobalVariables
      * @apiDescription Retrieves a list of all global variables (i.e. those not associated with a particular device).
      * @apiGroup Variables
+     * @apiParam (Query Parameters) {String} expand A comma-separated list of attributes to expand (supported values are "item").
      * @apiSuccessExample {json} Success Response:
      * {
      *   "numberOfItems": 2,

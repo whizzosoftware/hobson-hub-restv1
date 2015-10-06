@@ -62,7 +62,7 @@ public class DevicesResource extends SelfInjectingServerResource {
      * @apiDescription Retrieves a summary list of devices published by all plugins.
      * @apiGroup Devices
      * @apiParam (Query Parameters) {String} var Filter the list of devices to only those that publish the specified variable name
-     * @apiParam (Query Parameters) {String} expand A comma-separated list of attributes to expand (the only supported value is "item").
+     * @apiParam (Query Parameters) {String} expand A comma-separated list of attributes to expand (supported values are "item", "configurationClass", "configuration", "preferredVariable", "variables").
      * @apiSuccessExample {json} Success Response:
      * {
      *   "numberOfItems": 2,

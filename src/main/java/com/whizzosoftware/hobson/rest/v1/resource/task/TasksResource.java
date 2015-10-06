@@ -50,6 +50,7 @@ public class TasksResource extends SelfInjectingServerResource {
      * @apiName GetAllTasks
      * @apiDescription Retrieves a list of all tasks (regardless of provider).
      * @apiGroup Tasks
+     * @apiParam (Query Parameters) {String} expand A comma-separated list of attributes to expand (supported values are "item").
      * @apiSuccessExample {json} Success Response:
      * {
      *   "numberOfItems": 1,
