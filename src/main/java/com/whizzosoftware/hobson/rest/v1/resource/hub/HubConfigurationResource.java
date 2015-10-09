@@ -70,7 +70,7 @@ public class HubConfigurationResource extends SelfInjectingServerResource {
             }
         };
 
-        return new JsonRepresentation(DTOMapper.mapPropertyContainer(pc, pccp, linkProvider).toJSON());
+        return new JsonRepresentation(DTOMapper.mapPropertyContainer(pc, pccp, false, linkProvider).toJSON());
     }
 
     /**

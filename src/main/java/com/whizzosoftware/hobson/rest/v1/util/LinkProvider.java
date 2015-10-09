@@ -11,9 +11,11 @@ import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.hub.HubContext;
 import com.whizzosoftware.hobson.api.plugin.PluginContext;
 import com.whizzosoftware.hobson.api.presence.PresenceEntityContext;
+import com.whizzosoftware.hobson.api.property.PropertyContainerClass;
 import com.whizzosoftware.hobson.api.property.PropertyContainerClassContext;
 import com.whizzosoftware.hobson.api.property.PropertyContainerClassType;
 import com.whizzosoftware.hobson.api.task.TaskContext;
+import com.whizzosoftware.hobson.api.task.action.TaskActionClass;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.resource.activity.ActivityLogResource;
 import com.whizzosoftware.hobson.rest.v1.resource.hub.HubLogResource;
@@ -194,16 +196,16 @@ public class LinkProvider {
         return t.format(values);
     }
 
-    public String createPropertyContainerLink(PluginContext ctx, PropertyContainerClassType type) {
-        switch (type) {
+    public String createPropertyContainerLink(PropertyContainerClass pcc) {
+        switch (pcc.getType()) {
             case CONDITION:
-                return createTaskConditionLink();
+                return createTaskConditionLink(pcc.getContext());
             case ACTION:
-                return createTaskActionLink();
+                return createTaskActionLink(pcc.getContext());
             case HUB_CONFIG:
-                return createHubConfigurationLink(ctx.getHubContext());
+                return createHubConfigurationLink(pcc.getContext().getHubContext());
             case PLUGIN_CONFIG:
-                return createLocalPluginConfigurationLink(ctx);
+                return createLocalPluginConfigurationLink(pcc.getContext().getPluginContext());
             default:
                 return null;
         }
@@ -228,12 +230,24 @@ public class LinkProvider {
         }
     }
 
-    public String createTaskActionLink() {
-        return null;
+    public String createTaskActionLink(PropertyContainerClassContext pccc) {
+        Template t = new Template(apiRoot + TaskActionClassResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", pccc.getUserId());
+        values.put("hubId", pccc.getHubId());
+        values.put("pluginId", pccc.getPluginId());
+        values.put("actionClassId", pccc.getContainerClassId());
+        return t.format(values);
     }
 
-    public String createTaskConditionLink() {
-        return null;
+    public String createTaskConditionLink(PropertyContainerClassContext pccc) {
+        Template t = new Template(apiRoot + TaskConditionClassResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", pccc.getUserId());
+        values.put("hubId", pccc.getHubId());
+        values.put("pluginId", pccc.getPluginId());
+        values.put("conditionClassId", pccc.getContainerClassId());
+        return t.format(values);
     }
 
     public String createTasksLink(HubContext context) {

@@ -77,7 +77,7 @@ public class DeviceConfigurationResource extends SelfInjectingServerResource {
             }
         };
 
-        PropertyContainerDTO dto = DTOMapper.mapPropertyContainer(config, pccp, linkProvider);
+        PropertyContainerDTO dto = DTOMapper.mapPropertyContainer(config, pccp, false, linkProvider);
         return new JsonRepresentation(dto.toJSON());
     }
 

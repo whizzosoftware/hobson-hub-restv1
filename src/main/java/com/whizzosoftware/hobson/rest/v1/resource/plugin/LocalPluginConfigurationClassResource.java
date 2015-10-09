@@ -71,10 +71,7 @@ public class LocalPluginConfigurationClassResource extends SelfInjectingServerRe
         if (plugin != null) {
             PropertyContainerClass pcc = plugin.getConfigurationClass();
             if (pcc != null) {
-                PropertyContainerClassDTO.Builder builder = new PropertyContainerClassDTO.Builder(linkProvider.createLocalPluginConfigurationClassLink(pctx))
-                    .name(pcc.getName())
-                    .supportedProperties(DTOMapper.mapTypedPropertyList(pcc.getSupportedProperties()));
-                return new JsonRepresentation(builder.build().toJSON());
+                return new JsonRepresentation(DTOMapper.mapPropertyContainerClass(pcc, true, linkProvider).toJSON());
             } else {
                 throw new HobsonNotFoundException("Plugin configuration class not found");
             }

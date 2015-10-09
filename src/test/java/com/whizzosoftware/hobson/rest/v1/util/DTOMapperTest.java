@@ -10,10 +10,12 @@ package com.whizzosoftware.hobson.rest.v1.util;
 import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.hub.HubConfigurationClass;
 import com.whizzosoftware.hobson.api.hub.HubContext;
-import com.whizzosoftware.hobson.api.plugin.PluginContext;
+import com.whizzosoftware.hobson.api.plugin.*;
 import com.whizzosoftware.hobson.api.property.*;
 import com.whizzosoftware.hobson.dto.device.HobsonDeviceDTO;
+import com.whizzosoftware.hobson.dto.plugin.HobsonPluginDTO;
 import com.whizzosoftware.hobson.dto.property.*;
+import com.whizzosoftware.hobson.rest.ExpansionFields;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -272,7 +274,7 @@ public class DTOMapperTest {
         values.put("device", DeviceContext.create(HubContext.createLocal(), "plugin2", "device2"));
         PropertyContainer pc = new PropertyContainer(PropertyContainerClassContext.create(PluginContext.createLocal("plugin1"), "ccid"), values);
 
-        PropertyContainerDTO dto = DTOMapper.mapPropertyContainer(pc, ccp, new LinkProvider());
+        PropertyContainerDTO dto = DTOMapper.mapPropertyContainer(pc, true, ccp, new LinkProvider());
         assertEquals("/api/v1/users/local/hubs/local/configurationClass", dto.getContainerClass().getId());
         assertEquals("My Name", dto.getValues().get("name"));
     }
@@ -294,7 +296,7 @@ public class DTOMapperTest {
         values.put("device", DeviceContext.create(HubContext.createLocal(), "plugin2", "device2"));
         PropertyContainer pc = new PropertyContainer(PropertyContainerClassContext.create(PluginContext.createLocal("plugin1"), "ccid"), values);
 
-        PropertyContainerDTO dto = DTOMapper.mapPropertyContainer(pc, ccp, new LinkProvider());
+        PropertyContainerDTO dto = DTOMapper.mapPropertyContainer(pc, true, ccp, new LinkProvider());
         assertEquals("/api/v1/users/local/hubs/local/plugins/local/plugin1/configuration", dto.getId());
         assertEquals("/api/v1/users/local/hubs/local/plugins/local/plugin1/configurationClass", dto.getContainerClass().getId());
         assertEquals("My Name", dto.getValues().get("name"));
@@ -370,16 +372,167 @@ public class DTOMapperTest {
         // verify results
         assertEquals(1, pdtos.size());
         PropertyContainerDTO pdto = pdtos.get(0);
-        PropertyContainerClassDTO pccdto = pdto.getContainerClass();
-        assertEquals("/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-scheduler/conditionClasses/schedule", pccdto.getId());
-        assertEquals(3, pdto.getValues().size());
-        assertEquals("2015-09-09", pdto.getValues().get("date"));
-        assertEquals("10:00:00", pdto.getValues().get("time"));
-        assertTrue(pdto.getValues().get("devices") instanceof List);
-        assertEquals(1, ((List)pdto.getValues().get("devices")).size());
-        assertTrue(((List)pdto.getValues().get("devices")).get(0) instanceof HobsonDeviceDTO);
-        HobsonDeviceDTO hdd = (HobsonDeviceDTO)((List)pdto.getValues().get("devices")).get(0);
-        assertEquals("/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-sample/devices/bulb", hdd.getId());
+        assertEquals("/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-scheduler/conditionClasses/schedule", pdto.getId());
+        assertNull(pdto.getValues());
     }
+
+    @Test
+    public void mapPropertyContainerClass() {
+        List<TypedProperty> props = new ArrayList<>();
+        props.add(new TypedProperty("prop1id", "prop1name", "prop1desc", TypedProperty.Type.STRING));
+
+        PropertyContainerClass pcc = new PropertyContainerClass(
+            PropertyContainerClassContext.create(PluginContext.createLocal("plugin1"), "configurationClass"),
+            "config",
+            PropertyContainerClassType.PLUGIN_CONFIG,
+            "template",
+            props
+        );
+
+        // test with no details
+        PropertyContainerClassDTO dto = DTOMapper.mapPropertyContainerClass(pcc, false, new LinkProvider());
+        assertEquals("/api/v1/users/local/hubs/local/plugins/local/plugin1/configurationClass", dto.getId());
+        assertNull(dto.getName());
+        assertNull(dto.getDescriptionTemplate());
+        assertNull(dto.getSupportedProperties());
+
+        // test with details
+        dto = DTOMapper.mapPropertyContainerClass(pcc, true, new LinkProvider());
+        assertEquals("/api/v1/users/local/hubs/local/plugins/local/plugin1/configurationClass", dto.getId());
+        assertEquals("config", dto.getName());
+        assertEquals("template", dto.getDescriptionTemplate());
+        assertNotNull(dto.getSupportedProperties());
+        assertEquals(1, dto.getSupportedProperties().size());
+        TypedPropertyDTO tpd = dto.getSupportedProperties().get(0);
+        assertEquals("prop1id", tpd.getId());
+        assertEquals("prop1name", tpd.getName());
+        assertEquals("prop1desc", tpd.getDescription());
+    }
+
+    @Test
+    public void testMapLocalFrameworkPlugin() {
+        PluginDescriptor pd = new PluginDescriptor("plugin1", "Plugin", "Description", PluginType.FRAMEWORK, PluginStatus.running(), "1.0.0");
+        HobsonPluginDTO dto = DTOMapper.mapPlugin(new PluginDescriptorAdaptor(pd, null), pd.getDescription(), null, null, true, null, false, new LinkProvider());
+        assertEquals("/api/v1/users/local/hubs/local/plugins/local/plugin1", dto.getId());
+        assertEquals("Plugin", dto.getName());
+        assertEquals("Description", dto.getDescription());
+        assertEquals("1.0.0", dto.getVersion());
+    }
+
+    @Test
+    public void testMapRemotePlugin() {
+        PluginDescriptor pd = new PluginDescriptor("plugin1", "Plugin", "Description", PluginType.PLUGIN, PluginStatus.notInstalled(), "1.0.0");
+        HobsonPluginDTO dto = DTOMapper.mapPlugin(new PluginDescriptorAdaptor(pd, null), pd.getDescription(), null, null, true, null, true, new LinkProvider());
+        assertEquals("/api/v1/users/local/hubs/local/plugins/remote/plugin1/1.0.0", dto.getId());
+        assertEquals("Plugin", dto.getName());
+        assertEquals("Description", dto.getDescription());
+        assertEquals("1.0.0", dto.getVersion());
+    }
+
+    @Test
+    public void testMapLocalNonFrameworkPlugin() {
+        HobsonPlugin plugin = new HobsonPlugin() {
+            @Override
+            public PluginContext getContext() {
+                return PluginContext.createLocal("plugin1");
+            }
+
+            @Override
+            public String getName() {
+                return "My Plugin";
+            }
+
+            @Override
+            public PropertyContainerClass getConfigurationClass() {
+                return new PropertyContainerClass(
+                    PropertyContainerClassContext.create(PluginContext.createLocal("plugin2"), "configurationClass"),
+                    "name",
+                    PropertyContainerClassType.PLUGIN_CONFIG,
+                    "template",
+                    null
+                );
+            }
+
+            @Override
+            public HobsonPluginRuntime getRuntime() {
+                return null;
+            }
+
+            @Override
+            public PluginStatus getStatus() {
+                return PluginStatus.running();
+            }
+
+            @Override
+            public PluginType getType() {
+                return PluginType.CORE;
+            }
+
+            @Override
+            public String getVersion() {
+                return "1.0.0";
+            }
+
+            @Override
+            public boolean isConfigurable() {
+                return true;
+            }
+        };
+
+        // create configuration metadata
+        PropertyContainerClassContext pccc = PropertyContainerClassContext.create(PluginContext.createLocal("plugin1"), "configurationClass");
+        final PropertyContainerClass pcc = new PropertyContainerClass(pccc, "name", PropertyContainerClassType.PLUGIN_CONFIG, null, Collections.singletonList(new TypedProperty("device", "device", "device", TypedProperty.Type.DEVICE)));
+        PropertyContainer config = new PropertyContainer(pccc, Collections.singletonMap("device", (Object)DeviceContext.createLocal("plugin3", "device1")));
+        PropertyContainerClassProvider pccp = new PropertyContainerClassProvider() {
+            @Override
+            public PropertyContainerClass getPropertyContainerClass(PropertyContainerClassContext ctx) {
+                return pcc;
+            }
+        };
+
+        // test with no expansions
+        HobsonPluginDTO dto = DTOMapper.mapPlugin(plugin, null, null, null, false, null, false, new LinkProvider());
+        assertEquals("/api/v1/users/local/hubs/local/plugins/local/plugin1", dto.getId());
+        assertNull(dto.getName());
+        assertNull(dto.getDescription());
+        assertNull(dto.getVersion());
+        assertNull(dto.getType());
+        assertNull(dto.isConfigurable());
+        assertNull(dto.getStatus());
+        assertNull(dto.getConfigurationClass());
+        assertNull(dto.getConfiguration());
+
+        // test with details
+        dto = DTOMapper.mapPlugin(plugin, "Description", config, pccp, true, null, false, new LinkProvider());
+        assertEquals("/api/v1/users/local/hubs/local/plugins/local/plugin1", dto.getId());
+        assertEquals("My Plugin", dto.getName());
+        assertEquals("Description", dto.getDescription());
+        assertEquals("1.0.0", dto.getVersion());
+        assertEquals("plugin1", dto.getPluginId());
+        assertNotNull(dto.getImage());
+        assertEquals(PluginType.CORE, dto.getType());
+        assertEquals(true, dto.isConfigurable());
+        assertEquals(PluginStatus.Code.RUNNING, dto.getStatus().getCode());
+        assertNotNull(dto.getConfigurationClass());
+        assertEquals("/api/v1/users/local/hubs/local/plugins/local/plugin2/configurationClass", dto.getConfigurationClass().getId());
+        assertNull(dto.getConfigurationClass().getName());
+        assertNotNull(dto.getConfiguration());
+        assertEquals("/api/v1/users/local/hubs/local/plugins/local/plugin1/configuration", dto.getConfiguration().getId());
+        assertNull(dto.getConfiguration().getContainerClass());
+
+        // test with configuration class expansion
+        dto = DTOMapper.mapPlugin(plugin, "Description", null, null, true, new ExpansionFields("configurationClass"), false, new LinkProvider());
+        assertEquals("/api/v1/users/local/hubs/local/plugins/local/plugin2/configurationClass", dto.getConfigurationClass().getId());
+        assertEquals("name", dto.getConfigurationClass().getName());
+
+        // test with configuration expansion
+        dto = DTOMapper.mapPlugin(plugin, "Description", config, pccp, true, new ExpansionFields("configuration"), false, new LinkProvider());
+        assertEquals("/api/v1/users/local/hubs/local/plugins/local/plugin2/configurationClass", dto.getConfigurationClass().getId());
+        assertNotNull(dto.getConfiguration());
+        assertNotNull(dto.getConfiguration().getValues());
+        HobsonDeviceDTO hdd = (HobsonDeviceDTO)dto.getConfiguration().getValues().get("device");
+        assertEquals("/api/v1/users/local/hubs/local/plugins/plugin3/devices/device1", hdd.getId());
+    }
+
 }
 

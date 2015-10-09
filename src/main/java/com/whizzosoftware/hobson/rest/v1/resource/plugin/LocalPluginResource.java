@@ -7,6 +7,9 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.plugin;
 
+import com.whizzosoftware.hobson.api.property.PropertyContainerClass;
+import com.whizzosoftware.hobson.api.property.PropertyContainerClassContext;
+import com.whizzosoftware.hobson.api.property.PropertyContainerClassProvider;
 import com.whizzosoftware.hobson.rest.ExpansionFields;
 import com.whizzosoftware.hobson.api.plugin.HobsonPlugin;
 import com.whizzosoftware.hobson.api.plugin.PluginContext;
@@ -74,20 +77,17 @@ public class LocalPluginResource extends SelfInjectingServerResource {
         authorizer.authorizeHub(ctx.getHubContext());
 
         PluginContext pctx = PluginContext.create(ctx.getHubContext(), getAttribute("pluginId"));
-        HobsonPlugin plugin = pluginManager.getLocalPlugin(pctx);
+        final HobsonPlugin plugin = pluginManager.getLocalPlugin(pctx);
 
-        HobsonPluginDTO.Builder builder = new HobsonPluginDTO.Builder(linkProvider.createLocalPluginLink(pctx));
+        PropertyContainerClassProvider pccp = new PropertyContainerClassProvider() {
+            @Override
+            public PropertyContainerClass getPropertyContainerClass(PropertyContainerClassContext ctx) {
+                return plugin.getConfigurationClass();
+            }
+        };
 
-        DTOMapper.populatePluginDTO(
-                plugin,
-                plugin.isConfigurable() ? linkProvider.createLocalPluginConfigurationClassLink(pctx) : null,
-                plugin.isConfigurable() && expansions.has("configurationClass") ? plugin.getConfigurationClass() : null,
-                plugin.isConfigurable() ? linkProvider.createLocalPluginConfigurationLink(pctx) : null,
-                plugin.isConfigurable() && expansions.has("configuration") ? pluginManager.getLocalPluginConfiguration(pctx) : null,
-                linkProvider.createLocalPluginIconLink(pctx),
-                builder
-        );
+        HobsonPluginDTO dto = DTOMapper.mapPlugin(plugin, null, pluginManager.getLocalPluginConfiguration(pctx), pccp, true, expansions, false, linkProvider);
 
-        return new JsonRepresentation(builder.build().toJSON());
+        return new JsonRepresentation(dto.toJSON());
     }
 }

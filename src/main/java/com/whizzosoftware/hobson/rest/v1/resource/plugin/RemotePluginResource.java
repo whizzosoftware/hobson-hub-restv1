@@ -12,9 +12,11 @@ import com.whizzosoftware.hobson.api.plugin.PluginDescriptor;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
 import com.whizzosoftware.hobson.dto.plugin.HobsonPluginDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
+import com.whizzosoftware.hobson.rest.ExpansionFields;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
 import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
+import com.whizzosoftware.hobson.rest.v1.util.PluginDescriptorAdaptor;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -52,6 +54,7 @@ public class RemotePluginResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
 
         authorizer.authorizeHub(ctx.getHubContext());
 
@@ -59,9 +62,8 @@ public class RemotePluginResource extends SelfInjectingServerResource {
         PluginContext pctx = PluginContext.create(ctx.getHubContext(), getQueryValue("pluginId"));
         PluginDescriptor pd = pluginManager.getRemotePluginDescriptor(pctx, version);
 
-        HobsonPluginDTO.Builder builder = new HobsonPluginDTO.Builder(linkProvider.createRemotePluginLink(pctx, version));
-        DTOMapper.populateRemotePluginDTO(pd, builder);
+        HobsonPluginDTO dto = DTOMapper.mapPlugin(new PluginDescriptorAdaptor(pd, null), pd.getDescription(), null, null, true, expansions, true, linkProvider);
 
-        return new JsonRepresentation(builder.build().toJSON());
+        return new JsonRepresentation(dto.toJSON());
     }
 }

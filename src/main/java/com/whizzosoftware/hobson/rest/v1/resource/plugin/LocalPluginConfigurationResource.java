@@ -86,7 +86,7 @@ public class LocalPluginConfigurationResource extends SelfInjectingServerResourc
             }
         };
 
-        return new JsonRepresentation(DTOMapper.mapPropertyContainer(config, pccp, linkProvider).toJSON());
+        return new JsonRepresentation(DTOMapper.mapPropertyContainer(config, pccp, false, linkProvider).toJSON());
     }
 
     /**

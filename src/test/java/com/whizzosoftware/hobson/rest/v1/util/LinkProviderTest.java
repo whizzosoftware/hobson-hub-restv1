@@ -3,6 +3,7 @@ package com.whizzosoftware.hobson.rest.v1.util;
 import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.hub.HubContext;
 import com.whizzosoftware.hobson.api.plugin.PluginContext;
+import com.whizzosoftware.hobson.api.property.PropertyContainerClass;
 import com.whizzosoftware.hobson.api.property.PropertyContainerClassContext;
 import com.whizzosoftware.hobson.api.property.PropertyContainerClassType;
 import org.junit.Test;
@@ -50,7 +51,9 @@ public class LinkProviderTest {
     @Test
     public void testCreatePropertyContainerLink() {
         LinkProvider provider = new LinkProvider();
-        assertEquals("/api/v1/users/local/hubs/local/configuration", provider.createPropertyContainerLink(PluginContext.createLocal(null), PropertyContainerClassType.HUB_CONFIG));
+        assertEquals("/api/v1/users/local/hubs/local/configuration", provider.createPropertyContainerLink(
+            new PropertyContainerClass(PropertyContainerClassContext.create(PluginContext.createLocal("plugin1"), "configuration"), PropertyContainerClassType.HUB_CONFIG)
+        ));
     }
 
     @Test
