@@ -274,7 +274,7 @@ public class DTOMapperTest {
         values.put("device", DeviceContext.create(HubContext.createLocal(), "plugin2", "device2"));
         PropertyContainer pc = new PropertyContainer(PropertyContainerClassContext.create(PluginContext.createLocal("plugin1"), "ccid"), values);
 
-        PropertyContainerDTO dto = DTOMapper.mapPropertyContainer(pc, true, ccp, new LinkProvider());
+        PropertyContainerDTO dto = DTOMapper.mapPropertyContainer(pc, ccp, true, new LinkProvider());
         assertEquals("/api/v1/users/local/hubs/local/configurationClass", dto.getContainerClass().getId());
         assertEquals("My Name", dto.getValues().get("name"));
     }
@@ -296,7 +296,7 @@ public class DTOMapperTest {
         values.put("device", DeviceContext.create(HubContext.createLocal(), "plugin2", "device2"));
         PropertyContainer pc = new PropertyContainer(PropertyContainerClassContext.create(PluginContext.createLocal("plugin1"), "ccid"), values);
 
-        PropertyContainerDTO dto = DTOMapper.mapPropertyContainer(pc, true, ccp, new LinkProvider());
+        PropertyContainerDTO dto = DTOMapper.mapPropertyContainer(pc, ccp, true, new LinkProvider());
         assertEquals("/api/v1/users/local/hubs/local/plugins/local/plugin1/configuration", dto.getId());
         assertEquals("/api/v1/users/local/hubs/local/plugins/local/plugin1/configurationClass", dto.getContainerClass().getId());
         assertEquals("My Name", dto.getValues().get("name"));
