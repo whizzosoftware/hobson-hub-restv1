@@ -10,10 +10,13 @@ package com.whizzosoftware.hobson.rest.v1.resource.device;
 import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.api.property.PropertyContainer;
-import com.whizzosoftware.hobson.dto.property.PropertyContainerClassDTO;
+import com.whizzosoftware.hobson.api.property.PropertyContainerClass;
+import com.whizzosoftware.hobson.api.property.PropertyContainerClassContext;
+import com.whizzosoftware.hobson.api.property.PropertyContainerClassProvider;
 import com.whizzosoftware.hobson.dto.property.PropertyContainerDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
 import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import org.restlet.data.Status;
@@ -64,17 +67,17 @@ public class DeviceConfigurationResource extends SelfInjectingServerResource {
 
         authorizer.authorizeHub(ctx.getHubContext());
 
-        DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
+        final DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
         PropertyContainer config = deviceManager.getDeviceConfiguration(dctx);
 
-        PropertyContainerDTO dto = new PropertyContainerDTO.Builder(linkProvider.createDeviceConfigurationLink(dctx))
-            .name(config.getName())
-            .containerClass(
-                new PropertyContainerClassDTO.Builder(linkProvider.createDeviceConfigurationClassLink(dctx)).build()
-            )
-            .values(config.getPropertyValues())
-            .build();
+        PropertyContainerClassProvider pccp = new PropertyContainerClassProvider() {
+            @Override
+            public PropertyContainerClass getPropertyContainerClass(PropertyContainerClassContext ctx) {
+                return deviceManager.getDeviceConfigurationClass(dctx);
+            }
+        };
 
+        PropertyContainerDTO dto = DTOMapper.mapPropertyContainer(config, pccp, linkProvider);
         return new JsonRepresentation(dto.toJSON());
     }
 

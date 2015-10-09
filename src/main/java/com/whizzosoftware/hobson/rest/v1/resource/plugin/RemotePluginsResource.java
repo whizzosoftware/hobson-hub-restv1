@@ -15,7 +15,7 @@ import com.whizzosoftware.hobson.dto.plugin.HobsonPluginDTO;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.DTOHelper;
+import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
 import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -73,7 +73,7 @@ public class RemotePluginsResource extends SelfInjectingServerResource {
             PluginContext pctx = PluginContext.create(ctx.getHubContext(), pd.getId());
             HobsonPluginDTO.Builder builder = new HobsonPluginDTO.Builder(linkProvider.createRemotePluginLink(pctx, pd.getVersionString()));
             if (itemExpand) {
-                DTOHelper.populateRemotePluginDTO(pd, builder);
+                DTOMapper.populateRemotePluginDTO(pd, builder);
                 builder.addLink("install", linkProvider.createRemotePluginInstallLink(pctx, pd.getVersionString()));
             }
             results.add(builder.build());

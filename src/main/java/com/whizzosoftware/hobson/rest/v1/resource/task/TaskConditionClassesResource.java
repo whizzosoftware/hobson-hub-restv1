@@ -15,7 +15,7 @@ import com.whizzosoftware.hobson.dto.task.TaskConditionClassDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.ExpansionFields;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.DTOHelper;
+import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
 import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -80,9 +80,9 @@ public class TaskConditionClassesResource extends SelfInjectingServerResource {
                     linkProvider.createTaskConditionClassLink(conditionClass.getContext())
             );
             if (expandItems) {
-                builder.type(conditionClass.getType().toString()).name(conditionClass.getName())
+                builder.type(conditionClass.getConditionClassType().toString()).name(conditionClass.getName())
                         .descriptionTemplate(conditionClass.getDescriptionTemplate())
-                        .supportedProperties(DTOHelper.mapTypedPropertyList(conditionClass.getSupportedProperties()));
+                        .supportedProperties(DTOMapper.mapTypedPropertyList(conditionClass.getSupportedProperties()));
             }
             results.add(builder.build());
         }

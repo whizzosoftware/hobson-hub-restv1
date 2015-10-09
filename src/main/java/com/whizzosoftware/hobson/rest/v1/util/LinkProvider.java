@@ -12,6 +12,7 @@ import com.whizzosoftware.hobson.api.hub.HubContext;
 import com.whizzosoftware.hobson.api.plugin.PluginContext;
 import com.whizzosoftware.hobson.api.presence.PresenceEntityContext;
 import com.whizzosoftware.hobson.api.property.PropertyContainerClassContext;
+import com.whizzosoftware.hobson.api.property.PropertyContainerClassType;
 import com.whizzosoftware.hobson.api.task.TaskContext;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.resource.activity.ActivityLogResource;
@@ -40,9 +41,6 @@ import java.util.Map;
  */
 public class LinkProvider {
     public static final String API_ROOT = "/api/v1";
-    public static final int ACTION_CONTAINER = 0;
-    public static final int CONDITION_CONTAINER = 1;
-    public static final int HUB_CONFIG_CONTAINER = 2;
     public static final String LINKS_NAME = "_links";
 
     private String apiRoot;
@@ -146,7 +144,7 @@ public class LinkProvider {
         Template t = new Template(apiRoot + TaskActionClassResource.PATH);
         Map<String,Object> vars = new HashMap<>();
         t.parse(link, vars);
-        return PropertyContainerClassContext.create((String) vars.get("userId"), (String) vars.get("hubId"), (String) vars.get("pluginId"), (String) vars.get("actionClassId"));
+        return PropertyContainerClassContext.create((String) vars.get("userId"), (String) vars.get("hubId"), (String) vars.get("pluginId"), null, (String) vars.get("actionClassId"));
     }
 
     public String createTaskActionSetLink(HubContext ctx, String actionSetId) {
@@ -196,25 +194,35 @@ public class LinkProvider {
         return t.format(values);
     }
 
-    public String createPropertyContainerLink(HubContext context, int type) {
-        if (type == CONDITION_CONTAINER) {
-            return createTaskConditionLink();
-        } else if (type == ACTION_CONTAINER) {
-            return createTaskActionLink();
-        } else if (type == HUB_CONFIG_CONTAINER) {
-            return createHubConfigurationLink(context);
-        } else {
-            return null;
+    public String createPropertyContainerLink(PluginContext ctx, PropertyContainerClassType type) {
+        switch (type) {
+            case CONDITION:
+                return createTaskConditionLink();
+            case ACTION:
+                return createTaskActionLink();
+            case HUB_CONFIG:
+                return createHubConfigurationLink(ctx.getHubContext());
+            case PLUGIN_CONFIG:
+                return createLocalPluginConfigurationLink(ctx);
+            default:
+                return null;
         }
     }
 
-    public String createPropertyContainerClassLink(int type, PropertyContainerClassContext pccc) {
-        if (type == CONDITION_CONTAINER) {
-            return createTaskConditionClassLink(pccc);
-        } else if (type == ACTION_CONTAINER) {
-            return createTaskActionClassLink(pccc);
-        } else if (type == HUB_CONFIG_CONTAINER) {
-            return createHubConfigurationClassLink(pccc.getHubContext());
+    public String createPropertyContainerClassLink(PropertyContainerClassContext pccc, PropertyContainerClassType type) {
+        if (pccc != null) {
+            switch (type) {
+                case CONDITION:
+                    return createTaskConditionClassLink(pccc);
+                case ACTION:
+                    return createTaskActionClassLink(pccc);
+                case HUB_CONFIG:
+                    return createHubConfigurationClassLink(pccc.getHubContext());
+                case PLUGIN_CONFIG:
+                    return createLocalPluginConfigurationClassLink(pccc.getPluginContext());
+                default:
+                    return null;
+            }
         } else {
             return null;
         }

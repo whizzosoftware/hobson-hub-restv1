@@ -15,7 +15,7 @@ import com.whizzosoftware.hobson.api.property.PropertyContainerClass;
 import com.whizzosoftware.hobson.dto.property.PropertyContainerClassDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.DTOHelper;
+import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
 import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -73,7 +73,7 @@ public class LocalPluginConfigurationClassResource extends SelfInjectingServerRe
             if (pcc != null) {
                 PropertyContainerClassDTO.Builder builder = new PropertyContainerClassDTO.Builder(linkProvider.createLocalPluginConfigurationClassLink(pctx))
                     .name(pcc.getName())
-                    .supportedProperties(DTOHelper.mapTypedPropertyList(pcc.getSupportedProperties()));
+                    .supportedProperties(DTOMapper.mapTypedPropertyList(pcc.getSupportedProperties()));
                 return new JsonRepresentation(builder.build().toJSON());
             } else {
                 throw new HobsonNotFoundException("Plugin configuration class not found");

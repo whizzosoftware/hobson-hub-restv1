@@ -15,7 +15,7 @@ import com.whizzosoftware.hobson.dto.plugin.HobsonPluginDTO;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.DTOHelper;
+import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
 import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -72,14 +72,14 @@ public class LocalPluginsResource extends SelfInjectingServerResource {
             PluginContext pctx = PluginContext.create(ctx.getHubContext(), pd.getId());
             HobsonPluginDTO.Builder builder = new HobsonPluginDTO.Builder(linkProvider.createLocalPluginLink(pctx));
             if (itemExpand) {
-                DTOHelper.populatePluginDTO(
-                    pd,
-                    pd.isConfigurable() ? linkProvider.createLocalPluginConfigurationClassLink(pctx) : null,
-                    pd.isConfigurable() ? pluginManager.getLocalPlugin(pctx).getConfigurationClass() : null,
-                    pd.isConfigurable() ? linkProvider.createLocalPluginConfigurationLink(pctx) : null,
-                    pd.isConfigurable() ? pluginManager.getLocalPluginConfiguration(pctx) : null,
-                    linkProvider.createLocalPluginIconLink(pctx),
-                    builder
+                DTOMapper.populatePluginDTO(
+                        pd,
+                        pd.isConfigurable() ? linkProvider.createLocalPluginConfigurationClassLink(pctx) : null,
+                        pd.isConfigurable() ? pluginManager.getLocalPlugin(pctx).getConfigurationClass() : null,
+                        pd.isConfigurable() ? linkProvider.createLocalPluginConfigurationLink(pctx) : null,
+                        pd.isConfigurable() ? pluginManager.getLocalPluginConfiguration(pctx) : null,
+                        linkProvider.createLocalPluginIconLink(pctx),
+                        builder
                 );
                 builder.addLink("reload", linkProvider.createLocalPluginReloadLink(pctx));
             }

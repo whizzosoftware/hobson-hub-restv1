@@ -9,11 +9,13 @@ package com.whizzosoftware.hobson.rest.v1.resource.hub;
 
 import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.api.property.PropertyContainer;
-import com.whizzosoftware.hobson.dto.property.PropertyContainerClassDTO;
+import com.whizzosoftware.hobson.api.property.PropertyContainerClass;
+import com.whizzosoftware.hobson.api.property.PropertyContainerClassContext;
+import com.whizzosoftware.hobson.api.property.PropertyContainerClassProvider;
 import com.whizzosoftware.hobson.dto.property.PropertyContainerDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.DTOHelper;
+import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
 import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import org.restlet.data.Status;
@@ -61,16 +63,14 @@ public class HubConfigurationResource extends SelfInjectingServerResource {
         authorizer.authorizeHub(ctx.getHubContext());
 
         PropertyContainer pc = hubManager.getConfiguration(ctx.getHubContext());
+        PropertyContainerClassProvider pccp = new PropertyContainerClassProvider() {
+            @Override
+            public PropertyContainerClass getPropertyContainerClass(PropertyContainerClassContext ctx) {
+                return hubManager.getConfigurationClass(ctx.getHubContext());
+            }
+        };
 
-        return new JsonRepresentation(
-            new PropertyContainerDTO.Builder(linkProvider.createPropertyContainerLink(ctx.getHubContext(), LinkProvider.HUB_CONFIG_CONTAINER))
-                .containerClass(
-                    new PropertyContainerClassDTO.Builder(linkProvider.createPropertyContainerClassLink(LinkProvider.HUB_CONFIG_CONTAINER, pc.getContainerClassContext())).build()
-                )
-                .values(pc.getPropertyValues())
-                .build()
-                .toJSON()
-        );
+        return new JsonRepresentation(DTOMapper.mapPropertyContainer(pc, pccp, linkProvider).toJSON());
     }
 
     /**
@@ -95,7 +95,7 @@ public class HubConfigurationResource extends SelfInjectingServerResource {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
 
         PropertyContainerDTO dto = new PropertyContainerDTO(JSONHelper.createJSONFromRepresentation(entity));
-        PropertyContainer pc = DTOHelper.mapPropertyContainerDTO(dto, null, linkProvider);
+        PropertyContainer pc = DTOMapper.mapPropertyContainerDTO(dto, null, linkProvider);
         hubManager.setConfiguration(ctx.getHubContext(), pc);
 
         setStatus(Status.SUCCESS_ACCEPTED);

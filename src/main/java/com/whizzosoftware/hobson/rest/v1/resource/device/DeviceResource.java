@@ -24,7 +24,7 @@ import com.whizzosoftware.hobson.dto.telemetry.DeviceTelemetryDTO;
 import com.whizzosoftware.hobson.dto.variable.HobsonVariableDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.DTOHelper;
+import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
 import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.MediaVariableProxyProvider;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -108,7 +108,7 @@ public class DeviceResource extends SelfInjectingServerResource {
         PropertyContainerClassDTO.Builder pccdtob = new PropertyContainerClassDTO.Builder(linkProvider.createDeviceConfigurationClassLink(device.getContext()));
         if (expansions.has("configurationClass")) {
             PropertyContainerClass pccc = device.getConfigurationClass();
-            pccdtob.supportedProperties(DTOHelper.mapTypedPropertyList(pccc.getSupportedProperties()));
+            pccdtob.supportedProperties(DTOMapper.mapTypedPropertyList(pccc.getSupportedProperties()));
         }
         builder.configurationClass(pccdtob.build());
 

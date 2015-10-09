@@ -12,7 +12,7 @@ import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.dto.PasswordChangeDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.DTOHelper;
+import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -60,7 +60,7 @@ public class HubPasswordResource extends SelfInjectingServerResource {
         authorizer.authorizeHub(ctx.getHubContext());
         if (hubManager.getLocalManager() != null) {
             PasswordChangeDTO dto = new PasswordChangeDTO(JSONHelper.createJSONFromRepresentation(entity));
-            hubManager.getLocalManager().setLocalPassword(ctx.getHubContext(), DTOHelper.mapPasswordChangeDTO(dto));
+            hubManager.getLocalManager().setLocalPassword(ctx.getHubContext(), DTOMapper.mapPasswordChangeDTO(dto));
             getResponse().setStatus(Status.SUCCESS_ACCEPTED);
             return new EmptyRepresentation();
         } else {

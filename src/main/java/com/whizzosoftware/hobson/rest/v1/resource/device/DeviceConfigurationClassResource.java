@@ -9,12 +9,11 @@ package com.whizzosoftware.hobson.rest.v1.resource.device;
 
 import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.device.DeviceManager;
-import com.whizzosoftware.hobson.api.device.HobsonDevice;
 import com.whizzosoftware.hobson.api.property.PropertyContainerClass;
 import com.whizzosoftware.hobson.dto.property.PropertyContainerClassDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.DTOHelper;
+import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
 import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -61,13 +60,12 @@ public class DeviceConfigurationClassResource extends SelfInjectingServerResourc
 
         DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
 
-        HobsonDevice device = deviceManager.getDevice(dctx);
-        PropertyContainerClass pcc = device.getConfigurationClass();
+        PropertyContainerClass pcc = deviceManager.getDeviceConfigurationClass(dctx);
 
         PropertyContainerClassDTO dto = new PropertyContainerClassDTO.Builder(linkProvider.createDeviceConfigurationClassLink(dctx))
             .name(pcc.getName())
             .descriptionTemplate(pcc.getDescriptionTemplate())
-            .supportedProperties(DTOHelper.mapTypedPropertyList(pcc.getSupportedProperties()))
+            .supportedProperties(DTOMapper.mapTypedPropertyList(pcc.getSupportedProperties()))
             .build();
 
         return new JsonRepresentation(dto.toJSON());

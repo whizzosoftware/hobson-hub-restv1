@@ -7,6 +7,10 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.task;
 
+import com.whizzosoftware.hobson.api.hub.HubManager;
+import com.whizzosoftware.hobson.api.property.PropertyContainerClass;
+import com.whizzosoftware.hobson.api.property.PropertyContainerClassContext;
+import com.whizzosoftware.hobson.api.property.PropertyContainerClassProvider;
 import com.whizzosoftware.hobson.api.property.PropertyContainerSet;
 import com.whizzosoftware.hobson.api.task.TaskManager;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
@@ -14,7 +18,7 @@ import com.whizzosoftware.hobson.dto.property.PropertyContainerSetDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.ExpansionFields;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.DTOHelper;
+import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
 import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -28,6 +32,8 @@ public class TaskActionSetsResource extends SelfInjectingServerResource {
 
     @Inject
     Authorizer authorizer;
+    @Inject
+    HubManager hubManager;
     @Inject
     TaskManager taskManager;
     @Inject
@@ -63,12 +69,19 @@ public class TaskActionSetsResource extends SelfInjectingServerResource {
         ItemListDTO results = new ItemListDTO(linkProvider.createTaskActionSetsLink(ctx.getHubContext()));
         boolean expandItems = expansions.has("item");
 
+        PropertyContainerClassProvider pccp = new PropertyContainerClassProvider() {
+            @Override
+            public PropertyContainerClass getPropertyContainerClass(PropertyContainerClassContext ctx) {
+                return taskManager.getActionClass(ctx);
+            }
+        };
+
         for (PropertyContainerSet actionSet : taskManager.getAllActionSets(ctx.getHubContext())) {
             PropertyContainerSetDTO.Builder builder = new PropertyContainerSetDTO.Builder(
                 linkProvider.createTaskActionSetLink(ctx.getHubContext(), actionSet.getId())
             );
             if (expandItems) {
-                builder.containers(DTOHelper.mapPropertyContainerList(actionSet.getProperties()));
+                builder.containers(DTOMapper.mapPropertyContainerList(actionSet.getProperties(), pccp, linkProvider));
             }
             results.add(builder.build());
         }

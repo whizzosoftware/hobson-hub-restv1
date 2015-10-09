@@ -16,7 +16,7 @@ import com.whizzosoftware.hobson.dto.hub.HobsonHubDTO;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.rest.ExpansionFields;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.DTOHelper;
+import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
 import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import org.restlet.data.MediaType;
@@ -70,13 +70,13 @@ public class HubsResource extends SelfInjectingServerResource {
         for (HobsonHub hub : hubManager.getHubs(ctx.getUserId())) {
             if (expandItems) {
                 itemList.add(
-                    DTOHelper.createHubDTO(
-                        hub,
-                        expansions,
-                        linkProvider,
-                        hubManager,
-                        pluginManager,
-                        taskManager
+                    DTOMapper.mapHub(
+                            hub,
+                            expansions,
+                            linkProvider,
+                            hubManager,
+                            pluginManager,
+                            taskManager
                     )
                 );
             } else {
@@ -124,13 +124,13 @@ public class HubsResource extends SelfInjectingServerResource {
         String hubLink = linkProvider.createHubLink(HubContext.create(ctx.getUserId(), hubId));
         getResponse().setLocationRef(hubLink);
         return new JsonRepresentation(
-            DTOHelper.createHubDTO(
-                hub,
-                null,
-                linkProvider,
-                hubManager,
-                pluginManager,
-                taskManager
+            DTOMapper.mapHub(
+                    hub,
+                    null,
+                    linkProvider,
+                    hubManager,
+                    pluginManager,
+                    taskManager
             ).toJSON()
         );
     }

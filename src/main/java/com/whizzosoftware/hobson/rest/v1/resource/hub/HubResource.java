@@ -10,24 +10,12 @@ package com.whizzosoftware.hobson.rest.v1.resource.hub;
 import com.whizzosoftware.hobson.rest.ExpansionFields;
 import com.whizzosoftware.hobson.api.hub.HobsonHub;
 import com.whizzosoftware.hobson.api.hub.HubManager;
-import com.whizzosoftware.hobson.api.plugin.PluginContext;
-import com.whizzosoftware.hobson.api.plugin.PluginDescriptor;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
-import com.whizzosoftware.hobson.api.property.PropertyContainer;
-import com.whizzosoftware.hobson.api.property.PropertyContainerClass;
-import com.whizzosoftware.hobson.api.task.HobsonTask;
 import com.whizzosoftware.hobson.api.task.TaskManager;
-import com.whizzosoftware.hobson.dto.*;
 import com.whizzosoftware.hobson.dto.hub.HobsonHubDTO;
-import com.whizzosoftware.hobson.dto.hub.HubLogDTO;
-import com.whizzosoftware.hobson.dto.plugin.HobsonPluginDTO;
-import com.whizzosoftware.hobson.dto.property.PropertyContainerClassDTO;
-import com.whizzosoftware.hobson.dto.property.PropertyContainerDTO;
-import com.whizzosoftware.hobson.dto.property.PropertyContainerSetDTO;
-import com.whizzosoftware.hobson.dto.task.HobsonTaskDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.DTOHelper;
+import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
 import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import org.restlet.data.MediaType;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -100,13 +88,13 @@ public class HubResource extends SelfInjectingServerResource {
 
         HobsonHub hub = hubManager.getHub(ctx.getHubContext());
 
-        HobsonHubDTO dto = DTOHelper.createHubDTO(
-            hub,
-            expansions,
-            linkProvider,
-            hubManager,
-            pluginManager,
-            taskManager
+        HobsonHubDTO dto = DTOMapper.mapHub(
+                hub,
+                expansions,
+                linkProvider,
+                hubManager,
+                pluginManager,
+                taskManager
         );
 
         JsonRepresentation jr = new JsonRepresentation(dto.toJSON());

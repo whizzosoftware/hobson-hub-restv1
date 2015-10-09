@@ -8,14 +8,17 @@
 package com.whizzosoftware.hobson.rest.v1.resource.plugin;
 
 import com.whizzosoftware.hobson.api.hub.HubManager;
+import com.whizzosoftware.hobson.api.plugin.HobsonPlugin;
 import com.whizzosoftware.hobson.api.plugin.PluginContext;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
 import com.whizzosoftware.hobson.api.property.PropertyContainer;
-import com.whizzosoftware.hobson.dto.property.PropertyContainerClassDTO;
+import com.whizzosoftware.hobson.api.property.PropertyContainerClass;
+import com.whizzosoftware.hobson.api.property.PropertyContainerClassContext;
+import com.whizzosoftware.hobson.api.property.PropertyContainerClassProvider;
 import com.whizzosoftware.hobson.dto.property.PropertyContainerDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.DTOHelper;
+import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
 import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import org.restlet.data.Status;
@@ -54,21 +57,14 @@ public class LocalPluginConfigurationResource extends SelfInjectingServerResourc
      * @apiSuccess {Object} values The configuration values
      * @apiSuccessExample {json} Success Response:
      * {
-     *   "@id": "/api/v1/users/local/hubs/local/plugins/local/com.whizzosoftware.hobson.hub.hobson-hub-radiora/configuration",
+     *   "@id": "/api/v1/users/local/hubs/local/plugins/local/com.whizzosoftware.hobson.hub.hobson-hub-wunderground/configuration",
      *   "cclass": {
-     *     "@id": "/api/v1/users/local/hubs/local/plugins/local/com.whizzosoftware.hobson.hub.hobson-hub-radiora/configurationClass"
+     *     "@id": "/api/v1/users/local/hubs/local/plugins/local/com.whizzosoftware.hobson.hub.hobson-hub-wunderground/configurationClass"
      *   },
      *   "values": {
-     *     "serial.port": {
-     *       "name": "Serial Port",
-     *       "description": "The serial port the RA-RS232 controller is connected to (should not be used with Serial Hostname)",
-     *       "type": "STRING",
-     *     },
-     *     "serial.hostname": {
-     *       "name": "Serial Hostname",
-     *       "description": "The hostname of the GlobalCache device that RA-RS232 controller is connected to (should not be used with Serial Port)",
-     *       "value": "192.168.0.200",
-     *       "type": "STRING",
+     *     "pwsId": "KCOFOO",
+     *     "device": {
+     *       "@id": "/api/v1/users/local/hubs/local/plugins/plugin1/devices/device1"
      *     }
      *   }
      * }
@@ -80,18 +76,17 @@ public class LocalPluginConfigurationResource extends SelfInjectingServerResourc
         authorizer.authorizeHub(ctx.getHubContext());
 
         PluginContext pctx = PluginContext.create(ctx.getHubContext(), pluginId);
+        final HobsonPlugin plugin = pluginManager.getLocalPlugin(pctx);
         PropertyContainer config = pluginManager.getLocalPluginConfiguration(pctx);
 
-        return new JsonRepresentation(
-            new PropertyContainerDTO.Builder(linkProvider.createLocalPluginConfigurationLink(pctx))
-                .name(config.getName())
-                .containerClass(
-                    new PropertyContainerClassDTO.Builder(linkProvider.createLocalPluginConfigurationClassLink(pctx)).build()
-                )
-                .values(config.getPropertyValues())
-                .build()
-                .toJSON()
-        );
+        PropertyContainerClassProvider pccp = new PropertyContainerClassProvider() {
+            @Override
+            public PropertyContainerClass getPropertyContainerClass(PropertyContainerClassContext ctx) {
+                return plugin.getConfigurationClass();
+            }
+        };
+
+        return new JsonRepresentation(DTOMapper.mapPropertyContainer(config, pccp, linkProvider).toJSON());
     }
 
     /**
@@ -103,10 +98,13 @@ public class LocalPluginConfigurationResource extends SelfInjectingServerResourc
      * @apiExample {json} Example Request:
      * {
      *   "cclass": {
-     *     "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-radiora/configurationClass"
+     *     "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-wunderground/configurationClass"
      *   },
      *   "values": {
-     *     "serial.hostname": "192.168.0.200"
+     *     "pwsId": "KCOFOO",
+     *     "device": {
+ *           "@id": "/api/v1/users/local/hubs/local/plugins/plugin1/devices/device1"
+     *     }
      *   }
      * }
      * @apiSuccessExample {json} Success Response
@@ -118,10 +116,20 @@ public class LocalPluginConfigurationResource extends SelfInjectingServerResourc
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
         authorizer.authorizeHub(ctx.getHubContext());
 
+        PluginContext pc = PluginContext.create(ctx.getHubContext(), getAttribute("pluginId"));
+        final HobsonPlugin plugin = pluginManager.getLocalPlugin(pc);
+
         PropertyContainerDTO dto = new PropertyContainerDTO(JSONHelper.createJSONFromRepresentation(entity));
 
-        String pluginId = getAttribute("pluginId");
-        pluginManager.setLocalPluginConfiguration(PluginContext.create(ctx.getHubContext(), pluginId), DTOHelper.mapPropertyContainerDTO(dto, hubManager, linkProvider));
+        PropertyContainerClassProvider pccp = new PropertyContainerClassProvider() {
+            @Override
+            public PropertyContainerClass getPropertyContainerClass(PropertyContainerClassContext ctx) {
+                return plugin.getConfigurationClass();
+            }
+        };
+
+        pluginManager.setLocalPluginConfiguration(pc, DTOMapper.mapPropertyContainerDTO(dto, pccp, linkProvider));
+
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();
     }

@@ -7,6 +7,9 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.task;
 
+import com.whizzosoftware.hobson.api.property.PropertyContainerClass;
+import com.whizzosoftware.hobson.api.property.PropertyContainerClassContext;
+import com.whizzosoftware.hobson.api.property.PropertyContainerClassProvider;
 import com.whizzosoftware.hobson.rest.ExpansionFields;
 import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.api.task.HobsonTask;
@@ -15,7 +18,7 @@ import com.whizzosoftware.hobson.dto.task.HobsonTaskDTO;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.DTOHelper;
+import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
 import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import org.restlet.data.Status;
@@ -73,14 +76,21 @@ public class TasksResource extends SelfInjectingServerResource {
         ItemListDTO results = new ItemListDTO(linkProvider.createTasksLink(ctx.getHubContext()));
         boolean expandItems = expansions.has("item");
 
+        PropertyContainerClassProvider pccp = new PropertyContainerClassProvider() {
+            @Override
+            public PropertyContainerClass getPropertyContainerClass(PropertyContainerClassContext ctx) {
+                return hubManager.getContainerClass(ctx);
+            }
+        };
+
         Collection<HobsonTask> tasks = taskManager.getAllTasks(ctx.getHubContext());
         for (HobsonTask task : tasks) {
             HobsonTaskDTO.Builder builder = new HobsonTaskDTO.Builder(linkProvider.createTaskLink(task.getContext()));
             if (expandItems) {
                 builder.name(task.getName());
                 builder.description(task.getDescription());
-                builder.conditions(DTOHelper.mapPropertyContainerList(task.getConditions()));
-                builder.actionSet(DTOHelper.mapPropertyContainerSet(task.getActionSet()));
+                builder.conditions(DTOMapper.mapPropertyContainerList(task.getConditions(), pccp, linkProvider));
+                builder.actionSet(DTOMapper.mapPropertyContainerSet(task.getActionSet(), pccp, linkProvider));
                 builder.properties(task.getProperties());
             }
             results.add(builder.build());
@@ -134,12 +144,19 @@ public class TasksResource extends SelfInjectingServerResource {
         HobsonTaskDTO dto = new HobsonTaskDTO.Builder(JSONHelper.createJSONFromRepresentation(entity)).build();
         dto.validate();
 
+        PropertyContainerClassProvider pccp = new PropertyContainerClassProvider() {
+            @Override
+            public PropertyContainerClass getPropertyContainerClass(PropertyContainerClassContext ctx) {
+                return hubManager.getContainerClass(ctx);
+            }
+        };
+
         taskManager.createTask(
             ctx.getHubContext(),
             dto.getName(),
             dto.getDescription(),
-            DTOHelper.mapPropertyContainerDTOList(dto.getConditions(), hubManager, linkProvider),
-            DTOHelper.mapPropertyContainerSetDTO(dto.getActionSet(), hubManager, linkProvider)
+            DTOMapper.mapPropertyContainerDTOList(dto.getConditions(), pccp, linkProvider),
+            DTOMapper.mapPropertyContainerSetDTO(dto.getActionSet(), pccp, linkProvider)
         );
 
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);

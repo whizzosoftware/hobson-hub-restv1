@@ -14,7 +14,7 @@ import com.whizzosoftware.hobson.dto.property.PropertyContainerClassDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.ExpansionFields;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.DTOHelper;
+import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
 import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -76,7 +76,7 @@ public class TaskActionClassesResource extends SelfInjectingServerResource {
             if (expandItems) {
                 builder.name(actionClass.getName())
                     .descriptionTemplate(actionClass.getDescriptionTemplate())
-                    .supportedProperties(DTOHelper.mapTypedPropertyList(actionClass.getSupportedProperties()));
+                    .supportedProperties(DTOMapper.mapTypedPropertyList(actionClass.getSupportedProperties()));
             }
             results.add(builder.build());
         }
