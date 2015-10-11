@@ -72,9 +72,7 @@ public class RemotePluginsResource extends SelfInjectingServerResource {
         boolean itemExpand = expansions.has("item");
         for (PluginDescriptor pd : pluginManager.getRemotePluginDescriptors(ctx.getHubContext())) {
             HobsonPluginDTO dto = DTOMapper.mapPlugin(new PluginDescriptorAdaptor(pd, null), pd.getDescription(), null, null, itemExpand, expansions, true, linkProvider);
-            if (pd.isUpdatable()) {
-                dto.addLink("install", linkProvider.createRemotePluginInstallLink(PluginContext.create(ctx.getHubContext(), pd.getId()), pd.getVersionString()));
-            }
+            dto.addLink("install", linkProvider.createRemotePluginInstallLink(PluginContext.create(ctx.getHubContext(), pd.getId()), pd.getVersionString()));
             results.add(dto);
         }
 
