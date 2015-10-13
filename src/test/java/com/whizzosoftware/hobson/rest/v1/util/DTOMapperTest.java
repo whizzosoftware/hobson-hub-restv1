@@ -66,8 +66,8 @@ public class DTOMapperTest {
     public void testMapPropertyContainerDTOWithConditionContainerClass() {
         // define the properties the condition class will support
         final List<TypedProperty> properties = new ArrayList<>();
-        properties.add(new TypedProperty("name", "name", "Name", TypedProperty.Type.STRING));
-        properties.add(new TypedProperty("device", "device", "Device", TypedProperty.Type.DEVICE));
+        properties.add(new TypedProperty.Builder("name", "name", "Name", TypedProperty.Type.STRING).build());
+        properties.add(new TypedProperty.Builder("device", "device", "Device", TypedProperty.Type.DEVICE).build());
 
         // create the property values
         Map<String,Object> values = new HashMap<>();
@@ -120,8 +120,8 @@ public class DTOMapperTest {
     public void testMapPropertyContainerDTOWithActionContainerClass() {
         // define the properties the condition class will support
         final List<TypedProperty> properties = new ArrayList<>();
-        properties.add(new TypedProperty("name", "name", "Name", TypedProperty.Type.STRING));
-        properties.add(new TypedProperty("device", "device", "Device", TypedProperty.Type.DEVICE));
+        properties.add(new TypedProperty.Builder("name", "name", "Name", TypedProperty.Type.STRING).build());
+        properties.add(new TypedProperty.Builder("device", "device", "Device", TypedProperty.Type.DEVICE).build());
 
         // create the property values
         Map<String,Object> values = new HashMap<>();
@@ -171,7 +171,7 @@ public class DTOMapperTest {
     public void testMapPropertyContainerDTOWithHubConfigContainerClass() {
         // define the properties the condition class will support
         final List<TypedProperty> properties = new ArrayList<>();
-        properties.add(new TypedProperty("name", "name", "Name", TypedProperty.Type.STRING));
+        properties.add(new TypedProperty.Builder("name", "name", "Name", TypedProperty.Type.STRING).build());
 
         // create the property values
         Map<String,Object> values = new HashMap<>();
@@ -207,8 +207,8 @@ public class DTOMapperTest {
     public void testMapPropertyContainerDTOWithPluginConfigContainerClass() {
         // define the properties the condition class will support
         final List<TypedProperty> properties = new ArrayList<>();
-        properties.add(new TypedProperty("name", "name", "Name", TypedProperty.Type.STRING));
-        properties.add(new TypedProperty("device", "device", "Device", TypedProperty.Type.DEVICE));
+        properties.add(new TypedProperty.Builder("name", "name", "Name", TypedProperty.Type.STRING).build());
+        properties.add(new TypedProperty.Builder("device", "device", "Device", TypedProperty.Type.DEVICE).build());
 
         // create the property values
         Map<String,Object> values = new HashMap<>();
@@ -264,7 +264,7 @@ public class DTOMapperTest {
             @Override
             public PropertyContainerClass getPropertyContainerClass(PropertyContainerClassContext ctx) {
                 List<TypedProperty> props = new ArrayList<>();
-                props.add(new TypedProperty("name", "name", "name", TypedProperty.Type.STRING));
+                props.add(new TypedProperty.Builder("name", "name", "name", TypedProperty.Type.STRING).build());
                 return new PropertyContainerClass(ctx, "name", PropertyContainerClassType.HUB_CONFIG, "", props);
             }
         };
@@ -285,8 +285,8 @@ public class DTOMapperTest {
             @Override
             public PropertyContainerClass getPropertyContainerClass(PropertyContainerClassContext ctx) {
                 List<TypedProperty> props = new ArrayList<>();
-                props.add(new TypedProperty("name", "name", "name", TypedProperty.Type.STRING));
-                props.add(new TypedProperty("device", "device", "device", TypedProperty.Type.DEVICE));
+                props.add(new TypedProperty.Builder("name", "name", "name", TypedProperty.Type.STRING).build());
+                props.add(new TypedProperty.Builder("device", "device", "device", TypedProperty.Type.DEVICE).build());
                 return new PropertyContainerClass(ctx, "name", PropertyContainerClassType.PLUGIN_CONFIG, "", props);
             }
         };
@@ -330,10 +330,10 @@ public class DTOMapperTest {
             @Override
             public PropertyContainerClass getPropertyContainerClass(PropertyContainerClassContext ctx) {
                 List<TypedProperty> props = new ArrayList<>();
-                props.add(new TypedProperty("date", "date", "date", TypedProperty.Type.DATE));
-                props.add(new TypedProperty("time", "time", "time", TypedProperty.Type.TIME));
-                props.add(new TypedProperty("recurrence", "recurrence", "recurrence", TypedProperty.Type.RECURRENCE));
-                props.add(new TypedProperty("devices", "devices", "devices", TypedProperty.Type.DEVICES));
+                props.add(new TypedProperty.Builder("date", "date", "date", TypedProperty.Type.DATE).build());
+                props.add(new TypedProperty.Builder("time", "time", "time", TypedProperty.Type.TIME).build());
+                props.add(new TypedProperty.Builder("recurrence", "recurrence", "recurrence", TypedProperty.Type.RECURRENCE).build());
+                props.add(new TypedProperty.Builder("devices", "devices", "devices", TypedProperty.Type.DEVICES).build());
                 return new PropertyContainerClass(
                     PropertyContainerClassContext.create(PluginContext.createLocal("com.whizzosoftware.hobson.hub.hobson-hub-scheduler"), "schedule"),
                     "schedule",
@@ -379,7 +379,7 @@ public class DTOMapperTest {
     @Test
     public void mapPropertyContainerClass() {
         List<TypedProperty> props = new ArrayList<>();
-        props.add(new TypedProperty("prop1id", "prop1name", "prop1desc", TypedProperty.Type.STRING));
+        props.add(new TypedProperty.Builder("prop1id", "prop1name", "prop1desc", TypedProperty.Type.STRING).build());
 
         PropertyContainerClass pcc = new PropertyContainerClass(
             PropertyContainerClassContext.create(PluginContext.createLocal("plugin1"), "configurationClass"),
@@ -481,7 +481,7 @@ public class DTOMapperTest {
 
         // create configuration metadata
         PropertyContainerClassContext pccc = PropertyContainerClassContext.create(PluginContext.createLocal("plugin1"), "configurationClass");
-        final PropertyContainerClass pcc = new PropertyContainerClass(pccc, "name", PropertyContainerClassType.PLUGIN_CONFIG, null, Collections.singletonList(new TypedProperty("device", "device", "device", TypedProperty.Type.DEVICE)));
+        final PropertyContainerClass pcc = new PropertyContainerClass(pccc, "name", PropertyContainerClassType.PLUGIN_CONFIG, null, Collections.singletonList(new TypedProperty.Builder("device", "device", "device", TypedProperty.Type.DEVICE).build()));
         PropertyContainer config = new PropertyContainer(pccc, Collections.singletonMap("device", (Object)DeviceContext.createLocal("plugin3", "device1")));
         PropertyContainerClassProvider pccp = new PropertyContainerClassProvider() {
             @Override
