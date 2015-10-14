@@ -81,7 +81,7 @@ public class TaskActionSetsResource extends SelfInjectingServerResource {
                 linkProvider.createTaskActionSetLink(ctx.getHubContext(), actionSet.getId())
             );
             if (expandItems) {
-                builder.containers(DTOMapper.mapPropertyContainerList(actionSet.getProperties(), pccp, linkProvider));
+                builder.containers(DTOMapper.mapPropertyContainerList(actionSet.getProperties(), false, pccp, linkProvider));
             }
             results.add(builder.build());
         }

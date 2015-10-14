@@ -432,16 +432,17 @@ public class DTOMapper {
      * Maps a list of PropertyContainer objects to a list of PropertyContainerDTO objects.
      *
      * @param containers the PropertyContainers to map
+     * @param expandItems whether to include details for the items in the list
      * @param ccProvider a PropertyContainerClass provider
      * @param links a link provider
      *
      * @return a List of PropertyContainerDTO objects
      */
-    static public List<PropertyContainerDTO> mapPropertyContainerList(List<PropertyContainer> containers, PropertyContainerClassProvider ccProvider, LinkProvider links) {
+    static public List<PropertyContainerDTO> mapPropertyContainerList(List<PropertyContainer> containers, boolean expandItems, PropertyContainerClassProvider ccProvider, LinkProvider links) {
         List<PropertyContainerDTO> results = new ArrayList<>();
         if (containers != null) {
             for (PropertyContainer c : containers) {
-                results.add(mapPropertyContainer(c, ccProvider, false, links));
+                results.add(mapPropertyContainer(c, ccProvider, expandItems, links));
             }
         }
         return results;
@@ -467,9 +468,9 @@ public class DTOMapper {
         return results;
     }
 
-    static public PropertyContainerSetDTO mapPropertyContainerSet(PropertyContainerSet pcs, PropertyContainerClassProvider ccProvider, LinkProvider links) {
+    static public PropertyContainerSetDTO mapPropertyContainerSet(PropertyContainerSet pcs, boolean expandItems, PropertyContainerClassProvider ccProvider, LinkProvider links) {
         return new PropertyContainerSetDTO.Builder(pcs.getId())
-            .containers(mapPropertyContainerList(pcs.getProperties(), ccProvider, links))
+            .containers(mapPropertyContainerList(pcs.getProperties(), expandItems, ccProvider, links))
             .build();
     }
 

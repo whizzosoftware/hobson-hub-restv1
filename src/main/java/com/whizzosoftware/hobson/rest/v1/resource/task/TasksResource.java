@@ -89,8 +89,8 @@ public class TasksResource extends SelfInjectingServerResource {
             if (expandItems) {
                 builder.name(task.getName());
                 builder.description(task.getDescription());
-                builder.conditions(DTOMapper.mapPropertyContainerList(task.getConditions(), pccp, linkProvider));
-                builder.actionSet(DTOMapper.mapPropertyContainerSet(task.getActionSet(), pccp, linkProvider));
+                builder.conditions(DTOMapper.mapPropertyContainerList(task.getConditions(), false, pccp, linkProvider));
+                builder.actionSet(DTOMapper.mapPropertyContainerSet(task.getActionSet(), false, pccp, linkProvider));
                 builder.properties(task.getProperties());
             }
             results.add(builder.build());

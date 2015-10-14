@@ -98,7 +98,7 @@ public class TaskResource extends SelfInjectingServerResource {
 
         HobsonTaskDTO.Builder builder = new HobsonTaskDTO.Builder(linkProvider.createTaskLink(task.getContext()));
         builder.name(task.getName())
-            .conditions(DTOMapper.mapPropertyContainerList(task.getConditions(), pccp, linkProvider))
+            .conditions(DTOMapper.mapPropertyContainerList(task.getConditions(), true, pccp, linkProvider))
             .properties(task.getProperties());
 
         PropertyContainerSetDTO.Builder asBuilder = new PropertyContainerSetDTO.Builder(
@@ -106,7 +106,7 @@ public class TaskResource extends SelfInjectingServerResource {
         );
         if (expansions.has("actionSet")) {
             PropertyContainerSet pcs = taskManager.getActionSet(ctx.getHubContext(), task.getActionSet().getId());
-            asBuilder.containers(DTOMapper.mapPropertyContainerList(pcs.getProperties(), pccp, linkProvider));
+            asBuilder.containers(DTOMapper.mapPropertyContainerList(pcs.getProperties(), false, pccp, linkProvider));
         }
         builder.actionSet(asBuilder.build());
 

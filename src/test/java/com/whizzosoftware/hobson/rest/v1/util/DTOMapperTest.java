@@ -367,7 +367,7 @@ public class DTOMapperTest {
         assertEquals("bulb", dc.getDeviceId());
 
         // perform reverse mapping
-        List<PropertyContainerDTO> pdtos = DTOMapper.mapPropertyContainerList(pcs, pccp, new LinkProvider());
+        List<PropertyContainerDTO> pdtos = DTOMapper.mapPropertyContainerList(pcs, false, pccp, new LinkProvider());
 
         // verify results
         assertEquals(1, pdtos.size());
