@@ -18,6 +18,7 @@ import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
 import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
+import org.json.JSONObject;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -70,7 +71,11 @@ public class HubConfigurationResource extends SelfInjectingServerResource {
             }
         };
 
-        return new JsonRepresentation(DTOMapper.mapPropertyContainer(pc, pccp, true, linkProvider).toJSON());
+        if (pc != null) {
+            return new JsonRepresentation(DTOMapper.mapPropertyContainer(pc, pccp, true, linkProvider).toJSON());
+        } else {
+            return new JsonRepresentation(new JSONObject());
+        }
     }
 
     /**

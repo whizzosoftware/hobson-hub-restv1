@@ -90,6 +90,14 @@ public class LinkProvider {
         return map;
     }
 
+    public String createShutdownLink(HubContext ctx) {
+        Template t = new Template(apiRoot + ShutdownResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", ctx.getUserId());
+        values.put("hubId", ctx.getHubId());
+        return t.format(values);
+    }
+
     public String createTaskLink(TaskContext ctx) {
         Template t = new Template(apiRoot + TaskResource.PATH);
         Map<String,String> values = new HashMap<>();

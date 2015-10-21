@@ -120,7 +120,7 @@ public class DTOMapper {
 
         // add action classes
         ItemListDTO ildto = new ItemListDTO(linkProvider.createTaskActionClassesLink(hub.getContext()));
-        if (expansions.has("actionClasses")) {
+        if (expansions != null && expansions.has("actionClasses")) {
             for (PropertyContainerClass tac : taskManager.getAllActionClasses(hub.getContext(), false)) {
                 ildto.add(new PropertyContainerClassDTO.Builder(linkProvider.createTaskActionClassLink(tac.getContext())).build());
             }
@@ -129,7 +129,7 @@ public class DTOMapper {
         builder.actionClasses(ildto);
 
         // add configuration class attribute
-        if (expansions.has("configurationClass")) {
+        if (expansions != null && expansions.has("configurationClass")) {
             builder.configurationClass(
                     new PropertyContainerClassDTO.Builder(linkProvider.createHubConfigurationClassLink(hub.getContext()))
                             .name(hub.getConfigurationClass().getName())
@@ -141,7 +141,7 @@ public class DTOMapper {
         }
 
         // add configuration attribute
-        if (expansions.has("configuration")) {
+        if (expansions != null && expansions.has("configuration")) {
             PropertyContainer hubConfig = hubManager.getConfiguration(hub.getContext());
             builder.configuration(
                     new PropertyContainerDTO.Builder(linkProvider.createHubConfigurationLink(hub.getContext()))
@@ -158,7 +158,7 @@ public class DTOMapper {
 
         // add condition classes
         ildto = new ItemListDTO(linkProvider.createTaskConditionClassesLink(hub.getContext()));
-        if (expansions.has("conditionClasses")) {
+        if (expansions != null && expansions.has("conditionClasses")) {
             for (PropertyContainerClass tcc : taskManager.getAllConditionClasses(hub.getContext(), null, false)) {
                 ildto.add(new PropertyContainerClassDTO.Builder(linkProvider.createTaskConditionClassLink(tcc.getContext())).build());
             }
@@ -176,7 +176,7 @@ public class DTOMapper {
         // add local plugins attribute
         ildto = new ItemListDTO(linkProvider.createLocalPluginsLink(hub.getContext()));
         builder.localPlugins(ildto);
-        if (expansions.has("localPlugins")) {
+        if (expansions != null && expansions.has("localPlugins")) {
             for (PluginDescriptor pd : pluginManager.getLocalPluginDescriptors(hub.getContext())) {
                 PluginContext pctx = PluginContext.create(hub.getContext(), pd.getId());
                 HobsonPluginDTO dto = DTOMapper.mapPlugin(
@@ -197,7 +197,7 @@ public class DTOMapper {
         // add remote plugins attribute
         ildto = new ItemListDTO(linkProvider.createRemotePluginsLink(hub.getContext()));
         builder.remotePlugins(ildto);
-        if (expansions.has("remotePlugins")) {
+        if (expansions != null && expansions.has("remotePlugins")) {
             for (PluginDescriptor pd : pluginManager.getRemotePluginDescriptors(hub.getContext())) {
                 PluginContext pctx = PluginContext.create(hub.getContext(), pd.getId());
                 HobsonPluginDTO dto = DTOMapper.mapPlugin(new PluginDescriptorAdaptor(pd, null), pd.getDescription(), null, null, false, expansions, true, linkProvider);
@@ -209,7 +209,7 @@ public class DTOMapper {
 
         // add tasks
         ildto = new ItemListDTO(linkProvider.createTasksLink(hub.getContext()));
-        if (expansions.has("tasks")) {
+        if (expansions != null && expansions.has("tasks")) {
             for (HobsonTask task : taskManager.getAllTasks(hub.getContext())) {
                 HobsonTaskDTO.Builder builder2 = new HobsonTaskDTO.Builder(linkProvider.createTaskLink(task.getContext()));
                 builder2.name(task.getName())
@@ -221,6 +221,12 @@ public class DTOMapper {
             ildto.updateNumberOfItems();
         }
         builder.tasks(ildto);
+
+        // add local links
+        if (hub.isLocal()) {
+            builder.link("powerOff", linkProvider.createShutdownLink(hub.getContext()));
+            builder.link("activityLog", linkProvider.createActivityLogLink(hub.getContext()));
+        }
 
         return builder.build();
     }

@@ -27,6 +27,7 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
 
 import javax.inject.Inject;
+import java.util.Collection;
 
 public class HubsResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs";
@@ -67,20 +68,24 @@ public class HubsResource extends SelfInjectingServerResource {
         boolean expandItems = expansions.has("item");
 
         ItemListDTO itemList = new ItemListDTO(linkProvider.createHubsLink(ctx.getUserId()));
-        for (HobsonHub hub : hubManager.getHubs(ctx.getUserId())) {
-            if (expandItems) {
-                itemList.add(
-                    DTOMapper.mapHub(
+        Collection<HobsonHub> hubs = hubManager.getHubs(ctx.getUserId());
+
+        if (hubs != null) {
+            for (HobsonHub hub : hubs) {
+                if (expandItems) {
+                    itemList.add(
+                        DTOMapper.mapHub(
                             hub,
                             expansions,
                             linkProvider,
                             hubManager,
                             pluginManager,
                             taskManager
-                    )
-                );
-            } else {
-                itemList.add(new HobsonHubDTO.Builder(linkProvider.createHubLink(hub.getContext())).build());
+                        )
+                    );
+                } else {
+                    itemList.add(new HobsonHubDTO.Builder(linkProvider.createHubLink(hub.getContext())).build());
+                }
             }
         }
 

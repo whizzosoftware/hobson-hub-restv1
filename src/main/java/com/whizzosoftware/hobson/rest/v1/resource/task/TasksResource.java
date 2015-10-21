@@ -84,16 +84,19 @@ public class TasksResource extends SelfInjectingServerResource {
         };
 
         Collection<HobsonTask> tasks = taskManager.getAllTasks(ctx.getHubContext());
-        for (HobsonTask task : tasks) {
-            HobsonTaskDTO.Builder builder = new HobsonTaskDTO.Builder(linkProvider.createTaskLink(task.getContext()));
-            if (expandItems) {
-                builder.name(task.getName());
-                builder.description(task.getDescription());
-                builder.conditions(DTOMapper.mapPropertyContainerList(task.getConditions(), false, pccp, linkProvider));
-                builder.actionSet(DTOMapper.mapPropertyContainerSet(task.getActionSet(), false, pccp, linkProvider));
-                builder.properties(task.getProperties());
+
+        if (tasks != null) {
+            for (HobsonTask task : tasks) {
+                HobsonTaskDTO.Builder builder = new HobsonTaskDTO.Builder(linkProvider.createTaskLink(task.getContext()));
+                if (expandItems) {
+                    builder.name(task.getName());
+                    builder.description(task.getDescription());
+                    builder.conditions(DTOMapper.mapPropertyContainerList(task.getConditions(), false, pccp, linkProvider));
+                    builder.actionSet(DTOMapper.mapPropertyContainerSet(task.getActionSet(), false, pccp, linkProvider));
+                    builder.properties(task.getProperties());
+                }
+                results.add(builder.build());
             }
-            results.add(builder.build());
         }
 
         return new JsonRepresentation(results.toJSON());
