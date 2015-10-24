@@ -17,6 +17,8 @@ import com.whizzosoftware.hobson.api.plugin.*;
 import com.whizzosoftware.hobson.api.property.*;
 import com.whizzosoftware.hobson.api.task.HobsonTask;
 import com.whizzosoftware.hobson.api.task.TaskManager;
+import com.whizzosoftware.hobson.api.user.HobsonUser;
+import com.whizzosoftware.hobson.api.user.UserAccount;
 import com.whizzosoftware.hobson.dto.*;
 import com.whizzosoftware.hobson.dto.device.HobsonDeviceDTO;
 import com.whizzosoftware.hobson.dto.hub.HobsonHubDTO;
@@ -116,7 +118,8 @@ public class DTOMapper {
         // create the response DTO
         HobsonHubDTO.Builder builder = new HobsonHubDTO.Builder(linkProvider.createHubLink(hub.getContext()))
                 .name(hub.getName())
-                .version(hub.getVersion());
+                .version(hub.getVersion())
+                .apiKey(hub.getApiKey());
 
         // add action classes
         ItemListDTO ildto = new ItemListDTO(linkProvider.createTaskActionClassesLink(hub.getContext()));
@@ -524,5 +527,23 @@ public class DTOMapper {
             }
         }
         return results;
+    }
+
+    static public PersonDTO mapPerson(HobsonUser user, boolean expand, LinkProvider linkProvider) {
+        PersonDTO.Builder builder = new PersonDTO.Builder(linkProvider.createUserLink(user.getId()));
+        if (expand) {
+            builder.familyName(user.getFamilyName()).givenName(user.getGivenName());
+            if (user.isRemote()) {
+                builder.account(mapUserAccount(user.getId(), user.getAccount(), linkProvider));
+            }
+            builder.hubs(new ItemListDTO(linkProvider.createHubsLink(user.getId())));
+        }
+        return builder.build();
+    }
+
+    static public UserAccountDTO mapUserAccount(String userId, UserAccount account, LinkProvider linkProvider) {
+        UserAccountDTO.Builder builder = new UserAccountDTO.Builder(account.getExpiration(), account.hasAvailableHubs());
+        builder.link("addHub", linkProvider.createHubsLink(userId));
+        return builder.build();
     }
 }

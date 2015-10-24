@@ -14,6 +14,7 @@ import com.whizzosoftware.hobson.api.user.UserStore;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.dto.PersonDTO;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
 import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import org.restlet.data.MediaType;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -55,11 +56,7 @@ public class UserResource extends SelfInjectingServerResource {
         if (user != null) {
             if (user.getIdentifier().equals(ctx.getUserId())) {
                 HobsonUser hu = userStore.getUser(user.getIdentifier());
-                PersonDTO dto = new PersonDTO.Builder(linkProvider.createUserLink(hu.getId()))
-                    .givenName(hu.getGivenName())
-                    .familyName(hu.getFamilyName())
-                    .hubs(new ItemListDTO(linkProvider.createHubsLink(hu.getId())))
-                    .build();
+                PersonDTO dto = DTOMapper.mapPerson(hu, true, linkProvider);
                 JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
                 jr.setMediaType(new MediaType(dto.getMediaType() + "+json"));
                 return jr;

@@ -8,6 +8,7 @@ import com.whizzosoftware.hobson.dto.AuthResultDTO;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.dto.PersonDTO;
 import com.whizzosoftware.hobson.rest.TokenHelper;
+import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
 import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import org.json.JSONObject;
@@ -61,17 +62,9 @@ public class LoginResource extends SelfInjectingServerResource {
         if (json.has("username") && json.has("password")) {
             HobsonUser user = userManager.authenticate(json.getString("username"), json.getString("password"));
 
-            PersonDTO.Builder builder = new PersonDTO.Builder(linkProvider.createUserLink(user.getId()));
-            if (expansion.has("user")) {
-                builder
-                    .familyName(user.getFamilyName())
-                    .givenName(user.getGivenName())
-                    .hubs(new ItemListDTO(linkProvider.createHubsLink(user.getId())));
-            }
-
             AuthResultDTO dto = new AuthResultDTO(
                 tokenHelper.createToken(user.getId()),
-                builder.build()
+                DTOMapper.mapPerson(user, expansion.has("user"), linkProvider)
             );
 
             JsonRepresentation jr = new JsonRepresentation(dto.toJSON());

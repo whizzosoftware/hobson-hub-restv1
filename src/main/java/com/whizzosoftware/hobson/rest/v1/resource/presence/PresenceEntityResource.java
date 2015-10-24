@@ -7,15 +7,21 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.presence;
 
+import com.whizzosoftware.hobson.api.event.EventManager;
+import com.whizzosoftware.hobson.api.event.PresenceUpdateEvent;
 import com.whizzosoftware.hobson.api.presence.PresenceEntity;
 import com.whizzosoftware.hobson.api.presence.PresenceEntityContext;
 import com.whizzosoftware.hobson.api.presence.PresenceManager;
 import com.whizzosoftware.hobson.dto.presence.PresenceEntityDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
+import org.json.JSONObject;
+import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
+import org.restlet.representation.EmptyRepresentation;
 import org.restlet.representation.Representation;
 
 import javax.inject.Inject;
@@ -32,6 +38,8 @@ public class PresenceEntityResource extends SelfInjectingServerResource {
     Authorizer authorizer;
     @Inject
     PresenceManager presenceManager;
+    @Inject
+    EventManager eventManager;
     @Inject
     LinkProvider linkProvider;
 
@@ -66,5 +74,33 @@ public class PresenceEntityResource extends SelfInjectingServerResource {
                 .build()
                 .toJSON()
         );
+    }
+
+    /**
+     * @api {post} /api/v1/users/:userId/hubs/:hubId/presence/entities/:entityId Update presence entity
+     * @apiVersion 0.1.3
+     * @apiName UpdatePresenceEntity
+     * @apiDescription Updates a presence entity.
+     * @apiGroup Presence
+     *
+     * @apiExample {json} Example Request:
+     * {
+     *   "location": "home"
+     * }
+     * @apiSuccessExample Success Response:
+     * HTTP/1.1 202 Accepted
+     */
+    @Override
+    protected Representation put(Representation entity) {
+        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+
+        authorizer.authorizeHub(ctx.getHubContext());
+
+        JSONObject json = JSONHelper.createJSONFromRepresentation(entity);
+
+        eventManager.postEvent(ctx.getHubContext(), new PresenceUpdateEvent(System.currentTimeMillis(), getAttribute("entityId"), json.getString("location")));
+
+        getResponse().setStatus(Status.SUCCESS_ACCEPTED);
+        return new EmptyRepresentation();
     }
 }

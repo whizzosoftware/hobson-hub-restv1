@@ -13,6 +13,7 @@ import com.whizzosoftware.hobson.rest.HobsonStatusService;
 import com.whizzosoftware.hobson.rest.v1.resource.hub.HubLogResource;
 import com.whizzosoftware.hobson.rest.v1.resource.hub.ShutdownResource;
 import com.whizzosoftware.hobson.rest.v1.resource.login.LoginResource;
+import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceEntityResource;
 import com.whizzosoftware.hobson.rest.v1.resource.task.*;
 import com.whizzosoftware.hobson.rest.v1.resource.activity.ActivityLogResource;
 import com.whizzosoftware.hobson.rest.v1.resource.device.*;
@@ -97,6 +98,7 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
         router.attach(MediaProxyResource.PATH, MediaProxyResource.class);
         router.attach(PluginDevicesResource.PATH, PluginDevicesResource.class);
         router.attach(PresenceEntitiesResource.PATH, PresenceEntitiesResource.class);
+        router.attach(PresenceEntityResource.PATH, PresenceEntityResource.class);
         router.attach(RegisterDeviceResource.PATH, RegisterDeviceResource.class);
         router.attach(RemotePluginsResource.PATH, RemotePluginsResource.class);
         router.attach(RemotePluginResource.PATH, RemotePluginResource.class);
