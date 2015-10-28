@@ -11,9 +11,11 @@ import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.hub.HubConfigurationClass;
 import com.whizzosoftware.hobson.api.hub.HubContext;
 import com.whizzosoftware.hobson.api.plugin.*;
+import com.whizzosoftware.hobson.api.presence.PresenceLocation;
 import com.whizzosoftware.hobson.api.property.*;
 import com.whizzosoftware.hobson.dto.device.HobsonDeviceDTO;
 import com.whizzosoftware.hobson.dto.plugin.HobsonPluginDTO;
+import com.whizzosoftware.hobson.dto.presence.PresenceLocationDTO;
 import com.whizzosoftware.hobson.dto.property.*;
 import com.whizzosoftware.hobson.rest.ExpansionFields;
 import org.json.JSONArray;
@@ -534,5 +536,29 @@ public class DTOMapperTest {
         assertEquals("/api/v1/users/local/hubs/local/plugins/plugin3/devices/device1", hdd.getId());
     }
 
+    @Test
+    public void testMapPresenceLocationDTO() {
+        // test map location
+        PresenceLocation loc = DTOMapper.mapPresenceLocationDTO(new PresenceLocationDTO.Builder("foo").name("name").latitude(1.0).longitude(2.0).radius(3.0).build());
+        assertEquals("name", loc.getName());
+        assertEquals(1.0, loc.getLatitude(), 0.0);
+        assertEquals(2.0, loc.getLongitude(), 0.0);
+        assertEquals(3.0, loc.getRadius(), 0.0);
+
+        // test beacon location
+        loc = DTOMapper.mapPresenceLocationDTO(new PresenceLocationDTO.Builder("foo").name("name").beaconMajor(1).beaconMinor(2).build());
+        assertEquals("name", loc.getName());
+        assertEquals((Integer)1, loc.getBeaconMajor());
+        assertEquals((Integer)2, loc.getBeaconMinor());
+
+        // test empty location
+        assertNull(DTOMapper.mapPresenceLocationDTO(new PresenceLocationDTO.Builder((String)null).build()));
+    }
+
+    @Test
+    public void testMapPresenceLocation() {
+        PresenceLocationDTO dto = DTOMapper.mapPresenceLocation(null, false, null);
+        assertNull(dto);
+    }
 }
 

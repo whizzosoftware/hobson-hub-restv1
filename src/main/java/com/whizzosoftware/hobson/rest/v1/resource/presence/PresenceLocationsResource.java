@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014 Whizzo Software, LLC.
+ * Copyright (c) 2015 Whizzo Software, LLC.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,16 +7,16 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.presence;
 
-import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
-import com.whizzosoftware.hobson.api.presence.PresenceEntity;
+import com.whizzosoftware.hobson.api.presence.PresenceLocation;
 import com.whizzosoftware.hobson.api.presence.PresenceManager;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
+import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.ExpansionFields;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
-import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
+import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import org.json.JSONObject;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -26,13 +26,8 @@ import org.restlet.representation.Representation;
 
 import javax.inject.Inject;
 
-/**
- * A REST resource for adding and retrieving presence entities.
- *
- * @author Dan Noguerol
- */
-public class PresenceEntitiesResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/presence/entities";
+public class PresenceLocationsResource extends SelfInjectingServerResource {
+    public static final String PATH = "/users/{userId}/hubs/{hubId}/presence/locations";
 
     @Inject
     Authorizer authorizer;
@@ -42,10 +37,10 @@ public class PresenceEntitiesResource extends SelfInjectingServerResource {
     LinkProvider linkProvider;
 
     /**
-     * @api {get} /api/v1/users/:userId/hubs/:hubId/presence/entities Get presence entities
-     * @apiVersion 0.1.3
-     * @apiName GetAllPresenceEntities
-     * @apiDescription Retrieves a list of all presence entities.
+     * @api {get} /api/v1/users/:userId/hubs/:hubId/presence/locations Get presence locations
+     * @apiVersion 0.7.0
+     * @apiName GetAllPresenceLocations
+     * @apiDescription Retrieves a list of all locations.
      * @apiGroup Presence
      *
      * @apiSuccessExample {json} Success Response:
@@ -54,12 +49,12 @@ public class PresenceEntitiesResource extends SelfInjectingServerResource {
      *   "itemListElement": [
      *     {
      *       "item": {
-     *         "@id": "/api/v1/users/local/hubs/local/presence/entities/beef-cafe-beeeef-cafe",
+     *         "@id": "/api/v1/users/local/hubs/local/presence/locations/beef-cafe-beeeef-cafe",
      *       }
      *     },
      *     {
      *       "item": {
-     *         "@id": "/api/v1/users/local/hubs/local/presence/entities/cafe-beef-cafe-beeeef",
+     *         "@id": "/api/v1/users/local/hubs/local/presence/locations/cafe-beef-cafe-beeeef",
      *       }
      *     }
      *   ]
@@ -73,23 +68,26 @@ public class PresenceEntitiesResource extends SelfInjectingServerResource {
         authorizer.authorizeHub(ctx.getHubContext());
 
         ItemListDTO results = new ItemListDTO(linkProvider.createPresenceEntitiesLink(ctx.getHubContext()));
-        for (PresenceEntity entity : presenceManager.getAllEntities(ctx.getHubContext())) {
-            results.add(DTOMapper.mapPresenceEntity(entity, presenceManager, expansions, linkProvider));
+        for (PresenceLocation location : presenceManager.getAllLocations(ctx.getHubContext())) {
+            results.add(DTOMapper.mapPresenceLocation(location, expansions.has("item"), linkProvider));
         }
 
         return new JsonRepresentation(results.toJSON());
     }
 
     /**
-     * @api {post} /api/v1/users/:userId/hubs/:hubId/presence/entities Add presence entity
+     * @api {post} /api/v1/users/:userId/hubs/:hubId/presence/locations Add presence location
      * @apiVersion 0.1.3
-     * @apiName AddPresenceEntity
-     * @apiDescription Adds a new presence entity.
+     * @apiName AddPresenceLocation
+     * @apiDescription Adds a new presence location.
      * @apiGroup Presence
      *
      * @apiExample {json} Example Request:
      * {
-     *   "name": "Jane's Car"
+     *   "name": "Jane's Car",
+     *   "latitude": 0.000,
+     *   "longitude": 0.000,
+     *   "radius": 30
      * }
      * @apiSuccessExample Success Response:
      * HTTP/1.1 202 Accepted
@@ -99,12 +97,32 @@ public class PresenceEntitiesResource extends SelfInjectingServerResource {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
         authorizer.authorizeHub(ctx.getHubContext());
         JSONObject json = JSONHelper.createJSONFromRepresentation(entity);
-        if (json.has("name") && json.getString("name").trim().length() > 0) {
-            presenceManager.addEntity(ctx.getHubContext(), json.getString("name"));
-            getResponse().setStatus(Status.SUCCESS_CREATED);
-            return new EmptyRepresentation();
-        } else {
-            throw new HobsonInvalidRequestException("A name is required");
+
+        Double latitude = null;
+        Double longitude = null;
+        Double radius = null;
+        Integer beaconMajor = null;
+        Integer beaconMinor = null;
+
+        if (json.has(JSONAttributes.LATITUDE)) {
+            latitude = json.getDouble(JSONAttributes.LATITUDE);
         }
+        if (json.has(JSONAttributes.LONGITUDE)) {
+            longitude = json.getDouble(JSONAttributes.LONGITUDE);
+        }
+        if (json.has(JSONAttributes.RADIUS)) {
+            radius = json.getDouble(JSONAttributes.RADIUS);
+        }
+        if (json.has(JSONAttributes.BEACON_MAJOR)) {
+            beaconMajor = json.getInt(JSONAttributes.BEACON_MAJOR);
+        }
+        if (json.has(JSONAttributes.BEACON_MAJOR)) {
+            beaconMinor = json.getInt(JSONAttributes.BEACON_MINOR);
+        }
+
+        presenceManager.addLocation(ctx.getHubContext(), json.getString(JSONAttributes.NAME), latitude, longitude, radius, beaconMajor, beaconMinor);
+
+        getResponse().setStatus(Status.SUCCESS_CREATED);
+        return new EmptyRepresentation();
     }
 }

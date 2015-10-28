@@ -7,6 +7,7 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.hub;
 
+import com.whizzosoftware.hobson.api.presence.PresenceManager;
 import com.whizzosoftware.hobson.rest.ExpansionFields;
 import com.whizzosoftware.hobson.api.hub.HobsonHub;
 import com.whizzosoftware.hobson.api.hub.HubManager;
@@ -41,6 +42,8 @@ public class HubResource extends SelfInjectingServerResource {
     PluginManager pluginManager;
     @Inject
     TaskManager taskManager;
+    @Inject
+    PresenceManager presenceManager;
     @Inject
     LinkProvider linkProvider;
 
@@ -94,7 +97,8 @@ public class HubResource extends SelfInjectingServerResource {
                 linkProvider,
                 hubManager,
                 pluginManager,
-                taskManager
+                taskManager,
+                presenceManager
         );
 
         JsonRepresentation jr = new JsonRepresentation(dto.toJSON());

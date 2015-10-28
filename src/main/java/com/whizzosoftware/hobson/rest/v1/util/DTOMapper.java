@@ -10,31 +10,46 @@ package com.whizzosoftware.hobson.rest.v1.util;
 import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
 import com.whizzosoftware.hobson.api.HobsonRuntimeException;
 import com.whizzosoftware.hobson.api.device.DeviceContext;
+import com.whizzosoftware.hobson.api.device.DeviceManager;
+import com.whizzosoftware.hobson.api.device.HobsonDevice;
 import com.whizzosoftware.hobson.api.hub.HobsonHub;
+import com.whizzosoftware.hobson.api.hub.HubContext;
 import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.api.hub.PasswordChange;
 import com.whizzosoftware.hobson.api.plugin.*;
+import com.whizzosoftware.hobson.api.presence.PresenceEntity;
+import com.whizzosoftware.hobson.api.presence.PresenceLocation;
+import com.whizzosoftware.hobson.api.presence.PresenceLocationContext;
+import com.whizzosoftware.hobson.api.presence.PresenceManager;
 import com.whizzosoftware.hobson.api.property.*;
 import com.whizzosoftware.hobson.api.task.HobsonTask;
 import com.whizzosoftware.hobson.api.task.TaskManager;
 import com.whizzosoftware.hobson.api.user.HobsonUser;
 import com.whizzosoftware.hobson.api.user.UserAccount;
+import com.whizzosoftware.hobson.api.variable.HobsonVariable;
+import com.whizzosoftware.hobson.api.variable.VariableManager;
 import com.whizzosoftware.hobson.dto.*;
 import com.whizzosoftware.hobson.dto.device.HobsonDeviceDTO;
 import com.whizzosoftware.hobson.dto.hub.HobsonHubDTO;
 import com.whizzosoftware.hobson.dto.hub.HubLogDTO;
 import com.whizzosoftware.hobson.dto.image.ImageDTO;
 import com.whizzosoftware.hobson.dto.plugin.HobsonPluginDTO;
+import com.whizzosoftware.hobson.dto.presence.PresenceEntityDTO;
+import com.whizzosoftware.hobson.dto.presence.PresenceLocationDTO;
 import com.whizzosoftware.hobson.dto.property.PropertyContainerClassDTO;
 import com.whizzosoftware.hobson.dto.property.PropertyContainerDTO;
 import com.whizzosoftware.hobson.dto.property.PropertyContainerSetDTO;
 import com.whizzosoftware.hobson.dto.property.TypedPropertyDTO;
 import com.whizzosoftware.hobson.dto.task.HobsonTaskDTO;
+import com.whizzosoftware.hobson.dto.variable.HobsonVariableDTO;
+import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.json.TypedPropertyValueSerializer;
 import com.whizzosoftware.hobson.rest.ExpansionFields;
+import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.resource.device.DeviceConfigurationClassResource;
 import com.whizzosoftware.hobson.rest.v1.resource.hub.HubConfigurationClassResource;
 import com.whizzosoftware.hobson.rest.v1.resource.plugin.LocalPluginConfigurationClassResource;
+import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceLocationResource;
 import com.whizzosoftware.hobson.rest.v1.resource.task.TaskActionClassResource;
 import com.whizzosoftware.hobson.rest.v1.resource.task.TaskConditionClassResource;
 import org.json.JSONException;
@@ -54,6 +69,7 @@ public class DTOMapper {
     private static Template hubConfigClassesTemplate;
     private static Template pluginConfigClassesTemplate;
     private static Template deviceConfigClassesTemplate;
+    private static Template presenceLocationTemplate;
 
     static {
         actionClassesTemplate = new Template(LinkProvider.API_ROOT + TaskActionClassResource.PATH);
@@ -61,6 +77,7 @@ public class DTOMapper {
         hubConfigClassesTemplate = new Template(LinkProvider.API_ROOT + HubConfigurationClassResource.PATH);
         pluginConfigClassesTemplate = new Template(LinkProvider.API_ROOT + LocalPluginConfigurationClassResource.PATH);
         deviceConfigClassesTemplate = new Template(LinkProvider.API_ROOT + DeviceConfigurationClassResource.PATH);
+        presenceLocationTemplate = new Template(LinkProvider.API_ROOT + PresenceLocationResource.PATH);
     }
 
     static public PropertyContainerClassContext createPropertyContainerClassContext(PropertyContainerClassType type, String id) {
@@ -114,7 +131,13 @@ public class DTOMapper {
         }
     }
 
-    static public HobsonHubDTO mapHub(HobsonHub hub, ExpansionFields expansions, LinkProvider linkProvider, HubManager hubManager, PluginManager pluginManager, TaskManager taskManager) {
+    static public PresenceLocationContext createPresenceLocationContext(String id) {
+        Map<String,Object> vars = new HashMap<>();
+        presenceLocationTemplate.parse(id, vars);
+        return PresenceLocationContext.create(HubContext.create((String)vars.get("userId"), (String)vars.get("hubId")), (String)vars.get("locationId"));
+    }
+
+    static public HobsonHubDTO mapHub(HobsonHub hub, ExpansionFields expansions, LinkProvider linkProvider, HubManager hubManager, PluginManager pluginManager, TaskManager taskManager, PresenceManager presenceManager) {
         // create the response DTO
         HobsonHubDTO.Builder builder = new HobsonHubDTO.Builder(linkProvider.createHubLink(hub.getContext()))
                 .name(hub.getName())
@@ -225,10 +248,80 @@ public class DTOMapper {
         }
         builder.tasks(ildto);
 
+        // add presence entities
+        ildto = new ItemListDTO(linkProvider.createPresenceEntitiesLink(hub.getContext()));
+        if (expansions != null && expansions.has(JSONAttributes.PRESENCE_ENTITIES)) {
+            for (PresenceEntity entity : presenceManager.getAllEntities(hub.getContext())) {
+                ildto.add(DTOMapper.mapPresenceEntity(entity, presenceManager, null, linkProvider));
+            }
+        }
+        builder.presenceEntities(ildto);
+
         // add local links
         if (hub.isLocal()) {
             builder.link("powerOff", linkProvider.createShutdownLink(hub.getContext()));
             builder.link("activityLog", linkProvider.createActivityLogLink(hub.getContext()));
+        }
+
+        return builder.build();
+    }
+
+    static public HobsonDeviceDTO mapDevice(HobsonRestContext ctx, HobsonDevice device, DeviceManager deviceManager, VariableManager variableManager, ExpansionFields expansions, LinkProvider linkProvider) {
+        HobsonDeviceDTO.Builder builder = new HobsonDeviceDTO.Builder(linkProvider.createDeviceLink(device.getContext()));
+        long lastVariableUpdate = 0;
+
+        if (expansions.has("item")) {
+            // set top-level attributes
+            builder.name(device.getName());
+            builder.type(device.getType());
+            builder.available(device.isAvailable());
+            builder.checkInTime(device.getLastCheckIn());
+
+            // set configurationClass attribute
+            PropertyContainerClassDTO.Builder pccdtob = new PropertyContainerClassDTO.Builder(linkProvider.createDeviceConfigurationClassLink(device.getContext()));
+            if (expansions.has("configurationClass")) {
+                PropertyContainerClass pccc = device.getConfigurationClass();
+                pccdtob.supportedProperties(DTOMapper.mapTypedPropertyList(pccc.getSupportedProperties()));
+            }
+            builder.configurationClass(pccdtob.build());
+
+            // set configuration attribute
+            PropertyContainerDTO.Builder pcdtob = new PropertyContainerDTO.Builder(linkProvider.createDeviceConfigurationLink(device.getContext()));
+            if (expansions.has("configuration")) {
+                PropertyContainer config = deviceManager.getDeviceConfiguration(device.getContext());
+                pcdtob.values(config.getPropertyValues());
+            }
+            builder.configuration(pcdtob.build());
+
+            // set preferredVariable attribute
+            if (device.hasPreferredVariableName()) {
+                HobsonVariableDTO.Builder vbuilder = new HobsonVariableDTO.Builder(linkProvider.createDeviceVariableLink(device.getContext(), device.getPreferredVariableName()));
+                if (expansions.has("preferredVariable")) {
+                    HobsonVariable pv = variableManager.getDeviceVariable(device.getContext(), device.getPreferredVariableName(), new MediaVariableProxyProvider(ctx));
+                    vbuilder.name(pv.getName()).mask(pv.getMask()).lastUpdate(pv.getLastUpdate()).value(pv.getValue());
+                    if (pv.getLastUpdate() > lastVariableUpdate) {
+                        lastVariableUpdate = pv.getLastUpdate();
+                    }
+                }
+                builder.preferredVariable(vbuilder.build());
+            }
+
+            // set variables attribute
+            ItemListDTO vdto = new ItemListDTO(linkProvider.createDeviceVariablesLink(device.getContext()));
+            for (HobsonVariable v : variableManager.getDeviceVariables(device.getContext(), new MediaVariableProxyProvider(ctx)).getCollection()) {
+                if (expansions.has("variables")) {
+                    vdto.add(new HobsonVariableDTO.Builder(linkProvider.createDeviceVariableLink(device.getContext(), v.getName()))
+                                    .name(v.getName())
+                                    .mask(v.getMask())
+                                    .value(v.getValue())
+                                    .build()
+                    );
+                }
+                if (v.getLastUpdate() > lastVariableUpdate) {
+                    lastVariableUpdate = v.getLastUpdate();
+                }
+            }
+            builder.variables(vdto);
         }
 
         return builder.build();
@@ -312,6 +405,44 @@ public class DTOMapper {
         }
 
         return b.build();
+    }
+
+    static public PresenceEntityDTO mapPresenceEntity(PresenceEntity entity, PresenceManager manager, ExpansionFields expansions, LinkProvider linkProvider) {
+        PresenceEntityDTO.Builder builder = new PresenceEntityDTO.Builder(linkProvider.createPresenceEntityLink(entity.getContext()));
+        if (expansions != null && expansions.has("item")) {
+            builder.name(entity.getName());
+            builder.location(DTOMapper.mapPresenceLocation(manager.getEntityLocation(entity.getContext()), expansions.has("location"), linkProvider));
+            builder.lastUpdate(entity.getLastUpdate());
+        }
+        return builder.build();
+    }
+
+    static public PresenceLocationDTO mapPresenceLocation(PresenceLocation location, boolean includeDetails, LinkProvider linkProvider) {
+        if (location != null) {
+            PresenceLocationDTO.Builder builder = new PresenceLocationDTO.Builder(linkProvider.createPresenceLocationLink(location.getContext()));
+            if (includeDetails) {
+                builder.name(location.getName()).
+                        latitude(location.getLatitude()).
+                        longitude(location.getLongitude()).
+                        radius(location.getRadius()).
+                        beaconMajor(location.getBeaconMajor()).
+                        beaconMinor(location.getBeaconMinor());
+            }
+            return builder.build();
+        }
+        return null;
+    }
+
+    static public PresenceLocation mapPresenceLocationDTO(PresenceLocationDTO dto) {
+        PresenceLocation pl = null;
+        if (dto.getId() != null) {
+            if (dto.getBeaconMajor() != null && dto.getBeaconMinor() != null) {
+                pl = new PresenceLocation(createPresenceLocationContext(dto.getId()), dto.getName(), dto.getBeaconMajor(), dto.getBeaconMinor());
+            } else {
+                pl = new PresenceLocation(createPresenceLocationContext(dto.getId()), dto.getName(), dto.getLatitude(), dto.getLongitude(), dto.getRadius());
+            }
+        }
+        return pl;
     }
 
     /**

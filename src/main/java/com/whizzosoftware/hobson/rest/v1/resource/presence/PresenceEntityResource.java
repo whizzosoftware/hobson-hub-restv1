@@ -8,13 +8,16 @@
 package com.whizzosoftware.hobson.rest.v1.resource.presence;
 
 import com.whizzosoftware.hobson.api.event.EventManager;
-import com.whizzosoftware.hobson.api.event.PresenceUpdateEvent;
+import com.whizzosoftware.hobson.api.event.PresenceUpdateRequestEvent;
 import com.whizzosoftware.hobson.api.presence.PresenceEntity;
 import com.whizzosoftware.hobson.api.presence.PresenceEntityContext;
+import com.whizzosoftware.hobson.api.presence.PresenceLocation;
 import com.whizzosoftware.hobson.api.presence.PresenceManager;
-import com.whizzosoftware.hobson.dto.presence.PresenceEntityDTO;
+import com.whizzosoftware.hobson.dto.presence.PresenceLocationDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
+import com.whizzosoftware.hobson.rest.ExpansionFields;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import org.json.JSONObject;
@@ -53,7 +56,9 @@ public class PresenceEntityResource extends SelfInjectingServerResource {
      * @apiSuccessExample Success Response:
      * {
      *   "name": "John's Mobile Phone",
-     *   "location": "home",
+     *   "location": {
+     *       "@id": "/api/v1/users/local/hubs/local/presence/locations/beef-cafe-beeeef-cafe"
+     *   },
      *   "lastUpdate": 1416007036
      * }
      */
@@ -66,26 +71,25 @@ public class PresenceEntityResource extends SelfInjectingServerResource {
         PresenceEntityContext pctx = PresenceEntityContext.create(ctx.getHubContext(), getAttribute("entityId"));
         PresenceEntity entity = presenceManager.getEntity(pctx);
 
-        return new JsonRepresentation(
-            new PresenceEntityDTO.Builder(linkProvider.createPresenceEntityLink(pctx))
-                .name(entity.getName())
-                .location(entity.getLocation())
-                .lastUpdate(entity.getLastUpdate())
-                .build()
-                .toJSON()
-        );
+        return new JsonRepresentation(DTOMapper.mapPresenceEntity(entity, presenceManager, new ExpansionFields("item"), linkProvider));
     }
 
     /**
-     * @api {post} /api/v1/users/:userId/hubs/:hubId/presence/entities/:entityId Update presence entity
+     * @api {put} /api/v1/users/:userId/hubs/:hubId/presence/entities/:entityId Update presence entity
      * @apiVersion 0.1.3
      * @apiName UpdatePresenceEntity
      * @apiDescription Updates a presence entity.
      * @apiGroup Presence
      *
-     * @apiExample {json} Example Request:
+     * @apiExample {json} Example known location request:
      * {
-     *   "location": "home"
+     *   "location": {
+     *      "@id": "/api/v1/users/local/hubs/local/presence/locations/beef-cafe-beeeef-cafe"
+     *   }
+     * }
+     * @apiExample {json} Example unknown location request:
+     * {
+     *   "location": {}
      * }
      * @apiSuccessExample Success Response:
      * HTTP/1.1 202 Accepted
@@ -98,7 +102,11 @@ public class PresenceEntityResource extends SelfInjectingServerResource {
 
         JSONObject json = JSONHelper.createJSONFromRepresentation(entity);
 
-        eventManager.postEvent(ctx.getHubContext(), new PresenceUpdateEvent(System.currentTimeMillis(), getAttribute("entityId"), json.getString("location")));
+        PresenceEntityContext pec = PresenceEntityContext.create(ctx.getHubContext(), getAttribute("entityId"));
+        PresenceLocationDTO dto = new PresenceLocationDTO.Builder(json.getJSONObject("location")).build();
+
+        PresenceLocation loc = DTOMapper.mapPresenceLocationDTO(dto);
+        eventManager.postEvent(ctx.getHubContext(), new PresenceUpdateRequestEvent(System.currentTimeMillis(), pec, loc != null ? loc.getContext() : null));
 
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();

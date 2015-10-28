@@ -11,6 +11,7 @@ import com.whizzosoftware.hobson.api.hub.HobsonHub;
 import com.whizzosoftware.hobson.api.hub.HubContext;
 import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
+import com.whizzosoftware.hobson.api.presence.PresenceManager;
 import com.whizzosoftware.hobson.api.task.TaskManager;
 import com.whizzosoftware.hobson.dto.hub.HobsonHubDTO;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
@@ -38,6 +39,8 @@ public class HubsResource extends SelfInjectingServerResource {
     PluginManager pluginManager;
     @Inject
     TaskManager taskManager;
+    @Inject
+    PresenceManager presenceManager;
     @Inject
     LinkProvider linkProvider;
 
@@ -80,7 +83,8 @@ public class HubsResource extends SelfInjectingServerResource {
                             linkProvider,
                             hubManager,
                             pluginManager,
-                            taskManager
+                            taskManager,
+                            presenceManager
                         )
                     );
                 } else {
@@ -130,12 +134,13 @@ public class HubsResource extends SelfInjectingServerResource {
         getResponse().setLocationRef(hubLink);
         return new JsonRepresentation(
             DTOMapper.mapHub(
-                    hub,
-                    null,
-                    linkProvider,
-                    hubManager,
-                    pluginManager,
-                    taskManager
+                hub,
+                null,
+                linkProvider,
+                hubManager,
+                pluginManager,
+                taskManager,
+                presenceManager
             ).toJSON()
         );
     }

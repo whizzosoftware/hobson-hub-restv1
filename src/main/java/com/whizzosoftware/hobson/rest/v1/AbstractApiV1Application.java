@@ -10,9 +10,12 @@ package com.whizzosoftware.hobson.rest.v1;
 import com.whizzosoftware.hobson.rest.BearerTokenVerifier;
 import com.whizzosoftware.hobson.rest.HobsonApiApplication;
 import com.whizzosoftware.hobson.rest.HobsonStatusService;
+import com.whizzosoftware.hobson.rest.v1.resource.dashboard.DashboardResource;
 import com.whizzosoftware.hobson.rest.v1.resource.hub.HubLogResource;
 import com.whizzosoftware.hobson.rest.v1.resource.hub.ShutdownResource;
 import com.whizzosoftware.hobson.rest.v1.resource.login.LoginResource;
+import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceLocationResource;
+import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceLocationsResource;
 import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceEntityResource;
 import com.whizzosoftware.hobson.rest.v1.resource.task.*;
 import com.whizzosoftware.hobson.rest.v1.resource.activity.ActivityLogResource;
@@ -61,6 +64,7 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
         // create the router with all of our resource classes attached
         Router router = newRouter();
         router.attach(ActivityLogResource.PATH, ActivityLogResource.class);
+        router.attach(DashboardResource.PATH, DashboardResource.class);
         router.attach(DeviceBootstrapsResource.PATH, DeviceBootstrapsResource.class);
         router.attach(DeviceBootstrapResource.PATH, DeviceBootstrapResource.class);
         router.attach(DeviceResource.PATH, DeviceResource.class);
@@ -99,6 +103,8 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
         router.attach(PluginDevicesResource.PATH, PluginDevicesResource.class);
         router.attach(PresenceEntitiesResource.PATH, PresenceEntitiesResource.class);
         router.attach(PresenceEntityResource.PATH, PresenceEntityResource.class);
+        router.attach(PresenceLocationsResource.PATH, PresenceLocationsResource.class);
+        router.attach(PresenceLocationResource.PATH, PresenceLocationResource.class);
         router.attach(RegisterDeviceResource.PATH, RegisterDeviceResource.class);
         router.attach(RemotePluginsResource.PATH, RemotePluginsResource.class);
         router.attach(RemotePluginResource.PATH, RemotePluginResource.class);

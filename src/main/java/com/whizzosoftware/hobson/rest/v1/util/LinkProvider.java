@@ -11,11 +11,11 @@ import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.hub.HubContext;
 import com.whizzosoftware.hobson.api.plugin.PluginContext;
 import com.whizzosoftware.hobson.api.presence.PresenceEntityContext;
+import com.whizzosoftware.hobson.api.presence.PresenceLocationContext;
 import com.whizzosoftware.hobson.api.property.PropertyContainerClass;
 import com.whizzosoftware.hobson.api.property.PropertyContainerClassContext;
 import com.whizzosoftware.hobson.api.property.PropertyContainerClassType;
 import com.whizzosoftware.hobson.api.task.TaskContext;
-import com.whizzosoftware.hobson.api.task.action.TaskActionClass;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.resource.activity.ActivityLogResource;
 import com.whizzosoftware.hobson.rest.v1.resource.hub.HubLogResource;
@@ -24,6 +24,7 @@ import com.whizzosoftware.hobson.rest.v1.resource.hub.*;
 import com.whizzosoftware.hobson.rest.v1.resource.image.ImageLibraryGroupResource;
 import com.whizzosoftware.hobson.rest.v1.resource.image.ImageLibraryImageResource;
 import com.whizzosoftware.hobson.rest.v1.resource.plugin.*;
+import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceLocationResource;
 import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceEntitiesResource;
 import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceEntityResource;
 import com.whizzosoftware.hobson.rest.v1.resource.task.*;
@@ -201,6 +202,15 @@ public class LinkProvider {
         Map<String,String> values = new HashMap<>();
         values.put("userId", context.getUserId());
         values.put("hubId", context.getHubId());
+        return t.format(values);
+    }
+
+    public String createPresenceLocationLink(PresenceLocationContext context) {
+        Template t = new Template(apiRoot + PresenceLocationResource.PATH);
+        Map<String,String> values = new HashMap<>();
+        values.put("userId", context.getUserId());
+        values.put("hubId", context.getHubId());
+        values.put("locationId", context.getLocationId());
         return t.format(values);
     }
 
