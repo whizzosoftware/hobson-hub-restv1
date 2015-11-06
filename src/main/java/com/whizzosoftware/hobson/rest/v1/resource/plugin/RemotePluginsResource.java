@@ -68,7 +68,7 @@ public class RemotePluginsResource extends SelfInjectingServerResource {
 
         authorizer.authorizeHub(ctx.getHubContext());
 
-        ItemListDTO results = new ItemListDTO(idProvider.createRemotePluginsId(ctx.getHubContext()));
+        ItemListDTO results = new ItemListDTO(idProvider.createRemotePluginsId(ctx.getHubContext()), true);
 
         boolean itemExpand = expansions.has("item");
         for (PluginDescriptor pd : pluginManager.getRemotePluginDescriptors(ctx.getHubContext())) {
