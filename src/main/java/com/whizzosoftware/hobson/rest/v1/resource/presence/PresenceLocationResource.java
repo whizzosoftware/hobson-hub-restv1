@@ -10,13 +10,15 @@ package com.whizzosoftware.hobson.rest.v1.resource.presence;
 import com.whizzosoftware.hobson.api.presence.PresenceLocation;
 import com.whizzosoftware.hobson.api.presence.PresenceLocationContext;
 import com.whizzosoftware.hobson.api.presence.PresenceManager;
+import com.whizzosoftware.hobson.dto.IdProvider;
+import com.whizzosoftware.hobson.dto.presence.PresenceLocationDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
-import com.whizzosoftware.hobson.rest.ExpansionFields;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
-import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
+import org.restlet.data.MediaType;
+import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
+import org.restlet.representation.EmptyRepresentation;
 import org.restlet.representation.Representation;
 
 import javax.inject.Inject;
@@ -29,7 +31,7 @@ public class PresenceLocationResource extends SelfInjectingServerResource {
     @Inject
     PresenceManager presenceManager;
     @Inject
-    LinkProvider linkProvider;
+    IdProvider idProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/presence/locations/:locationId Get location
@@ -54,6 +56,33 @@ public class PresenceLocationResource extends SelfInjectingServerResource {
         authorizer.authorizeHub(ctx.getHubContext());
 
         PresenceLocation location = presenceManager.getLocation(PresenceLocationContext.create(ctx.getHubContext(), getAttribute("locationId")));
-        return new JsonRepresentation(DTOMapper.mapPresenceLocation(location, true, linkProvider).toJSON());
+
+        PresenceLocationDTO dto = new PresenceLocationDTO.Builder(location, idProvider, true).build();
+        JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
+        jr.setMediaType(new MediaType(dto.getJSONMediaType()));
+        return jr;
+    }
+
+    /**
+     * @api {delete} /api/v1/users/:userId/hubs/:hubId/presence/locations/:locationId Delete location
+     * @apiVersion 0.7.0
+     * @apiName DeleteLocation
+     * @apiDescription Deletes a specific presence location.
+     * @apiGroup Presence
+     *
+     * @apiSuccessExample Success Response:
+     * HTTP/1.1 202 Accepted
+     */
+    @Override
+    protected Representation delete() {
+        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+
+        authorizer.authorizeHub(ctx.getHubContext());
+
+        PresenceLocationContext pec = PresenceLocationContext.create(ctx.getHubContext(), getAttribute("locationId"));
+        presenceManager.deleteLocation(pec);
+
+        getResponse().setStatus(Status.SUCCESS_ACCEPTED);
+        return new EmptyRepresentation();
     }
 }

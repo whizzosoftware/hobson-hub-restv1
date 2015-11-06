@@ -11,16 +11,15 @@ import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.api.plugin.HobsonPlugin;
 import com.whizzosoftware.hobson.api.plugin.PluginContext;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
-import com.whizzosoftware.hobson.api.property.PropertyContainer;
-import com.whizzosoftware.hobson.api.property.PropertyContainerClass;
-import com.whizzosoftware.hobson.api.property.PropertyContainerClassContext;
-import com.whizzosoftware.hobson.api.property.PropertyContainerClassProvider;
+import com.whizzosoftware.hobson.api.property.*;
+import com.whizzosoftware.hobson.dto.ExpansionFields;
+import com.whizzosoftware.hobson.dto.IdProvider;
 import com.whizzosoftware.hobson.dto.property.PropertyContainerDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
-import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
+import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -45,7 +44,7 @@ public class LocalPluginConfigurationResource extends SelfInjectingServerResourc
     @Inject
     PluginManager pluginManager;
     @Inject
-    LinkProvider linkProvider;
+    IdProvider idProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/local/:pluginId/configuration Get local plugin configuration
@@ -71,22 +70,33 @@ public class LocalPluginConfigurationResource extends SelfInjectingServerResourc
      */
     @Override
     protected Representation get() throws ResourceException {
-        String pluginId = getAttribute("pluginId");
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
+
         authorizer.authorizeHub(ctx.getHubContext());
 
+        String pluginId = getAttribute("pluginId");
         PluginContext pctx = PluginContext.create(ctx.getHubContext(), pluginId);
         final HobsonPlugin plugin = pluginManager.getLocalPlugin(pctx);
         PropertyContainer config = pluginManager.getLocalPluginConfiguration(pctx);
 
-        PropertyContainerClassProvider pccp = new PropertyContainerClassProvider() {
-            @Override
-            public PropertyContainerClass getPropertyContainerClass(PropertyContainerClassContext ctx) {
-                return plugin.getConfigurationClass();
-            }
-        };
+        PropertyContainerDTO dto = new PropertyContainerDTO.Builder(
+            config,
+            new PropertyContainerClassProvider() {
+                @Override
+                public PropertyContainerClass getPropertyContainerClass(PropertyContainerClassContext ctx) {
+                    return plugin.getConfigurationClass();
+                }
+            },
+            PropertyContainerClassType.PLUGIN_CONFIG,
+            true,
+            expansions,
+            idProvider
+        ).build();
 
-        return new JsonRepresentation(DTOMapper.mapPropertyContainer(config, pccp, false, linkProvider).toJSON());
+        JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
+        jr.setMediaType(new MediaType(dto.getJSONMediaType()));
+        return jr;
     }
 
     /**
@@ -119,7 +129,7 @@ public class LocalPluginConfigurationResource extends SelfInjectingServerResourc
         PluginContext pc = PluginContext.create(ctx.getHubContext(), getAttribute("pluginId"));
         final HobsonPlugin plugin = pluginManager.getLocalPlugin(pc);
 
-        PropertyContainerDTO dto = new PropertyContainerDTO(JSONHelper.createJSONFromRepresentation(entity));
+        PropertyContainerDTO dto = new PropertyContainerDTO.Builder(JSONHelper.createJSONFromRepresentation(entity)).build();
 
         PropertyContainerClassProvider pccp = new PropertyContainerClassProvider() {
             @Override
@@ -128,7 +138,10 @@ public class LocalPluginConfigurationResource extends SelfInjectingServerResourc
             }
         };
 
-        pluginManager.setLocalPluginConfiguration(pc, DTOMapper.mapPropertyContainerDTO(dto, pccp, linkProvider));
+        pluginManager.setLocalPluginConfiguration(
+            pc,
+            DTOMapper.mapPropertyContainerDTO(dto, pccp, idProvider)
+        );
 
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();

@@ -13,14 +13,16 @@ import com.whizzosoftware.hobson.api.presence.PresenceEntity;
 import com.whizzosoftware.hobson.api.presence.PresenceEntityContext;
 import com.whizzosoftware.hobson.api.presence.PresenceLocation;
 import com.whizzosoftware.hobson.api.presence.PresenceManager;
+import com.whizzosoftware.hobson.dto.ExpansionFields;
+import com.whizzosoftware.hobson.dto.IdProvider;
+import com.whizzosoftware.hobson.dto.presence.PresenceEntityDTO;
 import com.whizzosoftware.hobson.dto.presence.PresenceLocationDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
-import com.whizzosoftware.hobson.rest.ExpansionFields;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
-import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import org.json.JSONObject;
+import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -44,7 +46,7 @@ public class PresenceEntityResource extends SelfInjectingServerResource {
     @Inject
     EventManager eventManager;
     @Inject
-    LinkProvider linkProvider;
+    IdProvider idProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/presence/entities/:entityId Get presence entity
@@ -65,13 +67,17 @@ public class PresenceEntityResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
 
         authorizer.authorizeHub(ctx.getHubContext());
 
         PresenceEntityContext pctx = PresenceEntityContext.create(ctx.getHubContext(), getAttribute("entityId"));
         PresenceEntity entity = presenceManager.getEntity(pctx);
 
-        return new JsonRepresentation(DTOMapper.mapPresenceEntity(entity, presenceManager, new ExpansionFields("item"), linkProvider));
+        PresenceEntityDTO dto = new PresenceEntityDTO.Builder(entity, presenceManager, true, expansions, idProvider).build();
+        JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
+        jr.setMediaType(new MediaType(dto.getJSONMediaType()));
+        return jr;
     }
 
     /**
@@ -107,6 +113,28 @@ public class PresenceEntityResource extends SelfInjectingServerResource {
 
         PresenceLocation loc = DTOMapper.mapPresenceLocationDTO(dto);
         eventManager.postEvent(ctx.getHubContext(), new PresenceUpdateRequestEvent(System.currentTimeMillis(), pec, loc != null ? loc.getContext() : null));
+
+        getResponse().setStatus(Status.SUCCESS_ACCEPTED);
+        return new EmptyRepresentation();
+    }
+
+    /**
+     * @api {delete} /api/v1/users/:userId/hubs/:hubId/presence/entities/:entityId Delete presence entity
+     * @apiVersion 0.7.0
+     * @apiName DeletePresenceEntity
+     * @apiDescription Deletes a specific presence entity.
+     * @apiGroup Presence
+     * @apiSuccessExample Success Response:
+     * HTTP/1.1 202 Accepted
+     */
+    @Override
+    protected Representation delete() {
+        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+
+        authorizer.authorizeHub(ctx.getHubContext());
+
+        PresenceEntityContext pec = PresenceEntityContext.create(ctx.getHubContext(), getAttribute("entityId"));
+        presenceManager.deleteEntity(pec);
 
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();

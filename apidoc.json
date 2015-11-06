@@ -1,8 +1,8 @@
 {
     "name": "Hobson REST API",
-    "version": "0.5.0",
+    "version": "0.7.0",
     "title": "Hobson REST API",
-    "description": "The Hobson REST API is published by both the Hobson Hub and Hobson CloudLink service.",
+    "description": "The Hobson REST API is published by both the Hobson Hub and Hobson CloudLink service. The media types produced and consumed by all resources are available here: https://whizzosoftware.atlassian.net/wiki/pages/viewpage.action?pageId=7340066",
     "footer": {
         "filename": "footer.md"
     }

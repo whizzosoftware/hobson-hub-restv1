@@ -8,17 +8,15 @@
 package com.whizzosoftware.hobson.rest.v1.resource.hub;
 
 import com.whizzosoftware.hobson.api.hub.HubManager;
-import com.whizzosoftware.hobson.api.property.PropertyContainer;
-import com.whizzosoftware.hobson.api.property.PropertyContainerClass;
-import com.whizzosoftware.hobson.api.property.PropertyContainerClassContext;
-import com.whizzosoftware.hobson.api.property.PropertyContainerClassProvider;
+import com.whizzosoftware.hobson.api.property.*;
+import com.whizzosoftware.hobson.dto.ExpansionFields;
+import com.whizzosoftware.hobson.dto.IdProvider;
 import com.whizzosoftware.hobson.dto.property.PropertyContainerDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
-import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
-import org.json.JSONObject;
+import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -36,7 +34,7 @@ public class HubConfigurationResource extends SelfInjectingServerResource {
     @Inject
     HubManager hubManager;
     @Inject
-    LinkProvider linkProvider;
+    IdProvider idProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/configuration Get Hub configuration
@@ -60,22 +58,28 @@ public class HubConfigurationResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
 
         authorizer.authorizeHub(ctx.getHubContext());
 
         PropertyContainer pc = hubManager.getConfiguration(ctx.getHubContext());
-        PropertyContainerClassProvider pccp = new PropertyContainerClassProvider() {
-            @Override
-            public PropertyContainerClass getPropertyContainerClass(PropertyContainerClassContext ctx) {
-                return hubManager.getConfigurationClass(ctx.getHubContext());
-            }
-        };
+        PropertyContainerDTO dto = new PropertyContainerDTO.Builder(
+            pc,
+            new PropertyContainerClassProvider() {
+                @Override
+                public PropertyContainerClass getPropertyContainerClass(PropertyContainerClassContext ctx) {
+                    return hubManager.getConfigurationClass(ctx.getHubContext());
+                }
+            },
+            PropertyContainerClassType.HUB_CONFIG,
+            true,
+            expansions,
+            idProvider
+        ).build();
 
-        if (pc != null) {
-            return new JsonRepresentation(DTOMapper.mapPropertyContainer(pc, pccp, true, linkProvider).toJSON());
-        } else {
-            return new JsonRepresentation(new JSONObject());
-        }
+        JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
+        jr.setMediaType(new MediaType(dto.getJSONMediaType()));
+        return jr;
     }
 
     /**
@@ -99,8 +103,8 @@ public class HubConfigurationResource extends SelfInjectingServerResource {
     protected Representation put(Representation entity) throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
 
-        PropertyContainerDTO dto = new PropertyContainerDTO(JSONHelper.createJSONFromRepresentation(entity));
-        PropertyContainer pc = DTOMapper.mapPropertyContainerDTO(dto, null, linkProvider);
+        PropertyContainerDTO dto = new PropertyContainerDTO.Builder(JSONHelper.createJSONFromRepresentation(entity)).build();
+        PropertyContainer pc = DTOMapper.mapPropertyContainerDTO(dto, null, idProvider);
         hubManager.setConfiguration(ctx.getHubContext(), pc);
 
         setStatus(Status.SUCCESS_ACCEPTED);

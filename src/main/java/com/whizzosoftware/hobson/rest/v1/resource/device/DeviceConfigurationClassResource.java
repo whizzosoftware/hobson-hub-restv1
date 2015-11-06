@@ -10,11 +10,11 @@ package com.whizzosoftware.hobson.rest.v1.resource.device;
 import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.api.property.PropertyContainerClass;
+import com.whizzosoftware.hobson.dto.IdProvider;
 import com.whizzosoftware.hobson.dto.property.PropertyContainerClassDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
-import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
+import org.restlet.data.MediaType;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -30,7 +30,7 @@ public class DeviceConfigurationClassResource extends SelfInjectingServerResourc
     @Inject
     DeviceManager deviceManager;
     @Inject
-    LinkProvider linkProvider;
+    IdProvider idProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/devices/:deviceId/configurationClass Get device configuration class
@@ -62,12 +62,14 @@ public class DeviceConfigurationClassResource extends SelfInjectingServerResourc
 
         PropertyContainerClass pcc = deviceManager.getDeviceConfigurationClass(dctx);
 
-        PropertyContainerClassDTO dto = new PropertyContainerClassDTO.Builder(linkProvider.createDeviceConfigurationClassLink(dctx))
-            .name(pcc.getName())
-            .descriptionTemplate(pcc.getDescriptionTemplate())
-            .supportedProperties(DTOMapper.mapTypedPropertyList(pcc.getSupportedProperties()))
-            .build();
+        PropertyContainerClassDTO dto = new PropertyContainerClassDTO.Builder(
+            idProvider.createDeviceConfigurationClassId(dctx),
+            pcc,
+            true
+        ).build();
 
-        return new JsonRepresentation(dto.toJSON());
+        JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
+        jr.setMediaType(new MediaType(dto.getJSONMediaType()));
+        return jr;
     }
 }

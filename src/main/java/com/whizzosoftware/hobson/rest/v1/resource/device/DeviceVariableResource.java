@@ -14,14 +14,17 @@ import com.whizzosoftware.hobson.api.event.VariableUpdateRequestEvent;
 import com.whizzosoftware.hobson.api.variable.HobsonVariable;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
 import com.whizzosoftware.hobson.api.variable.VariableUpdate;
+import com.whizzosoftware.hobson.dto.DTOBuildContext;
+import com.whizzosoftware.hobson.dto.IdProvider;
 import com.whizzosoftware.hobson.dto.variable.HobsonVariableDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
+import com.whizzosoftware.hobson.rest.v1.util.MapUtil;
 import com.whizzosoftware.hobson.rest.v1.util.MediaVariableProxyProvider;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.restlet.data.MediaType;
 import org.restlet.data.Reference;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -47,7 +50,7 @@ public class DeviceVariableResource extends SelfInjectingServerResource {
     @Inject
     EventManager eventManager;
     @Inject
-    LinkProvider linkProvider;
+    IdProvider idProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/devices/:deviceId/variables/:variableName Get device variable
@@ -71,17 +74,20 @@ public class DeviceVariableResource extends SelfInjectingServerResource {
         authorizer.authorizeHub(ctx.getHubContext());
 
         DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
+        HobsonVariable var = variableManager.getDeviceVariable(dctx, getAttribute("variableName"));
 
-        HobsonVariable var = variableManager.getDeviceVariable(dctx, getAttribute("variableName"), new MediaVariableProxyProvider(ctx));
+        HobsonVariableDTO dto = new HobsonVariableDTO.Builder(
+            new DTOBuildContext.Builder().
+                addProxyValueProvider(new MediaVariableProxyProvider(ctx)).
+                build(),
+            idProvider.createDeviceVariableId(dctx, var.getName()),
+            var,
+            true
+        ).build();
 
-        return new JsonRepresentation(new HobsonVariableDTO.Builder(linkProvider.createDeviceVariableLink(dctx, var.getName()))
-            .name(var.getName())
-            .mask(var.getMask())
-            .lastUpdate(var.getLastUpdate())
-            .value(var.getValue())
-            .build()
-            .toJSON()
-        );
+        JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
+        jr.setMediaType(new MediaType(dto.getJSONMediaType()));
+        return jr;
     }
 
     /**
@@ -115,7 +121,7 @@ public class DeviceVariableResource extends SelfInjectingServerResource {
         // TODO: is there a better way to do this? The Restlet request reference scheme is always HTTP for some reason...
         Reference requestRef = getRequest().getResourceRef();
         if (Boolean.getBoolean(System.getProperty("useSSL"))) {
-            getResponse().setLocationRef(new Reference("https", requestRef.getHostDomain(), requestRef.getHostPort(), ctx.getApiRoot() + new Template(DeviceVariableResource.PATH).format(linkProvider.createTripleEntryMap(ctx, "pluginId", pluginId, "deviceId", deviceId, "variableName", variableName)), null, null));
+            getResponse().setLocationRef(new Reference("https", requestRef.getHostDomain(), requestRef.getHostPort(), ctx.getApiRoot() + new Template(DeviceVariableResource.PATH).format(MapUtil.createTripleEntryMap(ctx, "pluginId", pluginId, "deviceId", deviceId, "variableName", variableName)), null, null));
         } else {
             getResponse().setLocationRef(requestRef);
         }

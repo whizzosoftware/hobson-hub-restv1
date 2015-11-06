@@ -12,11 +12,11 @@ import com.whizzosoftware.hobson.api.plugin.HobsonPlugin;
 import com.whizzosoftware.hobson.api.plugin.PluginContext;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
 import com.whizzosoftware.hobson.api.property.PropertyContainerClass;
+import com.whizzosoftware.hobson.dto.IdProvider;
 import com.whizzosoftware.hobson.dto.property.PropertyContainerClassDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
-import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
+import org.restlet.data.MediaType;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -32,7 +32,7 @@ public class LocalPluginConfigurationClassResource extends SelfInjectingServerRe
     @Inject
     PluginManager pluginManager;
     @Inject
-    LinkProvider linkProvider;
+    IdProvider idProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/local/:pluginId/configurationClass Get local plugin configuration class
@@ -71,7 +71,10 @@ public class LocalPluginConfigurationClassResource extends SelfInjectingServerRe
         if (plugin != null) {
             PropertyContainerClass pcc = plugin.getConfigurationClass();
             if (pcc != null) {
-                return new JsonRepresentation(DTOMapper.mapPropertyContainerClass(pcc, true, linkProvider).toJSON());
+                PropertyContainerClassDTO dto = new PropertyContainerClassDTO.Builder(idProvider.createLocalPluginConfigurationClassId(pctx), pcc, true).build();
+                JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
+                jr.setMediaType(new MediaType(dto.getJSONMediaType()));
+                return jr;
             } else {
                 throw new HobsonNotFoundException("Plugin configuration class not found");
             }

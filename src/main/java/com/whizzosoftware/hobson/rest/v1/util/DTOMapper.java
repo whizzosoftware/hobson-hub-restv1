@@ -10,42 +10,17 @@ package com.whizzosoftware.hobson.rest.v1.util;
 import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
 import com.whizzosoftware.hobson.api.HobsonRuntimeException;
 import com.whizzosoftware.hobson.api.device.DeviceContext;
-import com.whizzosoftware.hobson.api.device.DeviceManager;
-import com.whizzosoftware.hobson.api.device.HobsonDevice;
-import com.whizzosoftware.hobson.api.hub.HobsonHub;
 import com.whizzosoftware.hobson.api.hub.HubContext;
-import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.api.hub.PasswordChange;
-import com.whizzosoftware.hobson.api.plugin.*;
-import com.whizzosoftware.hobson.api.presence.PresenceEntity;
-import com.whizzosoftware.hobson.api.presence.PresenceLocation;
-import com.whizzosoftware.hobson.api.presence.PresenceLocationContext;
-import com.whizzosoftware.hobson.api.presence.PresenceManager;
+import com.whizzosoftware.hobson.api.presence.*;
 import com.whizzosoftware.hobson.api.property.*;
-import com.whizzosoftware.hobson.api.task.HobsonTask;
-import com.whizzosoftware.hobson.api.task.TaskManager;
-import com.whizzosoftware.hobson.api.user.HobsonUser;
-import com.whizzosoftware.hobson.api.user.UserAccount;
-import com.whizzosoftware.hobson.api.variable.HobsonVariable;
-import com.whizzosoftware.hobson.api.variable.VariableManager;
 import com.whizzosoftware.hobson.dto.*;
-import com.whizzosoftware.hobson.dto.device.HobsonDeviceDTO;
-import com.whizzosoftware.hobson.dto.hub.HobsonHubDTO;
-import com.whizzosoftware.hobson.dto.hub.HubLogDTO;
-import com.whizzosoftware.hobson.dto.image.ImageDTO;
-import com.whizzosoftware.hobson.dto.plugin.HobsonPluginDTO;
-import com.whizzosoftware.hobson.dto.presence.PresenceEntityDTO;
 import com.whizzosoftware.hobson.dto.presence.PresenceLocationDTO;
 import com.whizzosoftware.hobson.dto.property.PropertyContainerClassDTO;
 import com.whizzosoftware.hobson.dto.property.PropertyContainerDTO;
 import com.whizzosoftware.hobson.dto.property.PropertyContainerSetDTO;
 import com.whizzosoftware.hobson.dto.property.TypedPropertyDTO;
-import com.whizzosoftware.hobson.dto.task.HobsonTaskDTO;
-import com.whizzosoftware.hobson.dto.variable.HobsonVariableDTO;
-import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.json.TypedPropertyValueSerializer;
-import com.whizzosoftware.hobson.rest.ExpansionFields;
-import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.resource.device.DeviceConfigurationClassResource;
 import com.whizzosoftware.hobson.rest.v1.resource.hub.HubConfigurationClassResource;
 import com.whizzosoftware.hobson.rest.v1.resource.plugin.LocalPluginConfigurationClassResource;
@@ -58,8 +33,8 @@ import org.restlet.routing.Template;
 import java.util.*;
 
 /**
- * Helper class for mapping DTOs to/from model objects. This is done manually to avoid the overhead of using
- * auto-mapping libraries.
+ * Helper class for mapping DTOs to model objects. This is done manually to avoid the overhead of a full-blown
+ * marshalling library.
  *
  * @author Dan Noguerol
  */
@@ -72,12 +47,12 @@ public class DTOMapper {
     private static Template presenceLocationTemplate;
 
     static {
-        actionClassesTemplate = new Template(LinkProvider.API_ROOT + TaskActionClassResource.PATH);
-        conditionClassesTemplate = new Template(LinkProvider.API_ROOT + TaskConditionClassResource.PATH);
-        hubConfigClassesTemplate = new Template(LinkProvider.API_ROOT + HubConfigurationClassResource.PATH);
-        pluginConfigClassesTemplate = new Template(LinkProvider.API_ROOT + LocalPluginConfigurationClassResource.PATH);
-        deviceConfigClassesTemplate = new Template(LinkProvider.API_ROOT + DeviceConfigurationClassResource.PATH);
-        presenceLocationTemplate = new Template(LinkProvider.API_ROOT + PresenceLocationResource.PATH);
+        actionClassesTemplate = new Template(RestResourceIdProvider.API_ROOT + TaskActionClassResource.PATH);
+        conditionClassesTemplate = new Template(RestResourceIdProvider.API_ROOT + TaskConditionClassResource.PATH);
+        hubConfigClassesTemplate = new Template(RestResourceIdProvider.API_ROOT + HubConfigurationClassResource.PATH);
+        pluginConfigClassesTemplate = new Template(RestResourceIdProvider.API_ROOT + LocalPluginConfigurationClassResource.PATH);
+        deviceConfigClassesTemplate = new Template(RestResourceIdProvider.API_ROOT + DeviceConfigurationClassResource.PATH);
+        presenceLocationTemplate = new Template(RestResourceIdProvider.API_ROOT + PresenceLocationResource.PATH);
     }
 
     static public PropertyContainerClassContext createPropertyContainerClassContext(PropertyContainerClassType type, String id) {
@@ -137,219 +112,6 @@ public class DTOMapper {
         return PresenceLocationContext.create(HubContext.create((String)vars.get("userId"), (String)vars.get("hubId")), (String)vars.get("locationId"));
     }
 
-    static public HobsonHubDTO mapHub(HobsonHub hub, ExpansionFields expansions, LinkProvider linkProvider, HubManager hubManager, PluginManager pluginManager, TaskManager taskManager, PresenceManager presenceManager) {
-        // create the response DTO
-        HobsonHubDTO.Builder builder = new HobsonHubDTO.Builder(linkProvider.createHubLink(hub.getContext()))
-                .name(hub.getName())
-                .version(hub.getVersion())
-                .apiKey(hub.getApiKey());
-
-        // add action classes
-        ItemListDTO ildto = new ItemListDTO(linkProvider.createTaskActionClassesLink(hub.getContext()));
-        if (expansions != null && expansions.has("actionClasses")) {
-            for (PropertyContainerClass tac : taskManager.getAllActionClasses(hub.getContext(), false)) {
-                ildto.add(new PropertyContainerClassDTO.Builder(linkProvider.createTaskActionClassLink(tac.getContext())).build());
-            }
-            ildto.updateNumberOfItems();
-        }
-        builder.actionClasses(ildto);
-
-        // add configuration class attribute
-        if (expansions != null && expansions.has("configurationClass")) {
-            builder.configurationClass(
-                    new PropertyContainerClassDTO.Builder(linkProvider.createHubConfigurationClassLink(hub.getContext()))
-                            .name(hub.getConfigurationClass().getName())
-                            .supportedProperties(DTOMapper.mapTypedPropertyList(hub.getConfigurationClass().getSupportedProperties()))
-                            .build()
-            );
-        } else {
-            builder.configurationClass(new PropertyContainerClassDTO.Builder(linkProvider.createHubConfigurationClassLink(hub.getContext())).build());
-        }
-
-        // add configuration attribute
-        if (expansions != null && expansions.has("configuration")) {
-            PropertyContainer hubConfig = hubManager.getConfiguration(hub.getContext());
-            builder.configuration(
-                    new PropertyContainerDTO.Builder(linkProvider.createHubConfigurationLink(hub.getContext()))
-                            .name(hubConfig.getName())
-                            .containerClass(
-                                    new PropertyContainerClassDTO.Builder(linkProvider.createHubConfigurationClassLink(hub.getContext())).build()
-                            )
-                            .values(hubConfig.getPropertyValues())
-                            .build()
-            );
-        } else {
-            builder.configuration(new PropertyContainerDTO.Builder(linkProvider.createHubConfigurationLink(hub.getContext())).build());
-        }
-
-        // add condition classes
-        ildto = new ItemListDTO(linkProvider.createTaskConditionClassesLink(hub.getContext()));
-        if (expansions != null && expansions.has("conditionClasses")) {
-            for (PropertyContainerClass tcc : taskManager.getAllConditionClasses(hub.getContext(), null, false)) {
-                ildto.add(new PropertyContainerClassDTO.Builder(linkProvider.createTaskConditionClassLink(tcc.getContext())).build());
-            }
-            ildto.updateNumberOfItems();
-        }
-        builder.conditionClasses(ildto);
-
-        // add devices attribute
-        ildto = new ItemListDTO(linkProvider.createDevicesLink(hub.getContext()));
-        builder.devices(ildto);
-
-        // add log attribute
-        builder.log(new HubLogDTO(linkProvider.createHubLogLink(hub.getContext())));
-
-        // add local plugins attribute
-        ildto = new ItemListDTO(linkProvider.createLocalPluginsLink(hub.getContext()));
-        builder.localPlugins(ildto);
-        if (expansions != null && expansions.has("localPlugins")) {
-            for (PluginDescriptor pd : pluginManager.getLocalPluginDescriptors(hub.getContext())) {
-                PluginContext pctx = PluginContext.create(hub.getContext(), pd.getId());
-                HobsonPluginDTO dto = DTOMapper.mapPlugin(
-                    new PluginDescriptorAdaptor(pd, null),
-                    pd.getDescription(),
-                    pd.isConfigurable() ? pluginManager.getLocalPluginConfiguration(pctx) : null,
-                    null,
-                    false,
-                    expansions,
-                    false,
-                    linkProvider
-                );
-                ildto.add(dto);
-            }
-            ildto.updateNumberOfItems();
-        }
-
-        // add remote plugins attribute
-        ildto = new ItemListDTO(linkProvider.createRemotePluginsLink(hub.getContext()));
-        builder.remotePlugins(ildto);
-        if (expansions != null && expansions.has("remotePlugins")) {
-            for (PluginDescriptor pd : pluginManager.getRemotePluginDescriptors(hub.getContext())) {
-                PluginContext pctx = PluginContext.create(hub.getContext(), pd.getId());
-                HobsonPluginDTO dto = DTOMapper.mapPlugin(new PluginDescriptorAdaptor(pd, null), pd.getDescription(), null, null, false, expansions, true, linkProvider);
-                dto.addLink("install", linkProvider.createRemotePluginInstallLink(pctx, pd.getVersionString()));
-                ildto.add(dto);
-            }
-            ildto.updateNumberOfItems();
-        }
-
-        // add tasks
-        ildto = new ItemListDTO(linkProvider.createTasksLink(hub.getContext()));
-        if (expansions != null && expansions.has("tasks")) {
-            for (HobsonTask task : taskManager.getAllTasks(hub.getContext())) {
-                HobsonTaskDTO.Builder builder2 = new HobsonTaskDTO.Builder(linkProvider.createTaskLink(task.getContext()));
-                builder2.name(task.getName())
-                    .conditions(Collections.singletonList(new PropertyContainerDTO.Builder("").build())) // TODO
-                    .actionSet(new PropertyContainerSetDTO.Builder("").build()) // TODO
-                    .properties(task.getProperties());
-                ildto.add(builder2.build());
-            }
-            ildto.updateNumberOfItems();
-        }
-        builder.tasks(ildto);
-
-        // add presence entities
-        ildto = new ItemListDTO(linkProvider.createPresenceEntitiesLink(hub.getContext()));
-        if (expansions != null && expansions.has(JSONAttributes.PRESENCE_ENTITIES)) {
-            for (PresenceEntity entity : presenceManager.getAllEntities(hub.getContext())) {
-                ildto.add(DTOMapper.mapPresenceEntity(entity, presenceManager, null, linkProvider));
-            }
-        }
-        builder.presenceEntities(ildto);
-
-        // add local links
-        if (hub.isLocal()) {
-            builder.link("powerOff", linkProvider.createShutdownLink(hub.getContext()));
-            builder.link("activityLog", linkProvider.createActivityLogLink(hub.getContext()));
-        }
-
-        return builder.build();
-    }
-
-    static public HobsonDeviceDTO mapDevice(HobsonRestContext ctx, HobsonDevice device, DeviceManager deviceManager, VariableManager variableManager, ExpansionFields expansions, LinkProvider linkProvider) {
-        HobsonDeviceDTO.Builder builder = new HobsonDeviceDTO.Builder(linkProvider.createDeviceLink(device.getContext()));
-        long lastVariableUpdate = 0;
-
-        if (expansions.has("item")) {
-            // set top-level attributes
-            builder.name(device.getName());
-            builder.type(device.getType());
-            builder.available(device.isAvailable());
-            builder.checkInTime(device.getLastCheckIn());
-
-            // set configurationClass attribute
-            PropertyContainerClassDTO.Builder pccdtob = new PropertyContainerClassDTO.Builder(linkProvider.createDeviceConfigurationClassLink(device.getContext()));
-            if (expansions.has("configurationClass")) {
-                PropertyContainerClass pccc = device.getConfigurationClass();
-                pccdtob.supportedProperties(DTOMapper.mapTypedPropertyList(pccc.getSupportedProperties()));
-            }
-            builder.configurationClass(pccdtob.build());
-
-            // set configuration attribute
-            PropertyContainerDTO.Builder pcdtob = new PropertyContainerDTO.Builder(linkProvider.createDeviceConfigurationLink(device.getContext()));
-            if (expansions.has("configuration")) {
-                PropertyContainer config = deviceManager.getDeviceConfiguration(device.getContext());
-                pcdtob.values(config.getPropertyValues());
-            }
-            builder.configuration(pcdtob.build());
-
-            // set preferredVariable attribute
-            if (device.hasPreferredVariableName()) {
-                HobsonVariableDTO.Builder vbuilder = new HobsonVariableDTO.Builder(linkProvider.createDeviceVariableLink(device.getContext(), device.getPreferredVariableName()));
-                if (expansions.has("preferredVariable")) {
-                    HobsonVariable pv = variableManager.getDeviceVariable(device.getContext(), device.getPreferredVariableName(), new MediaVariableProxyProvider(ctx));
-                    vbuilder.name(pv.getName()).mask(pv.getMask()).lastUpdate(pv.getLastUpdate()).value(pv.getValue());
-                    if (pv.getLastUpdate() > lastVariableUpdate) {
-                        lastVariableUpdate = pv.getLastUpdate();
-                    }
-                }
-                builder.preferredVariable(vbuilder.build());
-            }
-
-            // set variables attribute
-            ItemListDTO vdto = new ItemListDTO(linkProvider.createDeviceVariablesLink(device.getContext()));
-            for (HobsonVariable v : variableManager.getDeviceVariables(device.getContext(), new MediaVariableProxyProvider(ctx)).getCollection()) {
-                if (expansions.has("variables")) {
-                    vdto.add(new HobsonVariableDTO.Builder(linkProvider.createDeviceVariableLink(device.getContext(), v.getName()))
-                                    .name(v.getName())
-                                    .mask(v.getMask())
-                                    .value(v.getValue())
-                                    .build()
-                    );
-                }
-                if (v.getLastUpdate() > lastVariableUpdate) {
-                    lastVariableUpdate = v.getLastUpdate();
-                }
-            }
-            builder.variables(vdto);
-        }
-
-        return builder.build();
-    }
-
-    /**
-     * Converts a model value object into one appropriate for use in a DTO.
-     *
-     * @param value the model value object
-     * @param linkProvider a link provider
-     *
-     * @return a DTO value object
-     */
-    static public Object mapDTOValueObject(Object value, LinkProvider linkProvider) {
-        if (value instanceof DeviceContext) {
-            DeviceContext dctx = (DeviceContext) value;
-            return new HobsonDeviceDTO.Builder(linkProvider.createDeviceLink(dctx)).build();
-        } else if (value instanceof List) {
-            List<Object> mappedList = new ArrayList<>();
-            for (Object o : ((List)value)) {
-                mappedList.add(mapDTOValueObject(o, linkProvider));
-            }
-            return mappedList;
-        } else {
-            return value;
-        }
-    }
-
     static public PasswordChange mapPasswordChangeDTO(PasswordChangeDTO dto) {
         try {
             return new PasswordChange(dto.getCurrentPassword(), dto.getNewPassword());
@@ -358,131 +120,12 @@ public class DTOMapper {
         }
     }
 
-    /**
-     * Maps a HobsonPlugin object to a HobsonPluginDTO object.
-     *
-     * @param plugin the plugin to map
-     * @param description the plugin description (or null)
-     * @param config the plugin configuration (or null)
-     * @param ccProvider a PropertyContainerClassProvider (or null)
-     * @param includeDetails indicates whether to include plugin detail attributes
-     * @param expansions any desired expansion fields (or null)
-     * @param isRemote indicates whether this is a remote plugin (which will effect the ID that is generated)
-     * @param linkProvider a link provider
-     *
-     * @return a HobsonPluginDTO instance
-     */
-    static public HobsonPluginDTO mapPlugin(HobsonPlugin plugin, String description, PropertyContainer config, PropertyContainerClassProvider ccProvider, boolean includeDetails, ExpansionFields expansions, boolean isRemote, LinkProvider linkProvider) {
-        String id;
-
-        if (isRemote) {
-            id = linkProvider.createRemotePluginLink(plugin.getContext(), plugin.getVersion());
-        } else {
-            id = linkProvider.createLocalPluginLink(plugin.getContext());
-        }
-
-        HobsonPluginDTO.Builder b = new HobsonPluginDTO.Builder(id);
-
-        // include details if necessary
-        if (includeDetails) {
-            ImageDTO imageDTO = null;
-
-            if (!isRemote) {
-                imageDTO = new ImageDTO.Builder(linkProvider.createLocalPluginIconLink(plugin.getContext())).build();
-                b.addLink("reload", linkProvider.createLocalPluginReloadLink(plugin.getContext()));
-            }
-
-            b.name(plugin.getName()).
-                    pluginId(plugin.getContext().getPluginId()). // pluginId is needed for the update check
-                    description(description).
-                    version(plugin.getVersion()).
-                    type(plugin.getType()).
-                    configurable(plugin.isConfigurable()).
-                    status(plugin.getStatus()).
-                    image(imageDTO).
-                    configurationClass(mapPropertyContainerClass(plugin.getConfigurationClass(), expansions != null && expansions.has("configurationClass"), linkProvider)).
-                    configuration(mapPropertyContainer(config, ccProvider, expansions != null && expansions.has("configuration"), linkProvider));
-        }
-
-        return b.build();
-    }
-
-    static public PresenceEntityDTO mapPresenceEntity(PresenceEntity entity, PresenceManager manager, ExpansionFields expansions, LinkProvider linkProvider) {
-        PresenceEntityDTO.Builder builder = new PresenceEntityDTO.Builder(linkProvider.createPresenceEntityLink(entity.getContext()));
-        if (expansions != null && expansions.has("item")) {
-            builder.name(entity.getName());
-            builder.location(DTOMapper.mapPresenceLocation(manager.getEntityLocation(entity.getContext()), expansions.has("location"), linkProvider));
-            builder.lastUpdate(entity.getLastUpdate());
-        }
-        return builder.build();
-    }
-
-    static public PresenceLocationDTO mapPresenceLocation(PresenceLocation location, boolean includeDetails, LinkProvider linkProvider) {
-        if (location != null) {
-            PresenceLocationDTO.Builder builder = new PresenceLocationDTO.Builder(linkProvider.createPresenceLocationLink(location.getContext()));
-            if (includeDetails) {
-                builder.name(location.getName()).
-                        latitude(location.getLatitude()).
-                        longitude(location.getLongitude()).
-                        radius(location.getRadius()).
-                        beaconMajor(location.getBeaconMajor()).
-                        beaconMinor(location.getBeaconMinor());
-            }
-            return builder.build();
-        }
-        return null;
-    }
-
     static public PresenceLocation mapPresenceLocationDTO(PresenceLocationDTO dto) {
         PresenceLocation pl = null;
         if (dto.getId() != null) {
-            if (dto.getBeaconMajor() != null && dto.getBeaconMinor() != null) {
-                pl = new PresenceLocation(createPresenceLocationContext(dto.getId()), dto.getName(), dto.getBeaconMajor(), dto.getBeaconMinor());
-            } else {
-                pl = new PresenceLocation(createPresenceLocationContext(dto.getId()), dto.getName(), dto.getLatitude(), dto.getLongitude(), dto.getRadius());
-            }
+            pl = new PresenceLocation(createPresenceLocationContext(dto.getId()), dto.getName(), dto.getLatitude(), dto.getLongitude(), dto.getRadius(), dto.getBeaconMajor(), dto.getBeaconMinor());
         }
         return pl;
-    }
-
-    /**
-     * Creates a PropertyContainerDTO from a PropertyContainer. This will also take care of creating appropriately
-     * typed property values if a PropertyContainerClass can be obtained through the specified
-     * PropertyContainerClassProvider.
-     *
-     * @param container the property container to map
-     * @param ccProvider a PropertyContainerClassProvider
-     * @param includeDetails indicates whether to include detail properties
-     * @param links a link provider
-     *
-     * @return a PropertyContainerDTO instance
-     */
-    static public PropertyContainerDTO mapPropertyContainer(PropertyContainer container, PropertyContainerClassProvider ccProvider, boolean includeDetails, LinkProvider links) {
-        PropertyContainerDTO dto = null;
-        if (container != null) {
-            PropertyContainerClass pcc = ccProvider.getPropertyContainerClass(container.getContainerClassContext());
-            if (pcc != null) {
-                // create DTO builder
-                PropertyContainerDTO.Builder builder = new PropertyContainerDTO.Builder(links.createPropertyContainerLink(pcc));
-
-                if (includeDetails) {
-                    builder.name(container.getName()).containerClass(mapPropertyContainerClass(pcc, false, links));
-
-                    // copy property values
-                    if (container.getPropertyValues() != null) {
-                        Map<String, Object> values = new HashMap<>();
-                        for (String name : container.getPropertyValues().keySet()) {
-                            values.put(name, mapDTOValueObject(container.getPropertyValue(name), links));
-                        }
-                        builder.values(values);
-                    }
-                }
-
-                // create DTO
-                dto = builder.build();
-            }
-        }
-        return dto;
     }
 
     /**
@@ -491,29 +134,25 @@ public class DTOMapper {
      *
      * @param dto the dto to map
      * @param ccProvider a provider for property container class lookup
-     * @param links a link provider
+     * @param idProvider a link provider
      *
      * @return a PropertyContainer object
      */
-    static public PropertyContainer mapPropertyContainerDTO(PropertyContainerDTO dto, PropertyContainerClassProvider ccProvider, final LinkProvider links) {
+    static public PropertyContainer mapPropertyContainerDTO(PropertyContainerDTO dto, PropertyContainerClassProvider ccProvider, final IdProvider idProvider) {
         PropertyContainer pc = null;
         if (dto != null) {
             pc = new PropertyContainer();
             pc.setId(dto.getId());
             pc.setName(dto.getName());
 
-            // map the container class
+            // at a minimum, we have the property container class id; however, if we can get the full property
+            // container class definition from the container class provider, use that instead
             PropertyContainerClass pcc = mapPropertyContainerClassDTO(dto.getContainerClass());
+            PropertyContainerClass npcc = ccProvider != null ? ccProvider.getPropertyContainerClass(pcc != null ? pcc.getContext() : null) : null;
+            if (npcc != null) {
+                pcc = npcc;
+            }
             if (pcc != null) {
-                // at a minimum, we have the property container class id; however, if we can get the full property
-                // container class definition from the container class provider, use that instead
-                PropertyContainerClass npcc;
-                if (ccProvider != null) {
-                    npcc = ccProvider.getPropertyContainerClass(pcc.getContext());
-                    if (npcc != null) {
-                        pcc = npcc;
-                    }
-                }
                 pc.setContainerClassContext(pcc.getContext());
             }
 
@@ -524,10 +163,20 @@ public class DTOMapper {
                     if (pcc != null) {
                         TypedProperty tp = pcc.getSupportedProperty(id);
                         if (tp != null) {
-                            value = TypedPropertyValueSerializer.createValueObject(tp.getType(), value, links != null ? new TypedPropertyValueSerializer.DeviceContextProvider() {
+                            value = TypedPropertyValueSerializer.createValueObject(tp.getType(), value, idProvider != null ? new TypedPropertyValueSerializer.PropertyContextProvider() {
                                 @Override
                                 public DeviceContext createDeviceContext(String id) {
-                                    return links.createDeviceContext(id);
+                                    return idProvider.createDeviceContext(id);
+                                }
+
+                                @Override
+                                public PresenceEntityContext createPresenceEntityContext(String id) {
+                                    return idProvider.createPresenceEntityContext(id);
+                                }
+
+                                @Override
+                                public PresenceLocationContext createPresenceLocationContext(String id) {
+                                    return idProvider.createPresenceLocationContext(id);
                                 }
                             } : null);
                         }
@@ -537,22 +186,6 @@ public class DTOMapper {
             }
         }
         return pc;
-    }
-
-    static public PropertyContainerClassDTO mapPropertyContainerClass(PropertyContainerClass pcc, boolean includeDetails, LinkProvider links) {
-        if (pcc != null) {
-            PropertyContainerClassDTO.Builder b = new PropertyContainerClassDTO.Builder(links.createPropertyContainerClassLink(pcc.getContext(), pcc.getType()));
-
-            if (includeDetails) {
-                b.name(pcc.getName()).
-                        descriptionTemplate(pcc.getDescriptionTemplate()).
-                        supportedProperties(mapTypedPropertyList(pcc.getSupportedProperties()));
-            }
-
-            return b.build();
-        } else {
-            return null;
-        }
     }
 
     static public PropertyContainerClass mapPropertyContainerClassDTO(PropertyContainerClassDTO dto) {
@@ -572,17 +205,24 @@ public class DTOMapper {
      * Maps a list of PropertyContainer objects to a list of PropertyContainerDTO objects.
      *
      * @param containers the PropertyContainers to map
-     * @param expandItems whether to include details for the items in the list
+     * @param showDetails whether to include details for the items in the list
      * @param ccProvider a PropertyContainerClass provider
-     * @param links a link provider
+     * @param idProvider a link provider
      *
      * @return a List of PropertyContainerDTO objects
      */
-    static public List<PropertyContainerDTO> mapPropertyContainerList(List<PropertyContainer> containers, boolean expandItems, PropertyContainerClassProvider ccProvider, LinkProvider links) {
+    static public List<PropertyContainerDTO> mapPropertyContainerList(List<PropertyContainer> containers, PropertyContainerClassType type, boolean showDetails, PropertyContainerClassProvider ccProvider, IdProvider idProvider) {
         List<PropertyContainerDTO> results = new ArrayList<>();
         if (containers != null) {
             for (PropertyContainer c : containers) {
-                results.add(mapPropertyContainer(c, ccProvider, expandItems, links));
+                results.add(new PropertyContainerDTO.Builder(
+                    c,
+                    ccProvider,
+                    type,
+                    showDetails,
+                    null,
+                    idProvider
+                ).build());
             }
         }
         return results;
@@ -593,34 +233,28 @@ public class DTOMapper {
      *
      * @param dtos the DTOs to map
      * @param ccProvider a PropertyContainerClass provider
-     * @param links a link provider
+     * @param idProvider a link provider
      *
      * @return a List of PropertyContainer objects
      */
-    static public List<PropertyContainer> mapPropertyContainerDTOList(List<PropertyContainerDTO> dtos, PropertyContainerClassProvider ccProvider, LinkProvider links) {
+    static public List<PropertyContainer> mapPropertyContainerDTOList(List<PropertyContainerDTO> dtos, PropertyContainerClassProvider ccProvider, IdProvider idProvider) {
         List<PropertyContainer> results = null;
         if (dtos != null) {
             results = new ArrayList<>();
             for (PropertyContainerDTO dto : dtos) {
-                results.add(mapPropertyContainerDTO(dto, ccProvider, links));
+                results.add(mapPropertyContainerDTO(dto, ccProvider, idProvider));
             }
         }
         return results;
     }
 
-    static public PropertyContainerSetDTO mapPropertyContainerSet(PropertyContainerSet pcs, boolean expandItems, PropertyContainerClassProvider ccProvider, LinkProvider links) {
-        return new PropertyContainerSetDTO.Builder(pcs.getId())
-            .containers(mapPropertyContainerList(pcs.getProperties(), expandItems, ccProvider, links))
-            .build();
-    }
-
-    static public PropertyContainerSet mapPropertyContainerSetDTO(PropertyContainerSetDTO dto, PropertyContainerClassProvider ccProvider, LinkProvider links) {
+    static public PropertyContainerSet mapPropertyContainerSetDTO(PropertyContainerSetDTO dto, PropertyContainerClassProvider ccProvider, IdProvider idProvider) {
         try {
             if (dto != null) {
                 PropertyContainerSet pcs = new PropertyContainerSet();
                 pcs.setId(dto.getId());
                 pcs.setName(dto.getName());
-                pcs.setProperties(mapPropertyContainerDTOList(dto.getContainers(), ccProvider, links));
+                pcs.setProperties(mapPropertyContainerDTOList(dto.getContainers(), ccProvider, idProvider));
                 return pcs;
             } else {
                 return null;
@@ -628,10 +262,6 @@ public class DTOMapper {
         } catch (Exception e) {
             throw new HobsonRuntimeException("Unable to map", e);
         }
-    }
-
-    static public TypedPropertyDTO mapTypedProperty(TypedProperty tp) {
-        return new TypedPropertyDTO.Builder(tp.getId()).name(tp.getName()).description(tp.getDescription()).type(tp.getType()).constraints(tp.getConstraints()).build();
     }
 
     static public TypedProperty mapTypedPropertyDTO(TypedPropertyDTO dto) {
@@ -643,7 +273,7 @@ public class DTOMapper {
         if (props != null) {
             results = new ArrayList<>();
             for (TypedProperty tp : props) {
-                results.add(mapTypedProperty(tp));
+                results.add(new TypedPropertyDTO.Builder(tp).build());
             }
         }
         return results;
@@ -658,23 +288,5 @@ public class DTOMapper {
             }
         }
         return results;
-    }
-
-    static public PersonDTO mapPerson(HobsonUser user, boolean expand, LinkProvider linkProvider) {
-        PersonDTO.Builder builder = new PersonDTO.Builder(linkProvider.createUserLink(user.getId()));
-        if (expand) {
-            builder.familyName(user.getFamilyName()).givenName(user.getGivenName());
-            if (user.isRemote()) {
-                builder.account(mapUserAccount(user.getId(), user.getAccount(), linkProvider));
-            }
-            builder.hubs(new ItemListDTO(linkProvider.createHubsLink(user.getId())));
-        }
-        return builder.build();
-    }
-
-    static public UserAccountDTO mapUserAccount(String userId, UserAccount account, LinkProvider linkProvider) {
-        UserAccountDTO.Builder builder = new UserAccountDTO.Builder(account.getExpiration(), account.hasAvailableHubs());
-        builder.link("addHub", linkProvider.createHubsLink(userId));
-        return builder.build();
     }
 }

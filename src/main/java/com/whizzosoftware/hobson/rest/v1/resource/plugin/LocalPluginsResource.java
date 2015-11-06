@@ -8,18 +8,15 @@
 package com.whizzosoftware.hobson.rest.v1.resource.plugin;
 
 import com.whizzosoftware.hobson.api.plugin.*;
-import com.whizzosoftware.hobson.api.property.PropertyContainer;
-import com.whizzosoftware.hobson.api.property.PropertyContainerClass;
-import com.whizzosoftware.hobson.api.property.PropertyContainerClassContext;
-import com.whizzosoftware.hobson.api.property.PropertyContainerClassProvider;
-import com.whizzosoftware.hobson.rest.ExpansionFields;
+import com.whizzosoftware.hobson.dto.DTOBuildContext;
+import com.whizzosoftware.hobson.dto.ExpansionFields;
+import com.whizzosoftware.hobson.dto.IdProvider;
 import com.whizzosoftware.hobson.dto.plugin.HobsonPluginDTO;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
-import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.PluginDescriptorAdaptor;
+import org.restlet.data.MediaType;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -35,7 +32,7 @@ public class LocalPluginsResource extends SelfInjectingServerResource {
     @Inject
     PluginManager pluginManager;
     @Inject
-    LinkProvider linkProvider;
+    IdProvider idProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/local Get local plugins
@@ -68,35 +65,17 @@ public class LocalPluginsResource extends SelfInjectingServerResource {
 
         authorizer.authorizeHub(ctx.getHubContext());
 
-        ItemListDTO results = new ItemListDTO(linkProvider.createLocalPluginsLink(ctx.getHubContext()));
+        ItemListDTO results = new ItemListDTO(idProvider.createLocalPluginsId(ctx.getHubContext()));
 
         boolean itemExpand = expansions.has("item");
         for (PluginDescriptor pd : pluginManager.getLocalPluginDescriptors(ctx.getHubContext())) {
             PluginContext pctx = PluginContext.create(ctx.getHubContext(), pd.getId());
-            final HobsonPlugin plugin;
-            final PropertyContainerClassProvider pccp;
-            final PropertyContainer pluginConfig;
-
-            if (pd.isConfigurable()) {
-                plugin = pluginManager.getLocalPlugin(pctx);
-                pluginConfig = pluginManager.getLocalPluginConfiguration(pctx);
-                pccp = new PropertyContainerClassProvider() {
-                    @Override
-                    public PropertyContainerClass getPropertyContainerClass(PropertyContainerClassContext ctx) {
-                        return plugin.getConfigurationClass();
-                    }
-                };
-            } else {
-                pccp = null;
-                plugin = null;
-                pluginConfig = null;
-            }
-
-            HobsonPluginDTO dto = DTOMapper.mapPlugin(new PluginDescriptorAdaptor(pd, plugin), pd.getDescription(), pluginConfig, pccp, itemExpand, expansions, false, linkProvider);
-
-            results.add(dto);
+            final HobsonPlugin plugin = pd.isConfigurable() ? pluginManager.getLocalPlugin(pctx) : null;
+            results.add(new HobsonPluginDTO.Builder(new DTOBuildContext.Builder().pluginManager(pluginManager).expansionFields(expansions).idProvider(idProvider).build(), new PluginDescriptorAdaptor(pd, plugin), pd.getDescription(), null, itemExpand).build());
         }
 
-        return new JsonRepresentation(results.toJSON());
+        JsonRepresentation jr = new JsonRepresentation(results.toJSON());
+        jr.setMediaType(new MediaType(results.getJSONMediaType()));
+        return jr;
     }
 }

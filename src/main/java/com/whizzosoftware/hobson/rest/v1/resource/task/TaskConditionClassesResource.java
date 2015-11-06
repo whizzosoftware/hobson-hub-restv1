@@ -10,13 +10,13 @@ package com.whizzosoftware.hobson.rest.v1.resource.task;
 import com.whizzosoftware.hobson.api.task.TaskManager;
 import com.whizzosoftware.hobson.api.task.condition.ConditionClassType;
 import com.whizzosoftware.hobson.api.task.condition.TaskConditionClass;
+import com.whizzosoftware.hobson.dto.ExpansionFields;
+import com.whizzosoftware.hobson.dto.IdProvider;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.dto.task.TaskConditionClassDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
-import com.whizzosoftware.hobson.rest.ExpansionFields;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
-import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -32,7 +32,7 @@ public class TaskConditionClassesResource extends SelfInjectingServerResource {
     @Inject
     TaskManager taskManager;
     @Inject
-    LinkProvider linkProvider;
+    IdProvider idProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/tasks/conditionClasses Get all condition classes
@@ -74,10 +74,10 @@ public class TaskConditionClassesResource extends SelfInjectingServerResource {
             type = ConditionClassType.valueOf(s);
         }
 
-        ItemListDTO results = new ItemListDTO(linkProvider.createTaskConditionClassesLink(ctx.getHubContext()));
+        ItemListDTO results = new ItemListDTO(idProvider.createTaskConditionClassesId(ctx.getHubContext()));
         for (TaskConditionClass conditionClass : taskManager.getAllConditionClasses(ctx.getHubContext(), type, applyConstraints)) {
             TaskConditionClassDTO.Builder builder = new TaskConditionClassDTO.Builder(
-                    linkProvider.createTaskConditionClassLink(conditionClass.getContext())
+                    idProvider.createTaskConditionClassId(conditionClass.getContext())
             );
             if (expandItems) {
                 builder.type(conditionClass.getConditionClassType().toString()).name(conditionClass.getName())

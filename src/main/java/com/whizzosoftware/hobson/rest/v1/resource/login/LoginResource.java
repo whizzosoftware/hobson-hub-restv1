@@ -1,15 +1,13 @@
 package com.whizzosoftware.hobson.rest.v1.resource.login;
 
-import com.whizzosoftware.hobson.rest.ExpansionFields;
 import com.whizzosoftware.hobson.api.HobsonAuthenticationException;
 import com.whizzosoftware.hobson.api.user.HobsonUser;
 import com.whizzosoftware.hobson.api.user.UserStore;
 import com.whizzosoftware.hobson.dto.AuthResultDTO;
-import com.whizzosoftware.hobson.dto.ItemListDTO;
-import com.whizzosoftware.hobson.dto.PersonDTO;
+import com.whizzosoftware.hobson.dto.ExpansionFields;
+import com.whizzosoftware.hobson.dto.HobsonUserDTO;
+import com.whizzosoftware.hobson.dto.IdProvider;
 import com.whizzosoftware.hobson.rest.TokenHelper;
-import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
-import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import org.json.JSONObject;
 import org.restlet.data.MediaType;
@@ -27,7 +25,7 @@ public class LoginResource extends SelfInjectingServerResource {
     @Inject
     TokenHelper tokenHelper;
     @Inject
-    LinkProvider linkProvider;
+    IdProvider idProvider;
 
     /**
      * @api {post} /api/v1/login Login user
@@ -64,7 +62,7 @@ public class LoginResource extends SelfInjectingServerResource {
 
             AuthResultDTO dto = new AuthResultDTO(
                 tokenHelper.createToken(user.getId()),
-                DTOMapper.mapPerson(user, expansion.has("user"), linkProvider)
+                new HobsonUserDTO.Builder(user, idProvider).build()
             );
 
             JsonRepresentation jr = new JsonRepresentation(dto.toJSON());

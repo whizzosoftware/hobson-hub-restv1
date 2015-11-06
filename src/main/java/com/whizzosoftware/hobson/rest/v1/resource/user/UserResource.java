@@ -11,11 +11,9 @@ import com.whizzosoftware.hobson.api.HobsonAuthorizationException;
 import com.whizzosoftware.hobson.api.HobsonRuntimeException;
 import com.whizzosoftware.hobson.api.user.HobsonUser;
 import com.whizzosoftware.hobson.api.user.UserStore;
-import com.whizzosoftware.hobson.dto.ItemListDTO;
-import com.whizzosoftware.hobson.dto.PersonDTO;
+import com.whizzosoftware.hobson.dto.HobsonUserDTO;
+import com.whizzosoftware.hobson.dto.IdProvider;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
-import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import org.restlet.data.MediaType;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -31,7 +29,7 @@ public class UserResource extends SelfInjectingServerResource {
     @Inject
     UserStore userStore;
     @Inject
-    LinkProvider linkProvider;
+    IdProvider idProvider;
 
     /**
      * @api {get} /api/v1/users/:userId Get user details
@@ -56,7 +54,9 @@ public class UserResource extends SelfInjectingServerResource {
         if (user != null) {
             if (user.getIdentifier().equals(ctx.getUserId())) {
                 HobsonUser hu = userStore.getUser(user.getIdentifier());
-                PersonDTO dto = DTOMapper.mapPerson(hu, true, linkProvider);
+
+                HobsonUserDTO dto = new HobsonUserDTO.Builder(hu, idProvider).build();
+
                 JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
                 jr.setMediaType(new MediaType(dto.getMediaType() + "+json"));
                 return jr;

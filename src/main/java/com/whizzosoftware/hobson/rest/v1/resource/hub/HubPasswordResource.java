@@ -57,7 +57,9 @@ public class HubPasswordResource extends SelfInjectingServerResource {
     @Override
     protected Representation post(Representation entity) throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+
         authorizer.authorizeHub(ctx.getHubContext());
+
         if (hubManager.getLocalManager() != null) {
             PasswordChangeDTO dto = new PasswordChangeDTO(JSONHelper.createJSONFromRepresentation(entity));
             hubManager.getLocalManager().setLocalPassword(ctx.getHubContext(), DTOMapper.mapPasswordChangeDTO(dto));

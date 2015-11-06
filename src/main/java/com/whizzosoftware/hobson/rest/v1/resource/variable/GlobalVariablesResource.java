@@ -7,14 +7,14 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.variable;
 
-import com.whizzosoftware.hobson.rest.ExpansionFields;
 import com.whizzosoftware.hobson.api.variable.HobsonVariable;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
-import com.whizzosoftware.hobson.dto.variable.HobsonVariableDTO;
+import com.whizzosoftware.hobson.dto.ExpansionFields;
+import com.whizzosoftware.hobson.dto.IdProvider;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
+import com.whizzosoftware.hobson.dto.variable.HobsonVariableDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -29,7 +29,7 @@ public class GlobalVariablesResource extends SelfInjectingServerResource {
     @Inject
     VariableManager variableManager;
     @Inject
-    LinkProvider linkProvider;
+    IdProvider idProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/globalVariables Get all global variables
@@ -60,9 +60,9 @@ public class GlobalVariablesResource extends SelfInjectingServerResource {
 
         authorizer.authorizeHub(ctx.getHubContext());
 
-        ItemListDTO results = new ItemListDTO(linkProvider.createGlobalVariablesLink(ctx.getHubContext()));
+        ItemListDTO results = new ItemListDTO(idProvider.createGlobalVariablesId(ctx.getHubContext()));
         for (HobsonVariable v : variableManager.getGlobalVariables(ctx.getHubContext())) {
-            HobsonVariableDTO.Builder builder = new HobsonVariableDTO.Builder(linkProvider.createGlobalVariableLink(ctx.getHubContext(), v.getName()));
+            HobsonVariableDTO.Builder builder = new HobsonVariableDTO.Builder(idProvider.createGlobalVariableId(ctx.getHubContext(), v.getName()));
             if (expansions.has("item")) {
                 builder.name(v.getName())
                     .mask(v.getMask())

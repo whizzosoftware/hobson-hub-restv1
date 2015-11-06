@@ -9,11 +9,11 @@ package com.whizzosoftware.hobson.rest.v1.resource.activity;
 
 import com.whizzosoftware.hobson.api.activity.ActivityLogEntry;
 import com.whizzosoftware.hobson.api.activity.ActivityLogManager;
+import com.whizzosoftware.hobson.dto.IdProvider;
 import com.whizzosoftware.hobson.dto.activity.ActivityEventDTO;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -34,7 +34,7 @@ public class ActivityLogResource extends SelfInjectingServerResource {
     @Inject
     ActivityLogManager activityManager;
     @Inject
-    LinkProvider linkProvider;
+    IdProvider idProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/activityLog Get activity log
@@ -63,7 +63,7 @@ public class ActivityLogResource extends SelfInjectingServerResource {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
         authorizer.authorizeHub(ctx.getHubContext());
 
-        ItemListDTO results = new ItemListDTO(linkProvider.createActivityLogLink(ctx.getHubContext()));
+        ItemListDTO results = new ItemListDTO(idProvider.createActivityLogId(ctx.getHubContext()));
         for (ActivityLogEntry event : activityManager.getActivityLog(25)) {
             results.add(new ActivityEventDTO(event.getName(), event.getTimestamp()));
         }

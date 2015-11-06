@@ -9,16 +9,14 @@ package com.whizzosoftware.hobson.rest.v1.resource.device;
 
 import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.device.DeviceManager;
-import com.whizzosoftware.hobson.api.property.PropertyContainer;
-import com.whizzosoftware.hobson.api.property.PropertyContainerClass;
-import com.whizzosoftware.hobson.api.property.PropertyContainerClassContext;
-import com.whizzosoftware.hobson.api.property.PropertyContainerClassProvider;
+import com.whizzosoftware.hobson.api.property.*;
+import com.whizzosoftware.hobson.dto.ExpansionFields;
+import com.whizzosoftware.hobson.dto.IdProvider;
 import com.whizzosoftware.hobson.dto.property.PropertyContainerDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
-import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
+import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -40,7 +38,7 @@ public class DeviceConfigurationResource extends SelfInjectingServerResource {
     @Inject
     DeviceManager deviceManager;
     @Inject
-    LinkProvider linkProvider;
+    IdProvider idProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/devices/:deviceId/configuration Get device configuration
@@ -64,21 +62,30 @@ public class DeviceConfigurationResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
 
         authorizer.authorizeHub(ctx.getHubContext());
 
         final DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
         PropertyContainer config = deviceManager.getDeviceConfiguration(dctx);
 
-        PropertyContainerClassProvider pccp = new PropertyContainerClassProvider() {
-            @Override
-            public PropertyContainerClass getPropertyContainerClass(PropertyContainerClassContext ctx) {
-                return deviceManager.getDeviceConfigurationClass(dctx);
-            }
-        };
+        PropertyContainerDTO dto = new PropertyContainerDTO.Builder(
+                config,
+                new PropertyContainerClassProvider() {
+                    @Override
+                    public PropertyContainerClass getPropertyContainerClass(PropertyContainerClassContext ctx) {
+                        return deviceManager.getDeviceConfigurationClass(dctx);
+                    }
+                },
+                PropertyContainerClassType.DEVICE_CONFIG,
+                true,
+                expansions,
+                idProvider
+        ).build();
 
-        PropertyContainerDTO dto = DTOMapper.mapPropertyContainer(config, pccp, false, linkProvider);
-        return new JsonRepresentation(dto.toJSON());
+        JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
+        jr.setMediaType(new MediaType(dto.getJSONMediaType()));
+        return jr;
     }
 
     /**
@@ -89,10 +96,6 @@ public class DeviceConfigurationResource extends SelfInjectingServerResource {
      * @apiGroup Devices
      * @apiParamExample {json} Example Request:
      * {
-     *   "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-radiora/device1/configuration",
-     *   "cclass": {
-     *     "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-radiora/device1/configurationClass"
-     *   },
      *   "values": {
      *     "name": "My New Device Name",
      *   }
@@ -107,7 +110,7 @@ public class DeviceConfigurationResource extends SelfInjectingServerResource {
         authorizer.authorizeHub(ctx.getHubContext());
 
         DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
-        PropertyContainerDTO dto = new PropertyContainerDTO(JSONHelper.createJSONFromRepresentation(entity));
+        PropertyContainerDTO dto = new PropertyContainerDTO.Builder(JSONHelper.createJSONFromRepresentation(entity)).build();
 
         deviceManager.setDeviceConfigurationProperties(dctx, dto.getValues(), true);
 

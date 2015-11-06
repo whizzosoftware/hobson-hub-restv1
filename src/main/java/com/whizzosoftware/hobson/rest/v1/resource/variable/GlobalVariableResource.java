@@ -9,10 +9,10 @@ package com.whizzosoftware.hobson.rest.v1.resource.variable;
 
 import com.whizzosoftware.hobson.api.variable.HobsonVariable;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
+import com.whizzosoftware.hobson.dto.IdProvider;
 import com.whizzosoftware.hobson.dto.variable.HobsonVariableDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -27,7 +27,7 @@ public class GlobalVariableResource extends SelfInjectingServerResource {
     @Inject
     VariableManager variableManager;
     @Inject
-    LinkProvider linkProvider;
+    IdProvider idProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/globalVariables/:name Get global variable
@@ -52,7 +52,7 @@ public class GlobalVariableResource extends SelfInjectingServerResource {
         String varName = getAttribute("name");
         HobsonVariable v = variableManager.getGlobalVariable(ctx.getHubContext(), varName);
         return new JsonRepresentation(
-            new HobsonVariableDTO.Builder(linkProvider.createGlobalVariableLink(ctx.getHubContext(), varName))
+            new HobsonVariableDTO.Builder(idProvider.createGlobalVariableId(ctx.getHubContext(), varName))
                 .name(v.getName())
                 .mask(v.getMask())
                 .lastUpdate(v.getLastUpdate())

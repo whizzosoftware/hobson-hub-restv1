@@ -7,23 +7,17 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.device;
 
-import com.whizzosoftware.hobson.rest.ExpansionFields;
+import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.api.device.HobsonDevice;
-import com.whizzosoftware.hobson.api.property.PropertyContainer;
-import com.whizzosoftware.hobson.api.property.PropertyContainerClass;
-import com.whizzosoftware.hobson.api.variable.HobsonVariable;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
 import com.whizzosoftware.hobson.dto.*;
 import com.whizzosoftware.hobson.dto.device.HobsonDeviceDTO;
-import com.whizzosoftware.hobson.dto.property.PropertyContainerClassDTO;
-import com.whizzosoftware.hobson.dto.property.PropertyContainerDTO;
-import com.whizzosoftware.hobson.dto.variable.HobsonVariableDTO;
+import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
-import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.MediaVariableProxyProvider;
+import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.data.Tag;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -53,7 +47,7 @@ public class DevicesResource extends SelfInjectingServerResource {
     @Inject
     VariableManager variableManager;
     @Inject
-    LinkProvider linkProvider;
+    IdProvider idProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/devices Get all devices
@@ -65,19 +59,19 @@ public class DevicesResource extends SelfInjectingServerResource {
      * @apiParam (Query Parameters) {String} expand A comma-separated list of attributes to expand (supported values are "item", "configurationClass", "configuration", "preferredVariable", "variables").
      * @apiSuccessExample {json} Success Response:
      * {
-     *   "numberOfItems": 2,
-     *   "itemListElement": [
-     *     {
-     *       "item": {
-     *         "@id": "/api/plugins/v1/users/local/hubs/local/com.whizzosoftware.hobson.hub.hobson-hub-foscam/devices/camera1",
-     *       }
-     *     },
-     *     {
-     *       "item": {
-     *         "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-radiora/devices/device1",
-     *       }
-     *     }
-     *   ]
+     * "numberOfItems": 2,
+     * "itemListElement": [
+     * {
+     * "item": {
+     * "@id": "/api/plugins/v1/users/local/hubs/local/com.whizzosoftware.hobson.hub.hobson-hub-foscam/devices/camera1",
+     * }
+     * },
+     * {
+     * "item": {
+     * "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-radiora/devices/device1",
+     * }
+     * }
+     * ]
      * }
      */
     @Override
@@ -88,76 +82,36 @@ public class DevicesResource extends SelfInjectingServerResource {
 
         authorizer.authorizeHub(ctx.getHubContext());
 
-        ItemListDTO results = new ItemListDTO(linkProvider.createDevicesLink(ctx.getHubContext()));
+        ItemListDTO results = new ItemListDTO(idProvider.createDevicesId(ctx.getHubContext()));
 
         Collection<HobsonDevice> devices = deviceManager.getAllDevices(ctx.getHubContext());
         TreeMap<String, Long> etagMap = new TreeMap<>();
 
         if (devices != null) {
             // TODO: refactor so the JSON isn't built if the ETag matches
+            boolean itemExpand = expansions.has(JSONAttributes.ITEM);
+            DTOBuildContext dbc = new DTOBuildContext.Builder().
+                deviceManager(deviceManager).
+                variableManager(variableManager).
+                expansionFields(expansions).
+                idProvider(idProvider).
+                addProxyValueProvider(new MediaVariableProxyProvider(ctx)).
+                build();
 
-            boolean itemExpand = expansions.has("item");
+            expansions.pushContext(JSONAttributes.ITEM);
+
             for (HobsonDevice device : devices) {
                 if (varFilter == null || variableManager.hasDeviceVariable(device.getContext(), varFilter)) {
-                    HobsonDeviceDTO.Builder builder = new HobsonDeviceDTO.Builder(linkProvider.createDeviceLink(device.getContext()));
-                    long lastVariableUpdate = 0;
-                    if (itemExpand) {
-                        builder.name(device.getName());
-                        builder.type(device.getType());
-                        builder.available(device.isAvailable());
-                        builder.checkInTime(device.getLastCheckIn());
-
-                        // set configurationClass attribute
-                        PropertyContainerClassDTO.Builder pccdtob = new PropertyContainerClassDTO.Builder(linkProvider.createDeviceConfigurationClassLink(device.getContext()));
-                        if (expansions.has("configurationClass")) {
-                            PropertyContainerClass pccc = device.getConfigurationClass();
-                            pccdtob.supportedProperties(DTOMapper.mapTypedPropertyList(pccc.getSupportedProperties()));
-                        }
-                        builder.configurationClass(pccdtob.build());
-
-                        // set configuration attribute
-                        PropertyContainerDTO.Builder pcdtob = new PropertyContainerDTO.Builder(linkProvider.createDeviceConfigurationLink(device.getContext()));
-                        if (expansions.has("configuration")) {
-                            PropertyContainer config = deviceManager.getDeviceConfiguration(device.getContext());
-                            pcdtob.values(config.getPropertyValues());
-                        }
-                        builder.configuration(pcdtob.build());
-
-                        // set preferredVariable attribute
-                        if (device.hasPreferredVariableName()) {
-                            HobsonVariableDTO.Builder vbuilder = new HobsonVariableDTO.Builder(linkProvider.createDeviceVariableLink(device.getContext(), device.getPreferredVariableName()));
-                            if (expansions.has("preferredVariable")) {
-                                HobsonVariable pv = variableManager.getDeviceVariable(device.getContext(), device.getPreferredVariableName(), new MediaVariableProxyProvider(ctx));
-                                vbuilder.name(pv.getName()).mask(pv.getMask()).lastUpdate(pv.getLastUpdate()).value(pv.getValue());
-                                if (pv.getLastUpdate() > lastVariableUpdate) {
-                                    lastVariableUpdate = pv.getLastUpdate();
-                                }
-                            }
-                            builder.preferredVariable(vbuilder.build());
-                        }
-
-                        // set variables attribute
-                        ItemListDTO vdto = new ItemListDTO(linkProvider.createDeviceVariablesLink(device.getContext()));
-                        if (expansions.has("variables")) {
-                            for (HobsonVariable v : variableManager.getDeviceVariables(device.getContext(), new MediaVariableProxyProvider(ctx)).getCollection()) {
-                                vdto.add(new HobsonVariableDTO.Builder(linkProvider.createDeviceVariableLink(device.getContext(), v.getName()))
-                                                .name(v.getName())
-                                                .mask(v.getMask())
-                                                .value(v.getValue())
-                                                .build()
-                                );
-                                if (v.getLastUpdate() > lastVariableUpdate) {
-                                    lastVariableUpdate = v.getLastUpdate();
-                                }
-                            }
-                        }
-                        builder.variables(vdto);
-
-                    }
-                    results.add(builder.build());
-                    etagMap.put(device.getContext().toString(), device.isAvailable() ? lastVariableUpdate : -1);
+                    HobsonDeviceDTO dto = new HobsonDeviceDTO.Builder(
+                        dbc,
+                        device,
+                        itemExpand
+                    ).build();
+                    results.add(dto);
                 }
             }
+
+            expansions.popContext();
         }
 
         // the ETag is a CRC calculated from all devices' contexts and last variable updates
@@ -179,6 +133,7 @@ public class DevicesResource extends SelfInjectingServerResource {
         }
 
         r.setTag(etag);
+        r.setMediaType(new MediaType(results.getJSONMediaType()));
         return r;
     }
 }

@@ -10,9 +10,11 @@ package com.whizzosoftware.hobson.rest.v1.resource.image;
 import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
 import com.whizzosoftware.hobson.api.image.ImageGroup;
 import com.whizzosoftware.hobson.api.image.ImageManager;
+import com.whizzosoftware.hobson.dto.IdProvider;
+import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
+import com.whizzosoftware.hobson.rest.v1.util.MapUtil;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -20,6 +22,7 @@ import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
+import org.restlet.routing.Template;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -32,7 +35,7 @@ public class ImageLibraryRootResource extends SelfInjectingServerResource {
     @Inject
     ImageManager imageManager;
     @Inject
-    LinkProvider linkProvider;
+    IdProvider idProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/imageLibrary Get library groups
@@ -63,7 +66,7 @@ public class ImageLibraryRootResource extends SelfInjectingServerResource {
         JSONArray results = new JSONArray();
         List<ImageGroup> groups = imageManager.getImageLibraryGroups(ctx.getHubContext());
         for (ImageGroup group : groups) {
-            results.put(linkProvider.addImageLibraryGroupLinks(
+            results.put(addImageLibraryGroupLinks(
                     ctx,
                     createImageLibraryGroupJSON(group),
                     group.getId()
@@ -81,4 +84,12 @@ public class ImageLibraryRootResource extends SelfInjectingServerResource {
             throw new HobsonInvalidRequestException(e.getMessage());
         }
     }
+
+    private JSONObject addImageLibraryGroupLinks(HobsonRestContext ctx, JSONObject json, String groupId) {
+        JSONObject groupLinks = new JSONObject();
+        groupLinks.put("self", ctx.getApiRoot() + new Template(ImageLibraryGroupResource.PATH).format(MapUtil.createSingleEntryMap(ctx, "groupId", groupId)));
+        json.put(JSONAttributes.LINKS, groupLinks);
+        return json;
+    }
+
 }

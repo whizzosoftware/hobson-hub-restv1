@@ -11,11 +11,15 @@ import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.api.device.HobsonDevice;
 import com.whizzosoftware.hobson.api.plugin.PluginContext;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
+import com.whizzosoftware.hobson.dto.DTOBuildContext;
+import com.whizzosoftware.hobson.dto.ExpansionFields;
+import com.whizzosoftware.hobson.dto.IdProvider;
 import com.whizzosoftware.hobson.dto.device.HobsonDeviceDTO;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
+import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
+import org.restlet.data.MediaType;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -37,7 +41,7 @@ public class PluginDevicesResource extends SelfInjectingServerResource {
     @Inject
     VariableManager variableManager;
     @Inject
-    LinkProvider linkProvider;
+    IdProvider idProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/devices Get all plugin devices
@@ -64,16 +68,35 @@ public class PluginDevicesResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
+        boolean showDetails = expansions.has(JSONAttributes.ITEM);
 
         authorizer.authorizeHub(ctx.getHubContext());
 
-        ItemListDTO results = new ItemListDTO(linkProvider.createPluginDevicesLink(ctx.getHubContext(), getAttribute("pluginId")));
+        PluginContext pctx = PluginContext.create(ctx.getHubContext(), getAttribute("pluginId"));
+        ItemListDTO results = new ItemListDTO(idProvider.createPluginDevicesId(pctx));
+
+        expansions.pushContext(JSONAttributes.ITEM);
+
         for (HobsonDevice device : deviceManager.getAllDevices(PluginContext.create(ctx.getHubContext(), getAttribute("pluginId")))) {
             results.add(
-                new HobsonDeviceDTO.Builder(linkProvider.createDeviceLink(device.getContext())).build()
+                new HobsonDeviceDTO.Builder(
+                    new DTOBuildContext.Builder().
+                        deviceManager(deviceManager).
+                        variableManager(variableManager).
+                        idProvider(idProvider).
+                        expansionFields(expansions).
+                        build(),
+                    device,
+                    showDetails
+                ).build()
             );
         }
 
-        return new JsonRepresentation(results.toJSON());
+        expansions.popContext();
+
+        JsonRepresentation jr = new JsonRepresentation(results.toJSON());
+        jr.setMediaType(new MediaType(results.getJSONMediaType()));
+        return jr;
     }
 }

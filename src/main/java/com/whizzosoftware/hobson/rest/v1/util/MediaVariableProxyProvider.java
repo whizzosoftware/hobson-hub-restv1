@@ -9,6 +9,7 @@ package com.whizzosoftware.hobson.rest.v1.util;
 
 import com.whizzosoftware.hobson.api.variable.HobsonVariable;
 import com.whizzosoftware.hobson.api.variable.VariableConstants;
+import com.whizzosoftware.hobson.api.variable.VariableProxyType;
 import com.whizzosoftware.hobson.api.variable.VariableProxyValueProvider;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.resource.device.MediaProxyResource;
@@ -28,6 +29,11 @@ public class MediaVariableProxyProvider implements VariableProxyValueProvider {
 
     public MediaVariableProxyProvider(HobsonRestContext context) {
         this.context = context;
+    }
+
+    @Override
+    public VariableProxyType getProxyType() {
+        return VariableProxyType.MEDIA;
     }
 
     public Object getProxyValue(HobsonVariable v) {

@@ -7,19 +7,23 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.hub;
 
+import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.api.hub.HobsonHub;
 import com.whizzosoftware.hobson.api.hub.HubContext;
 import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
 import com.whizzosoftware.hobson.api.presence.PresenceManager;
 import com.whizzosoftware.hobson.api.task.TaskManager;
-import com.whizzosoftware.hobson.dto.hub.HobsonHubDTO;
+import com.whizzosoftware.hobson.api.variable.VariableManager;
+import com.whizzosoftware.hobson.dto.DTOBuildContext;
+import com.whizzosoftware.hobson.dto.IdProvider;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
-import com.whizzosoftware.hobson.rest.ExpansionFields;
+import com.whizzosoftware.hobson.dto.ExpansionFields;
+import com.whizzosoftware.hobson.dto.hub.HobsonHubDTO;
+import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
-import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
+import com.whizzosoftware.hobson.rest.v1.util.MediaVariableProxyProvider;
 import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -38,11 +42,15 @@ public class HubsResource extends SelfInjectingServerResource {
     @Inject
     PluginManager pluginManager;
     @Inject
+    DeviceManager deviceManager;
+    @Inject
+    VariableManager variableManager;
+    @Inject
     TaskManager taskManager;
     @Inject
     PresenceManager presenceManager;
     @Inject
-    LinkProvider linkProvider;
+    IdProvider idProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs Get Hubs
@@ -68,33 +76,39 @@ public class HubsResource extends SelfInjectingServerResource {
     protected Representation get() throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
         ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
-        boolean expandItems = expansions.has("item");
 
-        ItemListDTO itemList = new ItemListDTO(linkProvider.createHubsLink(ctx.getUserId()));
+        ItemListDTO itemList = new ItemListDTO(idProvider.createHubsId(ctx.getUserId()));
         Collection<HobsonHub> hubs = hubManager.getHubs(ctx.getUserId());
 
         if (hubs != null) {
+            boolean showDetails = expansions.has(JSONAttributes.ITEM);
+            DTOBuildContext dbc = new DTOBuildContext.Builder().
+                hubManager(hubManager).
+                pluginManager(pluginManager).
+                deviceManager(deviceManager).
+                variableManager(variableManager).
+                taskManager(taskManager).
+                presenceManager(presenceManager).
+                expansionFields(expansions).
+                idProvider(idProvider).
+                addProxyValueProvider(new MediaVariableProxyProvider(ctx)).
+                build();
+
+            expansions.pushContext(JSONAttributes.ITEM);
+
             for (HobsonHub hub : hubs) {
-                if (expandItems) {
-                    itemList.add(
-                        DTOMapper.mapHub(
-                            hub,
-                            expansions,
-                            linkProvider,
-                            hubManager,
-                            pluginManager,
-                            taskManager,
-                            presenceManager
-                        )
-                    );
-                } else {
-                    itemList.add(new HobsonHubDTO.Builder(linkProvider.createHubLink(hub.getContext())).build());
-                }
+                itemList.add(new HobsonHubDTO.Builder(
+                    dbc,
+                    hub,
+                    showDetails
+                ).build());
             }
+
+            expansions.popContext();
         }
 
         JsonRepresentation jr = new JsonRepresentation(itemList.toJSON());
-        jr.setMediaType(new MediaType(itemList.getMediaType() + "+json"));
+        jr.setMediaType(new MediaType(itemList.getJSONMediaType()));
         return jr;
     }
 
@@ -130,18 +144,22 @@ public class HubsResource extends SelfInjectingServerResource {
         HobsonHub hub = hubManager.addHub(ctx.getHubContext().getUserId(), dto.getName());
         String hubId = hub.getContext().getHubId();
         getResponse().setStatus(Status.SUCCESS_CREATED);
-        String hubLink = linkProvider.createHubLink(HubContext.create(ctx.getUserId(), hubId));
+        String hubLink = idProvider.createHubId(HubContext.create(ctx.getUserId(), hubId));
         getResponse().setLocationRef(hubLink);
         return new JsonRepresentation(
-            DTOMapper.mapHub(
+            new HobsonHubDTO.Builder(
+                new DTOBuildContext.Builder().
+                    hubManager(hubManager).
+                    pluginManager(pluginManager).
+                    deviceManager(deviceManager).
+                    variableManager(variableManager).
+                    taskManager(taskManager).
+                    presenceManager(presenceManager).
+                    idProvider(idProvider).
+                    build(),
                 hub,
-                null,
-                linkProvider,
-                hubManager,
-                pluginManager,
-                taskManager,
-                presenceManager
-            ).toJSON()
+                false
+            ).build().toJSON()
         );
     }
 }

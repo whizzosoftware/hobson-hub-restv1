@@ -12,11 +12,12 @@ import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.api.telemetry.TelemetryInterval;
 import com.whizzosoftware.hobson.api.telemetry.TelemetryManager;
 import com.whizzosoftware.hobson.api.telemetry.TemporalValue;
+import com.whizzosoftware.hobson.dto.IdProvider;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.dto.telemetry.TemporalValueDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
+import org.restlet.data.MediaType;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -34,7 +35,7 @@ public class DeviceTelemetryDatasetResource extends SelfInjectingServerResource 
     @Inject
     TelemetryManager telemetryManager;
     @Inject
-    LinkProvider linkProvider;
+    IdProvider idProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/devices/:deviceId/telemetry/dataset/:datasetId Get device telemetry dataset
@@ -78,12 +79,14 @@ public class DeviceTelemetryDatasetResource extends SelfInjectingServerResource 
         long endTime = System.currentTimeMillis() / 1000; // TODO: should be pulled from request
         TelemetryInterval interval = TelemetryInterval.HOURS_24; // TODO: should be pulled from request
 
-        ItemListDTO results = new ItemListDTO(linkProvider.createDeviceTelemetryDatasetLink(dctx, datasetId));
+        ItemListDTO results = new ItemListDTO(idProvider.createDeviceTelemetryDatasetId(dctx, datasetId));
         Collection<TemporalValue> values = telemetryManager.getDeviceVariableTelemetry(dctx, datasetId, endTime, interval);
         for (TemporalValue tv : values) {
             results.add(new TemporalValueDTO(tv.getTime(), tv.getValue()));
         }
 
-        return new JsonRepresentation(results.toJSON());
+        JsonRepresentation jr = new JsonRepresentation(results.toJSON());
+        jr.setMediaType(new MediaType(results.getJSONMediaType()));
+        return jr;
     }
 }

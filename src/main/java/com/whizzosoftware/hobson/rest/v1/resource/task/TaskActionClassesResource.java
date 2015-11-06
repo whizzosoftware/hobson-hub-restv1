@@ -9,13 +9,13 @@ package com.whizzosoftware.hobson.rest.v1.resource.task;
 
 import com.whizzosoftware.hobson.api.property.PropertyContainerClass;
 import com.whizzosoftware.hobson.api.task.TaskManager;
+import com.whizzosoftware.hobson.dto.ExpansionFields;
+import com.whizzosoftware.hobson.dto.IdProvider;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.dto.property.PropertyContainerClassDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
-import com.whizzosoftware.hobson.rest.ExpansionFields;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
-import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -31,7 +31,7 @@ public class TaskActionClassesResource extends SelfInjectingServerResource {
     @Inject
     TaskManager taskManager;
     @Inject
-    LinkProvider linkProvider;
+    IdProvider idProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/actionClasses Get all action classes
@@ -68,10 +68,10 @@ public class TaskActionClassesResource extends SelfInjectingServerResource {
         boolean expandItems = expansions.has("item");
         boolean applyConstraints = Boolean.parseBoolean(getQueryValue("constraints"));
 
-        ItemListDTO results = new ItemListDTO(linkProvider.createTaskActionClassesLink(ctx.getHubContext()));
+        ItemListDTO results = new ItemListDTO(idProvider.createTaskActionClassesId(ctx.getHubContext()));
         for (PropertyContainerClass actionClass : taskManager.getAllActionClasses(ctx.getHubContext(), applyConstraints)) {
             PropertyContainerClassDTO.Builder builder = new PropertyContainerClassDTO.Builder(
-                linkProvider.createTaskActionClassLink(actionClass.getContext())
+                idProvider.createTaskActionClassId(actionClass.getContext())
             );
             if (expandItems) {
                 builder.name(actionClass.getName())

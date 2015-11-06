@@ -9,12 +9,15 @@ package com.whizzosoftware.hobson.rest.v1.resource.hub;
 
 import com.whizzosoftware.hobson.api.HobsonRuntimeException;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
+import com.whizzosoftware.hobson.dto.ExpansionFields;
+import com.whizzosoftware.hobson.dto.IdProvider;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.dto.hub.RepositoryDTO;
+import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
-import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
+import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -33,7 +36,7 @@ public class HubRemoteRepositoriesResource extends SelfInjectingServerResource {
     @Inject
     PluginManager pluginManager;
     @Inject
-    LinkProvider linkProvider;
+    IdProvider idProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/repositories Get remote repositories
@@ -41,7 +44,7 @@ public class HubRemoteRepositoriesResource extends SelfInjectingServerResource {
      * @apiName GetRemoteRepositories
      * @apiDescription Retrieves a URI list of remote repositories.
      * @apiGroup Hub
-     * @apiParamExample {json} Example Request:
+     * @apiSuccessExample {json} Success Response:
      * {
      *   "numberOfItems": "1",
      *   "itemListElement": [
@@ -52,22 +55,29 @@ public class HubRemoteRepositoriesResource extends SelfInjectingServerResource {
      *     }
      *   ]
      * }
-     * @apiSuccessExample {json} Success Response:
-     * HTTP/1.1 202 Accepted
      */
     @Override
     protected Representation get() throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
+
         authorizer.authorizeHub(ctx.getHubContext());
+
         if (pluginManager != null) {
-            ItemListDTO results = new ItemListDTO(linkProvider.createRepositoriesLink(ctx.getHubContext()));
+            boolean showDetails = expansions.has(JSONAttributes.ITEM);
+
+            ItemListDTO results = new ItemListDTO(idProvider.createRepositoriesId(ctx.getHubContext()));
+
             Collection<String> repositories = pluginManager.getRemoteRepositories();
             if (repositories != null) {
                 for (String uri : repositories) {
-                    results.add(new RepositoryDTO(linkProvider.createRepositoryLink(ctx.getHubContext(), uri), uri));
+                    results.add(new RepositoryDTO(idProvider.createRepositoryId(ctx.getHubContext(), uri), showDetails ? uri : null));
                 }
             }
-            return new JsonRepresentation(results.toJSON());
+
+            JsonRepresentation jr = new JsonRepresentation(results.toJSON());
+            jr.setMediaType(new MediaType(results.getJSONMediaType()));
+            return jr;
         } else {
             throw new HobsonRuntimeException("No plugin manager found");
         }

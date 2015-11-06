@@ -65,7 +65,7 @@ public class HubSendTestEmailResource extends SelfInjectingServerResource {
         try {
             HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
             authorizer.authorizeHub(ctx.getHubContext());
-            PropertyContainerDTO dto = new PropertyContainerDTO(JSONHelper.createJSONFromRepresentation(entity));
+            PropertyContainerDTO dto = new PropertyContainerDTO.Builder(JSONHelper.createJSONFromRepresentation(entity)).build();
 
             hubManager.sendTestEmail(
                 ctx.getHubContext(),

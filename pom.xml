@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
 	<groupId>com.whizzosoftware.hobson.hub</groupId>
     <artifactId>hobson-hub-restv1</artifactId>
-    <version>0.6.1-SNAPSHOT</version>
+    <version>0.7.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <name>REST API v1 Plugin</name>
     <description>Provides a RESTful API that can be used to manage the Hobson Hub</description>
@@ -65,13 +65,13 @@
         <dependency>
             <groupId>com.whizzosoftware.hobson.hub</groupId>
             <artifactId>hobson-hub-api</artifactId>
-            <version>0.6.1-SNAPSHOT</version>
+            <version>0.7.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.whizzosoftware.hobson.hub</groupId>
             <artifactId>hobson-hub-dto</artifactId>
-            <version>0.6.1-SNAPSHOT</version>
+            <version>0.7.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

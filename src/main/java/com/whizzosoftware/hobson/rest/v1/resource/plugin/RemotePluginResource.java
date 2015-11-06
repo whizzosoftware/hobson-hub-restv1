@@ -10,13 +10,14 @@ package com.whizzosoftware.hobson.rest.v1.resource.plugin;
 import com.whizzosoftware.hobson.api.plugin.PluginContext;
 import com.whizzosoftware.hobson.api.plugin.PluginDescriptor;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
+import com.whizzosoftware.hobson.dto.DTOBuildContext;
+import com.whizzosoftware.hobson.dto.ExpansionFields;
+import com.whizzosoftware.hobson.dto.IdProvider;
 import com.whizzosoftware.hobson.dto.plugin.HobsonPluginDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
-import com.whizzosoftware.hobson.rest.ExpansionFields;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
-import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.PluginDescriptorAdaptor;
+import org.restlet.data.MediaType;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -32,7 +33,7 @@ public class RemotePluginResource extends SelfInjectingServerResource {
     @Inject
     PluginManager pluginManager;
     @Inject
-    LinkProvider linkProvider;
+    IdProvider idProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/remote/:pluginId/:pluginVersion Get remote plugin details
@@ -62,8 +63,10 @@ public class RemotePluginResource extends SelfInjectingServerResource {
         PluginContext pctx = PluginContext.create(ctx.getHubContext(), getQueryValue("pluginId"));
         PluginDescriptor pd = pluginManager.getRemotePluginDescriptor(pctx, version);
 
-        HobsonPluginDTO dto = DTOMapper.mapPlugin(new PluginDescriptorAdaptor(pd, null), pd.getDescription(), null, null, true, expansions, true, linkProvider);
+        HobsonPluginDTO dto = new HobsonPluginDTO.Builder(new DTOBuildContext.Builder().pluginManager(pluginManager).expansionFields(expansions).idProvider(idProvider).build(), new PluginDescriptorAdaptor(pd, null), pd.getDescription(), pd.getVersionString(), true).build();
 
-        return new JsonRepresentation(dto.toJSON());
+        JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
+        jr.setMediaType(new MediaType(dto.getJSONMediaType()));
+        return jr;
     }
 }

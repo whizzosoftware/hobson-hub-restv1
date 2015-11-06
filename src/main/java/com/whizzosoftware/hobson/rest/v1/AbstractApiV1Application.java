@@ -10,7 +10,6 @@ package com.whizzosoftware.hobson.rest.v1;
 import com.whizzosoftware.hobson.rest.BearerTokenVerifier;
 import com.whizzosoftware.hobson.rest.HobsonApiApplication;
 import com.whizzosoftware.hobson.rest.HobsonStatusService;
-import com.whizzosoftware.hobson.rest.v1.resource.dashboard.DashboardResource;
 import com.whizzosoftware.hobson.rest.v1.resource.hub.HubLogResource;
 import com.whizzosoftware.hobson.rest.v1.resource.hub.ShutdownResource;
 import com.whizzosoftware.hobson.rest.v1.resource.login.LoginResource;
@@ -30,7 +29,6 @@ import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceEntitiesResou
 import com.whizzosoftware.hobson.rest.v1.resource.user.UserResource;
 import com.whizzosoftware.hobson.rest.v1.resource.variable.GlobalVariableResource;
 import com.whizzosoftware.hobson.rest.v1.resource.variable.GlobalVariablesResource;
-import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.Restlet;
@@ -50,6 +48,8 @@ import java.util.ArrayList;
  * @author Dan Noguerol
  */
 abstract public class AbstractApiV1Application extends ResourceInjectingApplication implements HobsonApiApplication {
+    public static final String API_ROOT = "/api/v1";
+
     /**
      * Constructor that creates an challenge-based authenticator using the fully-qualified class name specified in
      * the "hobson.rest.verifier" system property to instantiate a verifier.
@@ -64,7 +64,6 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
         // create the router with all of our resource classes attached
         Router router = newRouter();
         router.attach(ActivityLogResource.PATH, ActivityLogResource.class);
-        router.attach(DashboardResource.PATH, DashboardResource.class);
         router.attach(DeviceBootstrapsResource.PATH, DeviceBootstrapsResource.class);
         router.attach(DeviceBootstrapResource.PATH, DeviceBootstrapResource.class);
         router.attach(DeviceResource.PATH, DeviceResource.class);
@@ -143,7 +142,7 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
     }
 
     public String getApiRoot() {
-        return LinkProvider.API_ROOT;
+        return API_ROOT;
     }
 
     abstract protected String getRealmName();

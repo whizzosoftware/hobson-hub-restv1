@@ -8,18 +8,15 @@
 package com.whizzosoftware.hobson.rest.v1.resource.task;
 
 import com.whizzosoftware.hobson.api.hub.HubManager;
-import com.whizzosoftware.hobson.api.property.PropertyContainerClass;
-import com.whizzosoftware.hobson.api.property.PropertyContainerClassContext;
-import com.whizzosoftware.hobson.api.property.PropertyContainerClassProvider;
-import com.whizzosoftware.hobson.api.property.PropertyContainerSet;
+import com.whizzosoftware.hobson.api.property.*;
 import com.whizzosoftware.hobson.api.task.TaskManager;
+import com.whizzosoftware.hobson.dto.ExpansionFields;
+import com.whizzosoftware.hobson.dto.IdProvider;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.dto.property.PropertyContainerSetDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
-import com.whizzosoftware.hobson.rest.ExpansionFields;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
-import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -37,7 +34,7 @@ public class TaskActionSetsResource extends SelfInjectingServerResource {
     @Inject
     TaskManager taskManager;
     @Inject
-    LinkProvider linkProvider;
+    IdProvider idProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/tasks/actionSets Get all action sets
@@ -66,7 +63,7 @@ public class TaskActionSetsResource extends SelfInjectingServerResource {
 
         authorizer.authorizeHub(ctx.getHubContext());
 
-        ItemListDTO results = new ItemListDTO(linkProvider.createTaskActionSetsLink(ctx.getHubContext()));
+        ItemListDTO results = new ItemListDTO(idProvider.createTaskActionSetsId(ctx.getHubContext()));
         boolean expandItems = expansions.has("item");
 
         PropertyContainerClassProvider pccp = new PropertyContainerClassProvider() {
@@ -78,10 +75,10 @@ public class TaskActionSetsResource extends SelfInjectingServerResource {
 
         for (PropertyContainerSet actionSet : taskManager.getAllActionSets(ctx.getHubContext())) {
             PropertyContainerSetDTO.Builder builder = new PropertyContainerSetDTO.Builder(
-                linkProvider.createTaskActionSetLink(ctx.getHubContext(), actionSet.getId())
+                idProvider.createTaskActionSetId(ctx.getHubContext(), actionSet.getId())
             );
             if (expandItems) {
-                builder.containers(DTOMapper.mapPropertyContainerList(actionSet.getProperties(), false, pccp, linkProvider));
+                builder.containers(DTOMapper.mapPropertyContainerList(actionSet.getProperties(), PropertyContainerClassType.ACTION, false, pccp, idProvider));
             }
             results.add(builder.build());
         }

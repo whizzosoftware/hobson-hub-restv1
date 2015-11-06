@@ -9,9 +9,10 @@ package com.whizzosoftware.hobson.rest.v1.resource.plugin;
 
 import com.whizzosoftware.hobson.api.plugin.PluginContext;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
+import com.whizzosoftware.hobson.dto.IdProvider;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
+import com.whizzosoftware.hobson.rest.v1.util.MapUtil;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.representation.EmptyRepresentation;
@@ -33,7 +34,7 @@ public class RemotePluginInstallResource extends SelfInjectingServerResource {
     @Inject
     PluginManager pluginManager;
     @Inject
-    LinkProvider linkProvider;
+    IdProvider idProvider;
 
     /**
      * @api {post} /api/v1/users/:userId/hubs/:hubId/plugins/remote/:pluginId/:pluginVersion/install Install remote plugin
@@ -59,7 +60,7 @@ public class RemotePluginInstallResource extends SelfInjectingServerResource {
         pluginManager.installRemotePlugin(PluginContext.create(ctx.getHubContext(), pluginId), pluginVersion);
 
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
-        getResponse().setLocationRef(ctx.getApiRoot() + new Template(LocalPluginResource.PATH).format(linkProvider.createSingleEntryMap(ctx, "pluginId", pluginId)));
+        getResponse().setLocationRef(ctx.getApiRoot() + new Template(LocalPluginResource.PATH).format(MapUtil.createSingleEntryMap(ctx, "pluginId", pluginId)));
 
         return new EmptyRepresentation();
     }

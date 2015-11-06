@@ -9,15 +9,16 @@ package com.whizzosoftware.hobson.rest.v1.resource.presence;
 
 import com.whizzosoftware.hobson.api.presence.PresenceLocation;
 import com.whizzosoftware.hobson.api.presence.PresenceManager;
+import com.whizzosoftware.hobson.dto.IdProvider;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
+import com.whizzosoftware.hobson.dto.presence.PresenceLocationDTO;
 import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.Authorizer;
-import com.whizzosoftware.hobson.rest.ExpansionFields;
+import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
-import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import org.json.JSONObject;
+import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -34,7 +35,7 @@ public class PresenceLocationsResource extends SelfInjectingServerResource {
     @Inject
     PresenceManager presenceManager;
     @Inject
-    LinkProvider linkProvider;
+    IdProvider idProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/presence/locations Get presence locations
@@ -67,12 +68,14 @@ public class PresenceLocationsResource extends SelfInjectingServerResource {
 
         authorizer.authorizeHub(ctx.getHubContext());
 
-        ItemListDTO results = new ItemListDTO(linkProvider.createPresenceEntitiesLink(ctx.getHubContext()));
+        ItemListDTO results = new ItemListDTO(idProvider.createPresenceLocationsId(ctx.getHubContext()), true);
         for (PresenceLocation location : presenceManager.getAllLocations(ctx.getHubContext())) {
-            results.add(DTOMapper.mapPresenceLocation(location, expansions.has("item"), linkProvider));
+            results.add(new PresenceLocationDTO.Builder(location, idProvider, expansions.has(JSONAttributes.ITEM)).build());
         }
 
-        return new JsonRepresentation(results.toJSON());
+        JsonRepresentation jr = new JsonRepresentation(results.toJSON());
+        jr.setMediaType(new MediaType(results.getJSONMediaType()));
+        return jr;
     }
 
     /**
@@ -122,7 +125,30 @@ public class PresenceLocationsResource extends SelfInjectingServerResource {
 
         presenceManager.addLocation(ctx.getHubContext(), json.getString(JSONAttributes.NAME), latitude, longitude, radius, beaconMajor, beaconMinor);
 
-        getResponse().setStatus(Status.SUCCESS_CREATED);
+        getResponse().setStatus(Status.SUCCESS_ACCEPTED);
+        return new EmptyRepresentation();
+    }
+
+    /**
+     * @api {post} /api/v1/users/:userId/hubs/:hubId/presence/locations Delete presence locations
+     * @apiVersion 0.7.0
+     * @apiName DeletePresenceLocations
+     * @apiDescription Deletes all presence locations.
+     * @apiGroup Presence
+     *
+     * @apiSuccessExample Success Response:
+     * HTTP/1.1 202 Accepted
+     */
+    @Override
+    protected Representation delete() {
+        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        authorizer.authorizeHub(ctx.getHubContext());
+
+        for (PresenceLocation pl : presenceManager.getAllLocations(ctx.getHubContext())) {
+            presenceManager.deleteLocation(pl.getContext());
+        }
+
+        getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();
     }
 }

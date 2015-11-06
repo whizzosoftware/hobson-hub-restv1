@@ -8,21 +8,18 @@
 package com.whizzosoftware.hobson.rest.v1.resource.task;
 
 import com.whizzosoftware.hobson.api.hub.HubManager;
-import com.whizzosoftware.hobson.api.property.PropertyContainerClass;
-import com.whizzosoftware.hobson.api.property.PropertyContainerClassContext;
-import com.whizzosoftware.hobson.api.property.PropertyContainerClassProvider;
-import com.whizzosoftware.hobson.api.property.PropertyContainerSet;
+import com.whizzosoftware.hobson.api.property.*;
 import com.whizzosoftware.hobson.api.task.HobsonTask;
 import com.whizzosoftware.hobson.api.task.TaskContext;
 import com.whizzosoftware.hobson.api.task.TaskManager;
-import com.whizzosoftware.hobson.dto.property.PropertyContainerSetDTO;
+import com.whizzosoftware.hobson.dto.ExpansionFields;
+import com.whizzosoftware.hobson.dto.IdProvider;
 import com.whizzosoftware.hobson.dto.task.HobsonTaskDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
-import com.whizzosoftware.hobson.rest.ExpansionFields;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
-import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
+import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -46,7 +43,7 @@ public class TaskResource extends SelfInjectingServerResource {
     @Inject
     TaskManager taskManager;
     @Inject
-    LinkProvider linkProvider;
+    IdProvider idProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/tasks/:taskId Get task details
@@ -59,8 +56,8 @@ public class TaskResource extends SelfInjectingServerResource {
      * {
      *   "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-scheduler/tasks/112c8933-f487-4eb5-ba44-1ea8d4691fd9",
      *   "name": "My Task",
-     *   "conditionSet": {
-     *     "trigger": {
+     *   "conditions": [
+     *     {
      *       "cclass": {
      *         "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-scheduler/conditionClasses/schedule"
      *       },
@@ -70,7 +67,7 @@ public class TaskResource extends SelfInjectingServerResource {
      *         "recurrence": "FREQ=MONTHLY;BYDAY=FR;BYMONTHDAY=13"
      *       }
      *     }
-     *   },
+     *   ],
      *   "actionSet": {
      *     "@id": "/api/v1/users/local/hubs/local/tasks/actionSets/dc419994-987f-4bff-81f9-e5bce53733f3"
      *   },
@@ -89,28 +86,17 @@ public class TaskResource extends SelfInjectingServerResource {
 
         HobsonTask task = taskManager.getTask(TaskContext.create(ctx.getHubContext(), getAttribute("taskId")));
 
-        PropertyContainerClassProvider pccp = new PropertyContainerClassProvider() {
-            @Override
-            public PropertyContainerClass getPropertyContainerClass(PropertyContainerClassContext ctx) {
-                return hubManager.getContainerClass(ctx);
-            }
-        };
+        HobsonTaskDTO dto = new HobsonTaskDTO.Builder(
+            task,
+            taskManager,
+            true,
+            expansions,
+            idProvider
+        ).build();
 
-        HobsonTaskDTO.Builder builder = new HobsonTaskDTO.Builder(linkProvider.createTaskLink(task.getContext()));
-        builder.name(task.getName())
-            .conditions(DTOMapper.mapPropertyContainerList(task.getConditions(), true, pccp, linkProvider))
-            .properties(task.getProperties());
-
-        PropertyContainerSetDTO.Builder asBuilder = new PropertyContainerSetDTO.Builder(
-            linkProvider.createTaskActionSetLink(ctx.getHubContext(), task.getActionSet().getId())
-        );
-        if (expansions.has("actionSet")) {
-            PropertyContainerSet pcs = taskManager.getActionSet(ctx.getHubContext(), task.getActionSet().getId());
-            asBuilder.containers(DTOMapper.mapPropertyContainerList(pcs.getProperties(), false, pccp, linkProvider));
-        }
-        builder.actionSet(asBuilder.build());
-
-        return new JsonRepresentation(builder.build().toJSON());
+        JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
+        jr.setMediaType(new MediaType(dto.getJSONMediaType()));
+        return jr;
     }
 
     /**
@@ -160,8 +146,8 @@ public class TaskResource extends SelfInjectingServerResource {
             TaskContext.create(ctx.getHubContext(), getAttribute("taskId")),
             dto.getName(),
             dto.getDescription(),
-            mapper.mapPropertyContainerDTOList(dto.getConditions(), pccp, linkProvider),
-            mapper.mapPropertyContainerSetDTO(dto.getActionSet(), pccp, linkProvider));
+            mapper.mapPropertyContainerDTOList(dto.getConditions(), pccp, idProvider),
+            mapper.mapPropertyContainerSetDTO(dto.getActionSet(), pccp, idProvider));
 
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();

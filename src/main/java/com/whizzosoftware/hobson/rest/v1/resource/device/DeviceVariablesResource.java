@@ -8,7 +8,10 @@
 package com.whizzosoftware.hobson.rest.v1.resource.device;
 
 import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
-import com.whizzosoftware.hobson.rest.ExpansionFields;
+import com.whizzosoftware.hobson.dto.DTOBuildContext;
+import com.whizzosoftware.hobson.dto.ExpansionFields;
+import com.whizzosoftware.hobson.dto.IdProvider;
+import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.api.HobsonNotFoundException;
 import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.variable.HobsonVariable;
@@ -19,7 +22,6 @@ import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
-import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.MediaVariableProxyProvider;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -47,7 +49,7 @@ public class DeviceVariablesResource extends SelfInjectingServerResource {
     @Inject
     VariableManager variableManager;
     @Inject
-    LinkProvider linkProvider;
+    IdProvider idProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/devices/:deviceId/variables Get all device variables
@@ -77,18 +79,24 @@ public class DeviceVariablesResource extends SelfInjectingServerResource {
         authorizer.authorizeHub(ctx.getHubContext());
 
         DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
-        ItemListDTO results = new ItemListDTO(linkProvider.createDeviceVariablesLink(dctx));
+        ItemListDTO results = new ItemListDTO(idProvider.createDeviceVariablesId(dctx));
 
-        HobsonVariableCollection c = variableManager.getDeviceVariables(dctx, new MediaVariableProxyProvider(ctx));
+        HobsonVariableCollection c = variableManager.getDeviceVariables(dctx);
         if (c != null) {
             Collection<HobsonVariable> variables = c.getCollection();
+            boolean showDetails = expansions.has(JSONAttributes.ITEM);
+            expansions.pushContext(JSONAttributes.ITEM);
+            DTOBuildContext dbc = new DTOBuildContext.Builder().addProxyValueProvider(new MediaVariableProxyProvider(ctx)).build();
             for (HobsonVariable v : variables) {
-                HobsonVariableDTO.Builder builder = new HobsonVariableDTO.Builder(linkProvider.createDeviceVariableLink(dctx, v.getName()));
-                if (expansions.has("item")) {
-                    builder.name(v.getName()).mask(v.getMask()).lastUpdate(v.getLastUpdate()).value(v.getValue());
-                }
-                results.add(builder.build());
+                HobsonVariableDTO dto = new HobsonVariableDTO.Builder(
+                    dbc,
+                    idProvider.createDeviceVariableId(dctx, v.getName()),
+                    v,
+                    showDetails
+                ).build();
+                results.add(dto);
             }
+            expansions.popContext();
             return new JsonRepresentation(results.toJSON());
         } else {
             throw new HobsonNotFoundException("Unable to find variables for device");

@@ -7,17 +7,21 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.hub;
 
+import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.api.presence.PresenceManager;
-import com.whizzosoftware.hobson.rest.ExpansionFields;
 import com.whizzosoftware.hobson.api.hub.HobsonHub;
 import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
 import com.whizzosoftware.hobson.api.task.TaskManager;
+import com.whizzosoftware.hobson.api.variable.VariableManager;
+import com.whizzosoftware.hobson.dto.DTOBuildContext;
+import com.whizzosoftware.hobson.dto.ExpansionFields;
+import com.whizzosoftware.hobson.dto.IdProvider;
 import com.whizzosoftware.hobson.dto.hub.HobsonHubDTO;
+import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
-import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
+import com.whizzosoftware.hobson.rest.v1.util.MediaVariableProxyProvider;
 import org.restlet.data.MediaType;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -41,11 +45,15 @@ public class HubResource extends SelfInjectingServerResource {
     @Inject
     PluginManager pluginManager;
     @Inject
+    DeviceManager deviceManager;
+    @Inject
+    VariableManager variableManager;
+    @Inject
     TaskManager taskManager;
     @Inject
     PresenceManager presenceManager;
     @Inject
-    LinkProvider linkProvider;
+    IdProvider idProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId Get Hub details
@@ -85,21 +93,28 @@ public class HubResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() throws ResourceException {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+
         ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
+        expansions.add(JSONAttributes.ITEM);
 
         authorizer.authorizeHub(ctx.getHubContext());
 
         HobsonHub hub = hubManager.getHub(ctx.getHubContext());
-
-        HobsonHubDTO dto = DTOMapper.mapHub(
-                hub,
-                expansions,
-                linkProvider,
-                hubManager,
-                pluginManager,
-                taskManager,
-                presenceManager
-        );
+        HobsonHubDTO dto = new HobsonHubDTO.Builder(
+            new DTOBuildContext.Builder().
+                hubManager(hubManager).
+                pluginManager(pluginManager).
+                deviceManager(deviceManager).
+                variableManager(variableManager).
+                taskManager(taskManager).
+                presenceManager(presenceManager).
+                expansionFields(expansions).
+                idProvider(idProvider).
+                addProxyValueProvider(new MediaVariableProxyProvider(ctx)).
+                build(),
+            hub,
+            true
+        ).build();
 
         JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
         jr.setMediaType(new MediaType(dto.getMediaType() + "+json"));

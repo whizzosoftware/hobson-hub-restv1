@@ -7,9 +7,10 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.hub;
 
+import com.whizzosoftware.hobson.dto.IdProvider;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
+import com.whizzosoftware.hobson.rest.v1.util.MapUtil;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.representation.EmptyRepresentation;
 import org.restlet.representation.Representation;
@@ -28,7 +29,7 @@ public class ShutdownResource extends SelfInjectingServerResource {
     @Inject
     Authorizer authorizer;
     @Inject
-    LinkProvider linkProvider;
+    IdProvider idProvider;
 
     /**
      * @api {post} /api/v1/users/:userId/hubs/:hubId/shutdown Shutdown
@@ -45,8 +46,10 @@ public class ShutdownResource extends SelfInjectingServerResource {
     @Override
     public Representation post(Representation entity) {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+
         authorizer.authorizeHub(ctx.getHubContext());
-        getResponse().setLocationRef(new Template(HubResource.PATH).format(linkProvider.createEmptyMap(ctx)));
+
+        getResponse().setLocationRef(new Template(HubResource.PATH).format(MapUtil.createEmptyMap(ctx)));
         Representation result = new EmptyRepresentation();
 
         Thread t = new Thread(new Runnable() {

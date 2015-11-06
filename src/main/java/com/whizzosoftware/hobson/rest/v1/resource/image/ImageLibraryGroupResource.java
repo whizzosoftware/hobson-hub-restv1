@@ -8,15 +8,18 @@
 package com.whizzosoftware.hobson.rest.v1.resource.image;
 
 import com.whizzosoftware.hobson.api.image.ImageManager;
+import com.whizzosoftware.hobson.dto.IdProvider;
+import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
+import com.whizzosoftware.hobson.rest.v1.util.MapUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
+import org.restlet.routing.Template;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -29,7 +32,7 @@ public class ImageLibraryGroupResource extends SelfInjectingServerResource {
     @Inject
     ImageManager imageManager;
     @Inject
-    LinkProvider linkProvider;
+    IdProvider idProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/imageLibrary/groups/{groupId} Get library group
@@ -58,7 +61,7 @@ public class ImageLibraryGroupResource extends SelfInjectingServerResource {
         JSONArray results = new JSONArray();
         List<String> ids = imageManager.getImageLibraryImageIds(ctx.getHubContext(), getAttribute("groupId"));
         for (String id : ids) {
-            results.put(linkProvider.addImageLibraryImageLinks(ctx, createImageLibraryImageJSON(id), id));
+            results.put(addImageLibraryImageLinks(ctx, createImageLibraryImageJSON(id), id));
         }
         return new JsonRepresentation(results);
     }
@@ -66,4 +69,12 @@ public class ImageLibraryGroupResource extends SelfInjectingServerResource {
     private JSONObject createImageLibraryImageJSON(String id) {
         return new JSONObject();
     }
+
+    private JSONObject addImageLibraryImageLinks(HobsonRestContext ctx, JSONObject json, String imageId) {
+        JSONObject links = new JSONObject();
+        links.put("self", ctx.getApiRoot() + new Template(ImageLibraryImageResource.PATH).format(MapUtil.createSingleEntryMap(ctx, "imageId", imageId)));
+        json.put(JSONAttributes.LINKS, links);
+        return json;
+    }
+
 }

@@ -10,14 +10,16 @@ package com.whizzosoftware.hobson.rest.v1.resource.presence;
 import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
 import com.whizzosoftware.hobson.api.presence.PresenceEntity;
 import com.whizzosoftware.hobson.api.presence.PresenceManager;
+import com.whizzosoftware.hobson.dto.ExpansionFields;
+import com.whizzosoftware.hobson.dto.IdProvider;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
+import com.whizzosoftware.hobson.dto.presence.PresenceEntityDTO;
+import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.Authorizer;
-import com.whizzosoftware.hobson.rest.ExpansionFields;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
-import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import org.json.JSONObject;
+import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -39,7 +41,7 @@ public class PresenceEntitiesResource extends SelfInjectingServerResource {
     @Inject
     PresenceManager presenceManager;
     @Inject
-    LinkProvider linkProvider;
+    IdProvider idProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/presence/entities Get presence entities
@@ -72,12 +74,17 @@ public class PresenceEntitiesResource extends SelfInjectingServerResource {
 
         authorizer.authorizeHub(ctx.getHubContext());
 
-        ItemListDTO results = new ItemListDTO(linkProvider.createPresenceEntitiesLink(ctx.getHubContext()));
+        ItemListDTO results = new ItemListDTO(idProvider.createPresenceEntitiesId(ctx.getHubContext()), true);
+        boolean showDetails = expansions.has(JSONAttributes.ITEM);
+        expansions.pushContext(JSONAttributes.ITEM);
         for (PresenceEntity entity : presenceManager.getAllEntities(ctx.getHubContext())) {
-            results.add(DTOMapper.mapPresenceEntity(entity, presenceManager, expansions, linkProvider));
+            results.add(new PresenceEntityDTO.Builder(entity, presenceManager, showDetails, expansions, idProvider).build());
         }
+        expansions.popContext();
 
-        return new JsonRepresentation(results.toJSON());
+        JsonRepresentation jr = new JsonRepresentation(results.toJSON());
+        jr.setMediaType(new MediaType(results.getJSONMediaType()));
+        return jr;
     }
 
     /**
@@ -101,10 +108,32 @@ public class PresenceEntitiesResource extends SelfInjectingServerResource {
         JSONObject json = JSONHelper.createJSONFromRepresentation(entity);
         if (json.has("name") && json.getString("name").trim().length() > 0) {
             presenceManager.addEntity(ctx.getHubContext(), json.getString("name"));
-            getResponse().setStatus(Status.SUCCESS_CREATED);
+            getResponse().setStatus(Status.SUCCESS_ACCEPTED);
             return new EmptyRepresentation();
         } else {
             throw new HobsonInvalidRequestException("A name is required");
         }
+    }
+
+    /**
+     * @api {delete} /api/v1/users/:userId/hubs/:hubId/presence/entities Deletes all presence entities
+     * @apiVersion 0.7.0
+     * @apiName DeletePresenceEntities
+     * @apiDescription Deletes all presence entities.
+     * @apiGroup Presence
+     * @apiSuccessExample Success Response:
+     * HTTP/1.1 202 Accepted
+     */
+    @Override
+    protected Representation delete() {
+        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        authorizer.authorizeHub(ctx.getHubContext());
+
+        for (PresenceEntity entity : presenceManager.getAllEntities(ctx.getHubContext())) {
+            presenceManager.deleteEntity(entity.getContext());
+        }
+
+        getResponse().setStatus(Status.SUCCESS_ACCEPTED);
+        return new EmptyRepresentation();
     }
 }

@@ -12,12 +12,13 @@ import com.whizzosoftware.hobson.api.device.DeviceAlreadyBoostrappedException;
 import com.whizzosoftware.hobson.api.device.DeviceBootstrap;
 import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
+import com.whizzosoftware.hobson.dto.IdProvider;
 import com.whizzosoftware.hobson.dto.device.DeviceBootstrapDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
-import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import org.json.JSONObject;
+import org.restlet.data.MediaType;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -35,7 +36,7 @@ public class RegisterDeviceResource extends SelfInjectingServerResource {
     @Inject
     VariableManager variableManager;
     @Inject
-    LinkProvider linkProvider;
+    IdProvider idProvider;
 
     /**
      * @api {post} /api/v1/users/:userId/hubs/:hubId/registerDevice Register device
@@ -68,17 +69,12 @@ public class RegisterDeviceResource extends SelfInjectingServerResource {
         DeviceBootstrap db = deviceManager.registerDeviceBootstrap(ctx.getHubContext(), json.getString("deviceId"));
 
         try {
-            return new JsonRepresentation(
-                new DeviceBootstrapDTO.Builder(linkProvider.createDeviceBootstrapLink(ctx.getHubContext(), db.getId()))
-                    .deviceId(db.getId())
-                    .creationTime(db.getCreationTime())
-                    .bootstrapTime(db.getBootstrapTime())
-                    .secret(db.getSecret())
-                    .build()
-                    .toJSON()
-            );
+            DeviceBootstrapDTO dto = new DeviceBootstrapDTO.Builder(idProvider.createDeviceBootstrapId(ctx.getHubContext(), db.getId()), db, true, true).build();
+            JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
+            jr.setMediaType(new MediaType(dto.getJSONMediaType()));
+            return jr;
         } catch (DeviceAlreadyBoostrappedException e) {
-            throw new HobsonInvalidRequestException("Unable to register device");
+            throw new HobsonInvalidRequestException("Device has already been registered");
         }
     }
 }

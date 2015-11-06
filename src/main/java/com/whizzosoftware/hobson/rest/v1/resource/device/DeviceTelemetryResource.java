@@ -7,19 +7,19 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.device;
 
-import com.whizzosoftware.hobson.rest.ExpansionFields;
 import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
 import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.api.device.HobsonDevice;
 import com.whizzosoftware.hobson.api.telemetry.TelemetryManager;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
+import com.whizzosoftware.hobson.dto.IdProvider;
 import com.whizzosoftware.hobson.dto.telemetry.DeviceTelemetryDTO;
+import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.dto.telemetry.TelemetryDatasetDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import org.json.JSONObject;
 import org.restlet.data.Status;
@@ -47,7 +47,7 @@ public class DeviceTelemetryResource extends SelfInjectingServerResource {
     @Inject
     VariableManager variableManager;
     @Inject
-    LinkProvider linkProvider;
+    IdProvider idProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/devices/:deviceId/telemetry Get device telemetry info
@@ -78,14 +78,14 @@ public class DeviceTelemetryResource extends SelfInjectingServerResource {
 
         HobsonDevice device = deviceManager.getDevice(dctx);
 
-        ItemListDTO datasets = new ItemListDTO(linkProvider.createDeviceTelemetryDatasetsLink(dctx));
-        DeviceTelemetryDTO.Builder builder = new DeviceTelemetryDTO.Builder(linkProvider.createDeviceTelemetryLink(dctx));
+        ItemListDTO datasets = new ItemListDTO(idProvider.createDeviceTelemetryDatasetsId(dctx));
+        DeviceTelemetryDTO.Builder builder = new DeviceTelemetryDTO.Builder(idProvider.createDeviceTelemetryId(dctx));
         builder.capable(device.isTelemetryCapable()).enabled(telemetryManager.isDeviceTelemetryEnabled(dctx)).datasets(datasets);
 
         if (expansions.has("datasets")) {
             String[] vars = device.getTelemetryVariableNames();
             for (String var : vars) {
-                datasets.add(new TelemetryDatasetDTO.Builder(linkProvider.createDeviceTelemetryDatasetLink(dctx, var)).build());
+                datasets.add(new TelemetryDatasetDTO.Builder(idProvider.createDeviceTelemetryDatasetId(dctx, var)).build());
             }
         }
 

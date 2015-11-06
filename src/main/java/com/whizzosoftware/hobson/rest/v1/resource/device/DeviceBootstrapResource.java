@@ -11,10 +11,11 @@ import com.whizzosoftware.hobson.api.HobsonNotFoundException;
 import com.whizzosoftware.hobson.api.device.DeviceBootstrap;
 import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
+import com.whizzosoftware.hobson.dto.IdProvider;
 import com.whizzosoftware.hobson.dto.device.DeviceBootstrapDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.LinkProvider;
+import org.restlet.data.MediaType;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.EmptyRepresentation;
@@ -33,7 +34,7 @@ public class DeviceBootstrapResource extends SelfInjectingServerResource {
     @Inject
     VariableManager variableManager;
     @Inject
-    LinkProvider linkProvider;
+    IdProvider idProvider;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/deviceBootstraps/{bootstrapId} Get device bootstrap
@@ -58,14 +59,16 @@ public class DeviceBootstrapResource extends SelfInjectingServerResource {
         DeviceBootstrap db = deviceManager.getDeviceBootstrap(ctx.getHubContext(), getAttribute("bootstrapId"));
 
         if (db != null) {
-            return new JsonRepresentation(
-                new DeviceBootstrapDTO.Builder(linkProvider.createDeviceBootstrapLink(ctx.getHubContext(), db.getId()))
-                    .deviceId(db.getDeviceId())
-                    .creationTime(db.getCreationTime())
-                    .bootstrapTime(db.getBootstrapTime())
-                    .build()
-                    .toJSON()
-            );
+            DeviceBootstrapDTO dto = new DeviceBootstrapDTO.Builder(
+                idProvider.createDeviceBootstrapId(ctx.getHubContext(), db.getId()),
+                db,
+                true,
+                false
+            ).build();
+
+            JsonRepresentation js = new JsonRepresentation(dto.toJSON());
+            js.setMediaType(new MediaType(dto.getJSONMediaType()));
+            return js;
         } else {
             throw new HobsonNotFoundException("Device bootstrap not found");
         }
