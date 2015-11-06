@@ -69,7 +69,7 @@ public class PresenceLocationsResource extends SelfInjectingServerResource {
         authorizer.authorizeHub(ctx.getHubContext());
 
         ItemListDTO results = new ItemListDTO(idProvider.createPresenceLocationsId(ctx.getHubContext()), true);
-        for (PresenceLocation location : presenceManager.getAllLocations(ctx.getHubContext())) {
+        for (PresenceLocation location : presenceManager.getAllPresenceLocations(ctx.getHubContext())) {
             results.add(new PresenceLocationDTO.Builder(location, idProvider, expansions.has(JSONAttributes.ITEM)).build());
         }
 
@@ -123,7 +123,7 @@ public class PresenceLocationsResource extends SelfInjectingServerResource {
             beaconMinor = json.getInt(JSONAttributes.BEACON_MINOR);
         }
 
-        presenceManager.addLocation(ctx.getHubContext(), json.getString(JSONAttributes.NAME), latitude, longitude, radius, beaconMajor, beaconMinor);
+        presenceManager.addPresenceLocation(ctx.getHubContext(), json.getString(JSONAttributes.NAME), latitude, longitude, radius, beaconMajor, beaconMinor);
 
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();
@@ -144,8 +144,8 @@ public class PresenceLocationsResource extends SelfInjectingServerResource {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
         authorizer.authorizeHub(ctx.getHubContext());
 
-        for (PresenceLocation pl : presenceManager.getAllLocations(ctx.getHubContext())) {
-            presenceManager.deleteLocation(pl.getContext());
+        for (PresenceLocation pl : presenceManager.getAllPresenceLocations(ctx.getHubContext())) {
+            presenceManager.deletePresenceLocation(pl.getContext());
         }
 
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);

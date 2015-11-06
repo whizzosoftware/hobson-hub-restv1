@@ -55,7 +55,7 @@ public class PresenceLocationResource extends SelfInjectingServerResource {
 
         authorizer.authorizeHub(ctx.getHubContext());
 
-        PresenceLocation location = presenceManager.getLocation(PresenceLocationContext.create(ctx.getHubContext(), getAttribute("locationId")));
+        PresenceLocation location = presenceManager.getPresenceLocation(PresenceLocationContext.create(ctx.getHubContext(), getAttribute("locationId")));
 
         PresenceLocationDTO dto = new PresenceLocationDTO.Builder(location, idProvider, true).build();
         JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
@@ -80,7 +80,7 @@ public class PresenceLocationResource extends SelfInjectingServerResource {
         authorizer.authorizeHub(ctx.getHubContext());
 
         PresenceLocationContext pec = PresenceLocationContext.create(ctx.getHubContext(), getAttribute("locationId"));
-        presenceManager.deleteLocation(pec);
+        presenceManager.deletePresenceLocation(pec);
 
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();

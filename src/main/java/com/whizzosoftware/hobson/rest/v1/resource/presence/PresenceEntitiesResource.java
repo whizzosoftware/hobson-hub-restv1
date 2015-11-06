@@ -77,7 +77,7 @@ public class PresenceEntitiesResource extends SelfInjectingServerResource {
         ItemListDTO results = new ItemListDTO(idProvider.createPresenceEntitiesId(ctx.getHubContext()), true);
         boolean showDetails = expansions.has(JSONAttributes.ITEM);
         expansions.pushContext(JSONAttributes.ITEM);
-        for (PresenceEntity entity : presenceManager.getAllEntities(ctx.getHubContext())) {
+        for (PresenceEntity entity : presenceManager.getAllPresenceEntities(ctx.getHubContext())) {
             results.add(new PresenceEntityDTO.Builder(entity, presenceManager, showDetails, expansions, idProvider).build());
         }
         expansions.popContext();
@@ -107,7 +107,7 @@ public class PresenceEntitiesResource extends SelfInjectingServerResource {
         authorizer.authorizeHub(ctx.getHubContext());
         JSONObject json = JSONHelper.createJSONFromRepresentation(entity);
         if (json.has("name") && json.getString("name").trim().length() > 0) {
-            presenceManager.addEntity(ctx.getHubContext(), json.getString("name"));
+            presenceManager.addPresenceEntity(ctx.getHubContext(), json.getString("name"));
             getResponse().setStatus(Status.SUCCESS_ACCEPTED);
             return new EmptyRepresentation();
         } else {
@@ -129,8 +129,8 @@ public class PresenceEntitiesResource extends SelfInjectingServerResource {
         HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
         authorizer.authorizeHub(ctx.getHubContext());
 
-        for (PresenceEntity entity : presenceManager.getAllEntities(ctx.getHubContext())) {
-            presenceManager.deleteEntity(entity.getContext());
+        for (PresenceEntity entity : presenceManager.getAllPresenceEntities(ctx.getHubContext())) {
+            presenceManager.deletePresenceEntity(entity.getContext());
         }
 
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);

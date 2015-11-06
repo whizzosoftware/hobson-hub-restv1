@@ -72,7 +72,7 @@ public class PresenceEntityResource extends SelfInjectingServerResource {
         authorizer.authorizeHub(ctx.getHubContext());
 
         PresenceEntityContext pctx = PresenceEntityContext.create(ctx.getHubContext(), getAttribute("entityId"));
-        PresenceEntity entity = presenceManager.getEntity(pctx);
+        PresenceEntity entity = presenceManager.getPresenceEntity(pctx);
 
         PresenceEntityDTO dto = new PresenceEntityDTO.Builder(entity, presenceManager, true, expansions, idProvider).build();
         JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
@@ -134,7 +134,7 @@ public class PresenceEntityResource extends SelfInjectingServerResource {
         authorizer.authorizeHub(ctx.getHubContext());
 
         PresenceEntityContext pec = PresenceEntityContext.create(ctx.getHubContext(), getAttribute("entityId"));
-        presenceManager.deleteEntity(pec);
+        presenceManager.deletePresenceEntity(pec);
 
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();
