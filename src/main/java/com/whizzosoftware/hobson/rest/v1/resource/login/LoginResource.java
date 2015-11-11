@@ -1,12 +1,12 @@
 package com.whizzosoftware.hobson.rest.v1.resource.login;
 
 import com.whizzosoftware.hobson.api.HobsonAuthenticationException;
+import com.whizzosoftware.hobson.api.hub.HubContext;
+import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.api.user.HobsonUser;
 import com.whizzosoftware.hobson.api.user.UserStore;
-import com.whizzosoftware.hobson.dto.AuthResultDTO;
-import com.whizzosoftware.hobson.dto.ExpansionFields;
-import com.whizzosoftware.hobson.dto.HobsonUserDTO;
-import com.whizzosoftware.hobson.dto.IdProvider;
+import com.whizzosoftware.hobson.dto.*;
+import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.TokenHelper;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import org.json.JSONObject;
@@ -22,6 +22,8 @@ public class LoginResource extends SelfInjectingServerResource {
 
     @Inject
     UserStore userManager;
+    @Inject
+    HubManager hubManager;
     @Inject
     TokenHelper tokenHelper;
     @Inject
@@ -53,17 +55,27 @@ public class LoginResource extends SelfInjectingServerResource {
      */
     @Override
     protected Representation post(Representation entity) {
-        ExpansionFields expansion = new ExpansionFields(getQueryValue("expand"));
+        ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
 
         JSONObject json = JSONHelper.createJSONFromRepresentation(entity);
 
         if (json.has("username") && json.has("password")) {
             HobsonUser user = userManager.authenticate(json.getString("username"), json.getString("password"));
+            boolean showDetails = expansions.has(JSONAttributes.USER);
 
             AuthResultDTO dto = new AuthResultDTO(
                 tokenHelper.createToken(user.getId()),
-                new HobsonUserDTO.Builder(user, idProvider).build()
+                new HobsonUserDTO.Builder(
+                    new DTOBuildContext.Builder().
+                        expansionFields(expansions.pushContext(JSONAttributes.USER)).
+                        idProvider(idProvider).
+                        hubManager(hubManager).
+                        build(),
+                    user,
+                    showDetails
+                ).build()
             );
+            expansions.popContext();
 
             JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
             jr.setMediaType(new MediaType(dto.getMediaType() + "+json"));
@@ -79,6 +91,7 @@ public class LoginResource extends SelfInjectingServerResource {
         if (userManager.hasDefaultUser()) {
             json.put("defaultUser", userManager.getDefaultUser());
         }
+        json.put("hubVersion", hubManager.getVersion(HubContext.createLocal()));
         return new JsonRepresentation(json);
     }
 }

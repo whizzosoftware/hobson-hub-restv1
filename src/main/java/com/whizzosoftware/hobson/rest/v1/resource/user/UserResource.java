@@ -11,6 +11,7 @@ import com.whizzosoftware.hobson.api.HobsonAuthorizationException;
 import com.whizzosoftware.hobson.api.HobsonRuntimeException;
 import com.whizzosoftware.hobson.api.user.HobsonUser;
 import com.whizzosoftware.hobson.api.user.UserStore;
+import com.whizzosoftware.hobson.dto.DTOBuildContext;
 import com.whizzosoftware.hobson.dto.HobsonUserDTO;
 import com.whizzosoftware.hobson.dto.IdProvider;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
@@ -55,7 +56,13 @@ public class UserResource extends SelfInjectingServerResource {
             if (user.getIdentifier().equals(ctx.getUserId())) {
                 HobsonUser hu = userStore.getUser(user.getIdentifier());
 
-                HobsonUserDTO dto = new HobsonUserDTO.Builder(hu, idProvider).build();
+                HobsonUserDTO dto = new HobsonUserDTO.Builder(
+                    new DTOBuildContext.Builder().
+                        idProvider(idProvider).
+                        build(),
+                    hu,
+                    true
+                ).build();
 
                 JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
                 jr.setMediaType(new MediaType(dto.getMediaType() + "+json"));
