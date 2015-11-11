@@ -3,6 +3,7 @@ package com.whizzosoftware.hobson.rest.v1.resource.login;
 import com.whizzosoftware.hobson.api.HobsonAuthenticationException;
 import com.whizzosoftware.hobson.api.hub.HubContext;
 import com.whizzosoftware.hobson.api.hub.HubManager;
+import com.whizzosoftware.hobson.api.property.PropertyContainer;
 import com.whizzosoftware.hobson.api.user.HobsonUser;
 import com.whizzosoftware.hobson.api.user.UserStore;
 import com.whizzosoftware.hobson.dto.*;
@@ -91,7 +92,21 @@ public class LoginResource extends SelfInjectingServerResource {
         if (userManager.hasDefaultUser()) {
             json.put("defaultUser", userManager.getDefaultUser());
         }
-        json.put("hubVersion", hubManager.getVersion(HubContext.createLocal()));
+        HubContext hctx = HubContext.createLocal();
+
+        // set the hub name
+        PropertyContainer config = hubManager.getConfiguration(hctx);
+        String hubName;
+        if (config != null) {
+            hubName = config.hasPropertyValue("name") ? config.getPropertyValue("name").toString() : "Unnamed";
+        } else {
+            hubName = "Unnamed";
+        }
+        json.put("hubName", hubName);
+
+        // set the hub version
+        json.put("hubVersion", hubManager.getVersion(hctx));
+
         return new JsonRepresentation(json);
     }
 }
