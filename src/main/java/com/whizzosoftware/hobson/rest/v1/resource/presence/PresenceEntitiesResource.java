@@ -8,10 +8,10 @@
 package com.whizzosoftware.hobson.rest.v1.resource.presence;
 
 import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
+import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.api.presence.PresenceEntity;
 import com.whizzosoftware.hobson.api.presence.PresenceManager;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
-import com.whizzosoftware.hobson.dto.IdProvider;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.dto.presence.PresenceEntityDTO;
 import com.whizzosoftware.hobson.json.JSONAttributes;

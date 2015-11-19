@@ -8,9 +8,9 @@
 package com.whizzosoftware.hobson.rest.v1.resource.hub;
 
 import com.whizzosoftware.hobson.api.hub.HubManager;
+import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.api.property.*;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
-import com.whizzosoftware.hobson.dto.IdProvider;
 import com.whizzosoftware.hobson.dto.property.PropertyContainerDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;

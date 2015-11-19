@@ -8,12 +8,12 @@
 package com.whizzosoftware.hobson.rest.v1.resource.task;
 
 import com.whizzosoftware.hobson.api.hub.HubManager;
+import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.api.property.*;
 import com.whizzosoftware.hobson.api.task.HobsonTask;
 import com.whizzosoftware.hobson.api.task.TaskContext;
 import com.whizzosoftware.hobson.api.task.TaskManager;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
-import com.whizzosoftware.hobson.dto.IdProvider;
 import com.whizzosoftware.hobson.dto.task.HobsonTaskDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;

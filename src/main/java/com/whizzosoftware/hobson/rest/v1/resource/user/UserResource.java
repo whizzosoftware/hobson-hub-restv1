@@ -9,11 +9,11 @@ package com.whizzosoftware.hobson.rest.v1.resource.user;
 
 import com.whizzosoftware.hobson.api.HobsonAuthorizationException;
 import com.whizzosoftware.hobson.api.HobsonRuntimeException;
+import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.api.user.HobsonUser;
 import com.whizzosoftware.hobson.api.user.UserStore;
 import com.whizzosoftware.hobson.dto.DTOBuildContext;
 import com.whizzosoftware.hobson.dto.HobsonUserDTO;
-import com.whizzosoftware.hobson.dto.IdProvider;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import org.restlet.data.MediaType;
 import org.restlet.ext.guice.SelfInjectingServerResource;

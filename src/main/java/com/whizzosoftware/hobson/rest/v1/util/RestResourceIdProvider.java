@@ -10,6 +10,7 @@ package com.whizzosoftware.hobson.rest.v1.util;
 import com.whizzosoftware.hobson.api.HobsonRuntimeException;
 import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.hub.HubContext;
+import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.api.plugin.PluginContext;
 import com.whizzosoftware.hobson.api.presence.PresenceEntityContext;
 import com.whizzosoftware.hobson.api.presence.PresenceLocationContext;
@@ -17,7 +18,6 @@ import com.whizzosoftware.hobson.api.property.PropertyContainerClass;
 import com.whizzosoftware.hobson.api.property.PropertyContainerClassContext;
 import com.whizzosoftware.hobson.api.property.PropertyContainerClassType;
 import com.whizzosoftware.hobson.api.task.TaskContext;
-import com.whizzosoftware.hobson.dto.IdProvider;
 import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.v1.resource.activity.ActivityLogResource;
 import com.whizzosoftware.hobson.rest.v1.resource.hub.HubLogResource;
@@ -106,6 +106,14 @@ public class RestResourceIdProvider implements IdProvider {
         Map<String,String> values = new HashMap<>();
         values.put(JSONAttributes.USER_ID, userId);
         return t.format(values);
+    }
+
+    @Override
+    public PluginContext createPluginContext(String pluginId) {
+        Template t = new Template(apiRoot + LocalPluginResource.PATH);
+        Map<String,Object> vars = new HashMap<>();
+        t.parse(pluginId, vars);
+        return PluginContext.create(HubContext.create((String)vars.get(JSONAttributes.USER_ID), (String)vars.get(JSONAttributes.HUB_ID)), (String)vars.get(JSONAttributes.PLUGIN_ID));
     }
 
     @Override
@@ -387,6 +395,14 @@ public class RestResourceIdProvider implements IdProvider {
         Map<String,Object> vars = new HashMap<>();
         t.parse(deviceId, vars);
         return DeviceContext.create(HubContext.create((String)vars.get(JSONAttributes.USER_ID), (String)vars.get(JSONAttributes.HUB_ID)), (String)vars.get(JSONAttributes.PLUGIN_ID), (String)vars.get(JSONAttributes.DEVICE_ID));
+    }
+
+    @Override
+    public DeviceContext createDeviceContextWithHub(HubContext ctx, String deviceId) {
+        Template t = new Template(apiRoot + DeviceResource.PATH);
+        Map<String,Object> vars = new HashMap<>();
+        t.parse(deviceId, vars);
+        return DeviceContext.create(ctx, (String)vars.get(JSONAttributes.PLUGIN_ID), (String)vars.get(JSONAttributes.DEVICE_ID));
     }
 
     @Override

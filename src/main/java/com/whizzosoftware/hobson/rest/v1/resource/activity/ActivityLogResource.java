@@ -9,7 +9,7 @@ package com.whizzosoftware.hobson.rest.v1.resource.activity;
 
 import com.whizzosoftware.hobson.api.activity.ActivityLogEntry;
 import com.whizzosoftware.hobson.api.activity.ActivityLogManager;
-import com.whizzosoftware.hobson.dto.IdProvider;
+import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.dto.activity.ActivityEventDTO;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;

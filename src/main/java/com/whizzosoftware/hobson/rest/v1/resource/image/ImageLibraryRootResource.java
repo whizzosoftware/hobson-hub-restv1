@@ -10,7 +10,7 @@ package com.whizzosoftware.hobson.rest.v1.resource.image;
 import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
 import com.whizzosoftware.hobson.api.image.ImageGroup;
 import com.whizzosoftware.hobson.api.image.ImageManager;
-import com.whizzosoftware.hobson.dto.IdProvider;
+import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;

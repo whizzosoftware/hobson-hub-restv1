@@ -21,39 +21,35 @@ public class BearerTokenVerifier implements Verifier {
     public int verify(Request request, Response response) {
         int result = RESULT_INVALID;
 
-        if (request.getResourceRef().getPath().endsWith("/login")) {
-            result = RESULT_VALID;
+        String token = null;
+
+        // first check challenge response
+        if (request.getChallengeResponse() != null && ChallengeScheme.HTTP_OAUTH_BEARER.equals(request.getChallengeResponse().getScheme())) {
+            token = request.getChallengeResponse().getRawValue();
+        // then check for a cookie
         } else {
-            String token = null;
-
-            // first check challenge response
-            if (request.getChallengeResponse() != null && ChallengeScheme.HTTP_OAUTH_BEARER.equals(request.getChallengeResponse().getScheme())) {
-                token = request.getChallengeResponse().getRawValue();
-            // then check for a cookie
-            } else {
-                Cookie cookie = request.getCookies().getFirst("Token", true);
-                if (cookie != null) {
-                    token = cookie.getValue();
-                }
+            Cookie cookie = request.getCookies().getFirst("Token", true);
+            if (cookie != null) {
+                token = cookie.getValue();
             }
+        }
 
-            if (token != null) {
-                HobsonUser user = tokenHelper.verifyToken(token);
-                if (user != null) {
-                    result = RESULT_VALID;
-                    request.getClientInfo().setUser(
-                        new User(
-                            user.getId(),
-                            token,
-                            user.getGivenName(),
-                            user.getFamilyName(),
-                            null
-                        )
-                    );
-                }
-            } else {
-                result = RESULT_MISSING;
+        if (token != null) {
+            HobsonUser user = tokenHelper.verifyToken(token);
+            if (user != null) {
+                result = RESULT_VALID;
+                request.getClientInfo().setUser(
+                    new User(
+                        user.getId(),
+                        token,
+                        user.getGivenName(),
+                        user.getFamilyName(),
+                        null
+                    )
+                );
             }
+        } else {
+            result = RESULT_MISSING;
         }
 
         return result;

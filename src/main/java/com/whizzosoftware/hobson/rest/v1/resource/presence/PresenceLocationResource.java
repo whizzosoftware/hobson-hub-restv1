@@ -7,10 +7,10 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.presence;
 
+import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.api.presence.PresenceLocation;
 import com.whizzosoftware.hobson.api.presence.PresenceLocationContext;
 import com.whizzosoftware.hobson.api.presence.PresenceManager;
-import com.whizzosoftware.hobson.dto.IdProvider;
 import com.whizzosoftware.hobson.dto.presence.PresenceLocationDTO;
 import com.whizzosoftware.hobson.rest.Authorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;

@@ -61,65 +61,75 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
 
     @Override
     public Restlet createInboundRoot() {
-        // create the router with all of our resource classes attached
-        Router router = newRouter();
-        router.attach(ActivityLogResource.PATH, ActivityLogResource.class);
-        router.attach(DeviceBootstrapsResource.PATH, DeviceBootstrapsResource.class);
-        router.attach(DeviceBootstrapResource.PATH, DeviceBootstrapResource.class);
-        router.attach(DeviceResource.PATH, DeviceResource.class);
-        router.attach(DeviceConfigurationResource.PATH, DeviceConfigurationResource.class);
-        router.attach(DeviceConfigurationClassResource.PATH, DeviceConfigurationClassResource.class);
-        router.attach(DeviceTelemetryResource.PATH, DeviceTelemetryResource.class);
-        router.attach(DeviceTelemetryDatasetResource.PATH, DeviceTelemetryDatasetResource.class);
-        router.attach(DeviceTelemetryDatasetsResource.PATH, DeviceTelemetryDatasetsResource.class);
-        router.attach(DevicesResource.PATH, DevicesResource.class);
-        router.attach(DeviceVariableResource.PATH, DeviceVariableResource.class);
-        router.attach(DeviceVariablesResource.PATH, DeviceVariablesResource.class);
-        router.attach(ExecuteTaskResource.PATH, ExecuteTaskResource.class);
-        router.attach(GlobalVariableResource.PATH, GlobalVariableResource.class);
-        router.attach(GlobalVariablesResource.PATH, GlobalVariablesResource.class);
-        router.attach(HubConfigurationResource.PATH, HubConfigurationResource.class);
-        router.attach(HubConfigurationClassResource.PATH, HubConfigurationClassResource.class);
-        router.attach(HubImageResource.PATH, HubImageResource.class);
-        router.attach(HubResource.PATH, HubResource.class);
-        router.attach(HubPasswordResource.PATH, HubPasswordResource.class);
-        router.attach(HubSendTestEmailResource.PATH, HubSendTestEmailResource.class);
-        router.attach(HubRemoteRepositoriesResource.PATH, HubRemoteRepositoriesResource.class);
-        router.attach(HubRemoteRepositoryResource.PATH, HubRemoteRepositoryResource.class);
-        router.attach(HubsResource.PATH, HubsResource.class);
-        router.attach(ImageLibraryGroupResource.PATH, ImageLibraryGroupResource.class);
-        router.attach(ImageLibraryImageResource.PATH, ImageLibraryImageResource.class);
-        router.attach(ImageLibraryRootResource.PATH, ImageLibraryRootResource.class);
-        router.attach(LocalPluginsResource.PATH, LocalPluginsResource.class);
-        router.attach(LocalPluginResource.PATH, LocalPluginResource.class);
-        router.attach(LocalPluginConfigurationResource.PATH, LocalPluginConfigurationResource.class);
-        router.attach(LocalPluginConfigurationClassResource.PATH, LocalPluginConfigurationClassResource.class);
-        router.attach(LocalPluginImageResource.PATH, LocalPluginImageResource.class);
-        router.attach(LocalPluginReloadResource.PATH, LocalPluginReloadResource.class);
-        router.attach(HubLogResource.PATH, HubLogResource.class);
-        router.attach(LoginResource.PATH, LoginResource.class);
-        router.attach(MediaProxyResource.PATH, MediaProxyResource.class);
-        router.attach(PluginDevicesResource.PATH, PluginDevicesResource.class);
-        router.attach(PresenceEntitiesResource.PATH, PresenceEntitiesResource.class);
-        router.attach(PresenceEntityResource.PATH, PresenceEntityResource.class);
-        router.attach(PresenceLocationsResource.PATH, PresenceLocationsResource.class);
-        router.attach(PresenceLocationResource.PATH, PresenceLocationResource.class);
-        router.attach(RegisterDeviceResource.PATH, RegisterDeviceResource.class);
-        router.attach(RemotePluginsResource.PATH, RemotePluginsResource.class);
-        router.attach(RemotePluginResource.PATH, RemotePluginResource.class);
-        router.attach(RemotePluginInstallResource.PATH, RemotePluginInstallResource.class);
-        router.attach(ShutdownResource.PATH, ShutdownResource.class);
-        router.attach(TaskActionClassesResource.PATH, TaskActionClassesResource.class);
-        router.attach(TaskActionSetsResource.PATH, TaskActionSetsResource.class);
-        router.attach(TaskConditionClassesResource.PATH, TaskConditionClassesResource.class);
-        router.attach(TaskResource.PATH, TaskResource.class);
-        router.attach(TasksResource.PATH, TasksResource.class);
-        router.attach(UserResource.PATH, UserResource.class);
+        // create the secure router
+        Router secureRouter = newRouter();
+        secureRouter.attach(ActivityLogResource.PATH, ActivityLogResource.class);
+        secureRouter.attach(DeviceBootstrapsResource.PATH, DeviceBootstrapsResource.class);
+        secureRouter.attach(DeviceBootstrapResource.PATH, DeviceBootstrapResource.class);
+        secureRouter.attach(DeviceResource.PATH, DeviceResource.class);
+        secureRouter.attach(DeviceConfigurationResource.PATH, DeviceConfigurationResource.class);
+        secureRouter.attach(DeviceConfigurationClassResource.PATH, DeviceConfigurationClassResource.class);
+        secureRouter.attach(DeviceTelemetryResource.PATH, DeviceTelemetryResource.class);
+        secureRouter.attach(DeviceTelemetryDatasetResource.PATH, DeviceTelemetryDatasetResource.class);
+        secureRouter.attach(DeviceTelemetryDatasetsResource.PATH, DeviceTelemetryDatasetsResource.class);
+        secureRouter.attach(DevicesResource.PATH, DevicesResource.class);
+        secureRouter.attach(DeviceVariableResource.PATH, DeviceVariableResource.class);
+        secureRouter.attach(DeviceVariablesResource.PATH, DeviceVariablesResource.class);
+        secureRouter.attach(ExecuteTaskResource.PATH, ExecuteTaskResource.class);
+        secureRouter.attach(GlobalVariableResource.PATH, GlobalVariableResource.class);
+        secureRouter.attach(GlobalVariablesResource.PATH, GlobalVariablesResource.class);
+        secureRouter.attach(HubConfigurationResource.PATH, HubConfigurationResource.class);
+        secureRouter.attach(HubConfigurationClassResource.PATH, HubConfigurationClassResource.class);
+        secureRouter.attach(HubImageResource.PATH, HubImageResource.class);
+        secureRouter.attach(HubResource.PATH, HubResource.class);
+        secureRouter.attach(HubPasswordResource.PATH, HubPasswordResource.class);
+        secureRouter.attach(HubSendTestEmailResource.PATH, HubSendTestEmailResource.class);
+        secureRouter.attach(HubRemoteRepositoriesResource.PATH, HubRemoteRepositoriesResource.class);
+        secureRouter.attach(HubRemoteRepositoryResource.PATH, HubRemoteRepositoryResource.class);
+        secureRouter.attach(HubsResource.PATH, HubsResource.class);
+        secureRouter.attach(ImageLibraryGroupResource.PATH, ImageLibraryGroupResource.class);
+        secureRouter.attach(ImageLibraryImageResource.PATH, ImageLibraryImageResource.class);
+        secureRouter.attach(ImageLibraryRootResource.PATH, ImageLibraryRootResource.class);
+        secureRouter.attach(LocalPluginsResource.PATH, LocalPluginsResource.class);
+        secureRouter.attach(LocalPluginResource.PATH, LocalPluginResource.class);
+        secureRouter.attach(LocalPluginConfigurationResource.PATH, LocalPluginConfigurationResource.class);
+        secureRouter.attach(LocalPluginConfigurationClassResource.PATH, LocalPluginConfigurationClassResource.class);
+        secureRouter.attach(LocalPluginImageResource.PATH, LocalPluginImageResource.class);
+        secureRouter.attach(LocalPluginReloadResource.PATH, LocalPluginReloadResource.class);
+        secureRouter.attach(HubLogResource.PATH, HubLogResource.class);
+        secureRouter.attach(MediaProxyResource.PATH, MediaProxyResource.class);
+        secureRouter.attach(PluginDevicesResource.PATH, PluginDevicesResource.class);
+        secureRouter.attach(PresenceEntitiesResource.PATH, PresenceEntitiesResource.class);
+        secureRouter.attach(PresenceEntityResource.PATH, PresenceEntityResource.class);
+        secureRouter.attach(PresenceLocationsResource.PATH, PresenceLocationsResource.class);
+        secureRouter.attach(PresenceLocationResource.PATH, PresenceLocationResource.class);
+        secureRouter.attach(RegisterDeviceResource.PATH, RegisterDeviceResource.class);
+        secureRouter.attach(RemotePluginsResource.PATH, RemotePluginsResource.class);
+        secureRouter.attach(RemotePluginResource.PATH, RemotePluginResource.class);
+        secureRouter.attach(RemotePluginInstallResource.PATH, RemotePluginInstallResource.class);
+        secureRouter.attach(ShutdownResource.PATH, ShutdownResource.class);
+        secureRouter.attach(TaskActionClassesResource.PATH, TaskActionClassesResource.class);
+        secureRouter.attach(TaskActionSetsResource.PATH, TaskActionSetsResource.class);
+        secureRouter.attach(TaskConditionClassesResource.PATH, TaskConditionClassesResource.class);
+        secureRouter.attach(TaskResource.PATH, TaskResource.class);
+        secureRouter.attach(TasksResource.PATH, TasksResource.class);
+        secureRouter.attach(UserResource.PATH, UserResource.class);
 
-        createAdditionalResources(router);
+        // create bearer token challenge authenticator
+        ChallengeAuthenticator auth = new ChallengeAuthenticator(getContext(), ChallengeScheme.HTTP_OAUTH_BEARER, getRealmName());
+        auth.setVerifier(new BearerTokenVerifier());
+        auth.setNext(secureRouter);
+
+        // create the insecure router
+        Router insecureRouter = newRouter();
+        insecureRouter.attach(LoginResource.PATH, LoginResource.class);
+        insecureRouter.attachDefault(auth);
+
+        // allow subclasses to create any additional resources they need to
+        createAdditionalResources(secureRouter, insecureRouter);
 
         // create a filter that prevents caching of API responses
-        Filter cache = new Filter(getContext(), router) {
+        return new Filter(getContext(), insecureRouter) {
             protected void afterHandle(Request request, Response response) {
                 super.afterHandle(request, response);
                 if (response != null && response.getEntity() != null) {
@@ -131,14 +141,6 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
                 }
             }
         };
-
-        // create bearer token challenge authenticator
-        ChallengeAuthenticator auth = new ChallengeAuthenticator(getContext(), ChallengeScheme.HTTP_OAUTH_BEARER, getRealmName());
-        auth.setVerifier(new BearerTokenVerifier());
-        auth.setNext(cache);
-
-        // make the authenticator the first restlet in the chain
-        return auth;
     }
 
     public String getApiRoot() {
@@ -146,5 +148,5 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
     }
 
     abstract protected String getRealmName();
-    abstract protected void createAdditionalResources(Router router);
+    abstract protected void createAdditionalResources(Router secureRouter, Router insecureRouter);
 }
