@@ -16,7 +16,7 @@ import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.dto.device.DeviceBootstrapDTO;
 import com.whizzosoftware.hobson.json.JSONAttributes;
-import com.whizzosoftware.hobson.rest.Authorizer;
+import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import org.json.JSONObject;
@@ -34,8 +34,6 @@ import java.util.Collection;
 public class DeviceBootstrapsResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/deviceBootstraps";
 
-    @Inject
-    Authorizer authorizer;
     @Inject
     DeviceManager deviceManager;
     @Inject
@@ -69,11 +67,9 @@ public class DeviceBootstrapsResource extends SelfInjectingServerResource {
      */
     @Override
     protected Representation get() throws ResourceException {
-        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
         ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
         boolean itemExpand = expansions.has(JSONAttributes.ITEM);
-
-        authorizer.authorizeHub(ctx.getHubContext());
 
         Collection<DeviceBootstrap> bootstraps = deviceManager.getDeviceBootstraps(ctx.getHubContext());
         ItemListDTO results = new ItemListDTO(idProvider.createDeviceBootstrapsId(ctx.getHubContext()), true);
@@ -107,9 +103,7 @@ public class DeviceBootstrapsResource extends SelfInjectingServerResource {
      */
     @Override
     protected Representation post(Representation entity) throws ResourceException {
-        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-
-        authorizer.authorizeHub(ctx.getHubContext());
+        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
         JSONObject json = JSONHelper.createJSONFromRepresentation(entity);
 
@@ -134,9 +128,7 @@ public class DeviceBootstrapsResource extends SelfInjectingServerResource {
      */
     @Override
     protected Representation delete() throws ResourceException {
-        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-
-        authorizer.authorizeHub(ctx.getHubContext());
+        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
         for (DeviceBootstrap db : deviceManager.getDeviceBootstraps(ctx.getHubContext())) {
             deviceManager.deleteDeviceBootstrap(ctx.getHubContext(), db.getId());

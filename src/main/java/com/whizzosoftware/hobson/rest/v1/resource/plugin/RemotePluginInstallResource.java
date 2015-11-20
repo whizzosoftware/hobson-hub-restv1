@@ -10,7 +10,7 @@ package com.whizzosoftware.hobson.rest.v1.resource.plugin;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.api.plugin.PluginContext;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
-import com.whizzosoftware.hobson.rest.Authorizer;
+import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.MapUtil;
 import org.restlet.data.Status;
@@ -29,8 +29,6 @@ import javax.inject.Inject;
 public class RemotePluginInstallResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/remote/{pluginId}/{pluginVersion}/install";
 
-    @Inject
-    Authorizer authorizer;
     @Inject
     PluginManager pluginManager;
     @Inject
@@ -51,8 +49,7 @@ public class RemotePluginInstallResource extends SelfInjectingServerResource {
      */
     @Override
     protected Representation post(Representation entity) {
-        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getHubContext());
+        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
         String pluginId = getAttribute("pluginId");
         String pluginVersion = getAttribute("pluginVersion");

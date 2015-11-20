@@ -13,7 +13,7 @@ import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
 import com.whizzosoftware.hobson.dto.device.DeviceBootstrapDTO;
-import com.whizzosoftware.hobson.rest.Authorizer;
+import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import org.restlet.data.MediaType;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -27,8 +27,6 @@ import javax.inject.Inject;
 public class DeviceBootstrapResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/deviceBootstraps/{bootstrapId}";
 
-    @Inject
-    Authorizer authorizer;
     @Inject
     DeviceManager deviceManager;
     @Inject
@@ -52,9 +50,7 @@ public class DeviceBootstrapResource extends SelfInjectingServerResource {
      */
     @Override
     protected Representation get() throws ResourceException {
-        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-
-        authorizer.authorizeHub(ctx.getHubContext());
+        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
         DeviceBootstrap db = deviceManager.getDeviceBootstrap(ctx.getHubContext(), getAttribute("bootstrapId"));
 
@@ -85,9 +81,7 @@ public class DeviceBootstrapResource extends SelfInjectingServerResource {
      */
     @Override
     protected Representation post(Representation entity) throws ResourceException {
-        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-
-        authorizer.authorizeHub(ctx.getHubContext());
+        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
         deviceManager.resetDeviceBootstrap(ctx.getHubContext(), getAttribute("bootstrapId"));
         return new EmptyRepresentation();
@@ -104,9 +98,7 @@ public class DeviceBootstrapResource extends SelfInjectingServerResource {
      */
     @Override
     protected Representation delete() throws ResourceException {
-        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-
-        authorizer.authorizeHub(ctx.getHubContext());
+        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
         deviceManager.deleteDeviceBootstrap(ctx.getHubContext(), getAttribute("bootstrapId"));
         return new EmptyRepresentation();

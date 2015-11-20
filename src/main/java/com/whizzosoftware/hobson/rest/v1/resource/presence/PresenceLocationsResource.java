@@ -13,7 +13,7 @@ import com.whizzosoftware.hobson.api.presence.PresenceManager;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.dto.presence.PresenceLocationDTO;
 import com.whizzosoftware.hobson.json.JSONAttributes;
-import com.whizzosoftware.hobson.rest.Authorizer;
+import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
@@ -30,8 +30,6 @@ import javax.inject.Inject;
 public class PresenceLocationsResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/presence/locations";
 
-    @Inject
-    Authorizer authorizer;
     @Inject
     PresenceManager presenceManager;
     @Inject
@@ -63,10 +61,8 @@ public class PresenceLocationsResource extends SelfInjectingServerResource {
      */
     @Override
     protected Representation get() {
-        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
         ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
-
-        authorizer.authorizeHub(ctx.getHubContext());
 
         ItemListDTO results = new ItemListDTO(idProvider.createPresenceLocationsId(ctx.getHubContext()), true);
         for (PresenceLocation location : presenceManager.getAllPresenceLocations(ctx.getHubContext())) {
@@ -97,8 +93,7 @@ public class PresenceLocationsResource extends SelfInjectingServerResource {
      */
     @Override
     protected Representation post(Representation entity) {
-        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getHubContext());
+        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
         JSONObject json = JSONHelper.createJSONFromRepresentation(entity);
 
         Double latitude = null;
@@ -141,8 +136,7 @@ public class PresenceLocationsResource extends SelfInjectingServerResource {
      */
     @Override
     protected Representation delete() {
-        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getHubContext());
+        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
         for (PresenceLocation pl : presenceManager.getAllPresenceLocations(ctx.getHubContext())) {
             presenceManager.deletePresenceLocation(pl.getContext());

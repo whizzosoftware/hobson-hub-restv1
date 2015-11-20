@@ -19,7 +19,7 @@ import com.whizzosoftware.hobson.api.variable.HobsonVariableCollection;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
 import com.whizzosoftware.hobson.dto.variable.HobsonVariableDTO;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
-import com.whizzosoftware.hobson.rest.Authorizer;
+import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import com.whizzosoftware.hobson.rest.v1.util.MediaVariableProxyProvider;
@@ -45,7 +45,7 @@ public class DeviceVariablesResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/{pluginId}/devices/{deviceId}/variables";
 
     @Inject
-    Authorizer authorizer;
+    HobsonAuthorizer authorizer;
     @Inject
     VariableManager variableManager;
     @Inject
@@ -73,10 +73,8 @@ public class DeviceVariablesResource extends SelfInjectingServerResource {
      */
     @Override
     protected Representation get() {
-        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
         ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
-
-        authorizer.authorizeHub(ctx.getHubContext());
 
         DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
         ItemListDTO results = new ItemListDTO(idProvider.createDeviceVariablesId(dctx));
@@ -121,9 +119,7 @@ public class DeviceVariablesResource extends SelfInjectingServerResource {
      */
     @Override
     protected Representation put(Representation entity) {
-        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-
-        authorizer.authorizeHub(ctx.getHubContext());
+        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
         DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
 

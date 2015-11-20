@@ -10,7 +10,7 @@ package com.whizzosoftware.hobson.rest.v1.resource.plugin;
 import com.whizzosoftware.hobson.api.image.ImageInputStream;
 import com.whizzosoftware.hobson.api.plugin.PluginContext;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
-import com.whizzosoftware.hobson.rest.Authorizer;
+import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import org.apache.commons.codec.binary.Base64InputStream;
 import org.restlet.data.MediaType;
@@ -31,8 +31,6 @@ public class LocalPluginImageResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/{pluginId}/image";
 
     @Inject
-    Authorizer authorizer;
-    @Inject
     PluginManager pluginManager;
 
     /**
@@ -48,8 +46,7 @@ public class LocalPluginImageResource extends SelfInjectingServerResource {
      */
     @Override
     protected Representation get() throws ResourceException {
-        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getHubContext());
+        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
         String pluginId = getAttribute("pluginId");
 
         String s = getQueryValue("base64");

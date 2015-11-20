@@ -14,7 +14,7 @@ import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
 import com.whizzosoftware.hobson.dto.device.DeviceBootstrapDTO;
-import com.whizzosoftware.hobson.rest.Authorizer;
+import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import org.json.JSONObject;
@@ -29,8 +29,6 @@ import javax.inject.Inject;
 public class RegisterDeviceResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/registerDevice";
 
-    @Inject
-    Authorizer authorizer;
     @Inject
     DeviceManager deviceManager;
     @Inject
@@ -61,9 +59,7 @@ public class RegisterDeviceResource extends SelfInjectingServerResource {
      */
     @Override
     protected Representation post(Representation entity) throws ResourceException {
-        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-
-        authorizer.authorizeHub(ctx.getHubContext());
+        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
         JSONObject json = JSONHelper.createJSONFromRepresentation(entity);
         DeviceBootstrap db = deviceManager.registerDeviceBootstrap(ctx.getHubContext(), json.getString("deviceId"));

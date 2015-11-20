@@ -18,7 +18,7 @@ import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.dto.telemetry.TelemetryDatasetDTO;
 import com.whizzosoftware.hobson.dto.telemetry.TemporalValueDTO;
-import com.whizzosoftware.hobson.rest.Authorizer;
+import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -30,8 +30,6 @@ import java.util.Collection;
 public class DeviceTelemetryDatasetsResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/{pluginId}/devices/{deviceId}/telemetry/datasets";
 
-    @Inject
-    Authorizer authorizer;
     @Inject
     DeviceManager deviceManager;
     @Inject
@@ -64,10 +62,8 @@ public class DeviceTelemetryDatasetsResource extends SelfInjectingServerResource
      */
     @Override
     protected Representation get() {
-        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
         ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
-
-        authorizer.authorizeHub(ctx.getHubContext());
 
         DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
         HobsonDevice device = deviceManager.getDevice(dctx);

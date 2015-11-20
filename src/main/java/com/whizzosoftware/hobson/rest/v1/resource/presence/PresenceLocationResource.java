@@ -12,7 +12,7 @@ import com.whizzosoftware.hobson.api.presence.PresenceLocation;
 import com.whizzosoftware.hobson.api.presence.PresenceLocationContext;
 import com.whizzosoftware.hobson.api.presence.PresenceManager;
 import com.whizzosoftware.hobson.dto.presence.PresenceLocationDTO;
-import com.whizzosoftware.hobson.rest.Authorizer;
+import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import org.restlet.data.MediaType;
 import org.restlet.data.Status;
@@ -26,8 +26,6 @@ import javax.inject.Inject;
 public class PresenceLocationResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/presence/locations/{locationId}";
 
-    @Inject
-    Authorizer authorizer;
     @Inject
     PresenceManager presenceManager;
     @Inject
@@ -51,9 +49,7 @@ public class PresenceLocationResource extends SelfInjectingServerResource {
      */
     @Override
     protected Representation get() {
-        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-
-        authorizer.authorizeHub(ctx.getHubContext());
+        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
         PresenceLocation location = presenceManager.getPresenceLocation(PresenceLocationContext.create(ctx.getHubContext(), getAttribute("locationId")));
 
@@ -75,9 +71,7 @@ public class PresenceLocationResource extends SelfInjectingServerResource {
      */
     @Override
     protected Representation delete() {
-        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-
-        authorizer.authorizeHub(ctx.getHubContext());
+        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
         PresenceLocationContext pec = PresenceLocationContext.create(ctx.getHubContext(), getAttribute("locationId"));
         presenceManager.deletePresenceLocation(pec);

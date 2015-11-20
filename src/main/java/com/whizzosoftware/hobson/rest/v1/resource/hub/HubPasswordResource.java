@@ -10,7 +10,7 @@ package com.whizzosoftware.hobson.rest.v1.resource.hub;
 import com.whizzosoftware.hobson.api.HobsonRuntimeException;
 import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.dto.PasswordChangeDTO;
-import com.whizzosoftware.hobson.rest.Authorizer;
+import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
@@ -30,8 +30,6 @@ import javax.inject.Inject;
 public class HubPasswordResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/password";
 
-    @Inject
-    Authorizer authorizer;
     @Inject
     HubManager hubManager;
 
@@ -56,9 +54,7 @@ public class HubPasswordResource extends SelfInjectingServerResource {
      */
     @Override
     protected Representation post(Representation entity) throws ResourceException {
-        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-
-        authorizer.authorizeHub(ctx.getHubContext());
+        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
         if (hubManager.getLocalManager() != null) {
             PasswordChangeDTO dto = new PasswordChangeDTO(JSONHelper.createJSONFromRepresentation(entity));

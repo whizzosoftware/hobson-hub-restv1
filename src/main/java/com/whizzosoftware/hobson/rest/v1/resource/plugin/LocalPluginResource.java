@@ -14,7 +14,7 @@ import com.whizzosoftware.hobson.api.plugin.PluginManager;
 import com.whizzosoftware.hobson.dto.DTOBuildContext;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.dto.plugin.HobsonPluginDTO;
-import com.whizzosoftware.hobson.rest.Authorizer;
+import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import org.restlet.data.MediaType;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -27,8 +27,6 @@ import javax.inject.Inject;
 public class LocalPluginResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/local/{pluginId}";
 
-    @Inject
-    Authorizer authorizer;
     @Inject
     PluginManager pluginManager;
     @Inject
@@ -69,10 +67,8 @@ public class LocalPluginResource extends SelfInjectingServerResource {
      */
     @Override
     protected Representation get() throws ResourceException {
-        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
         ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
-
-        authorizer.authorizeHub(ctx.getHubContext());
 
         PluginContext pctx = PluginContext.create(ctx.getHubContext(), getAttribute("pluginId"));
         HobsonPlugin plugin = pluginManager.getLocalPlugin(pctx);

@@ -15,7 +15,7 @@ import com.whizzosoftware.hobson.api.plugin.PluginManager;
 import com.whizzosoftware.hobson.api.property.*;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.dto.property.PropertyContainerDTO;
-import com.whizzosoftware.hobson.rest.Authorizer;
+import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
@@ -37,8 +37,6 @@ import javax.inject.Inject;
 public class LocalPluginConfigurationResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/local/{pluginId}/configuration";
 
-    @Inject
-    Authorizer authorizer;
     @Inject
     HubManager hubManager;
     @Inject
@@ -70,10 +68,8 @@ public class LocalPluginConfigurationResource extends SelfInjectingServerResourc
      */
     @Override
     protected Representation get() throws ResourceException {
-        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
         ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
-
-        authorizer.authorizeHub(ctx.getHubContext());
 
         String pluginId = getAttribute("pluginId");
         PluginContext pctx = PluginContext.create(ctx.getHubContext(), pluginId);
@@ -123,8 +119,7 @@ public class LocalPluginConfigurationResource extends SelfInjectingServerResourc
      */
     @Override
     protected Representation put(Representation entity) throws ResourceException {
-        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getHubContext());
+        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
         PluginContext pc = PluginContext.create(ctx.getHubContext(), getAttribute("pluginId"));
         final HobsonPlugin plugin = pluginManager.getLocalPlugin(pc);

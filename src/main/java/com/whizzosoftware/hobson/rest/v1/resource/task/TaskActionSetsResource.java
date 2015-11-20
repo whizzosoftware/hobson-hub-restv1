@@ -14,7 +14,7 @@ import com.whizzosoftware.hobson.api.task.TaskManager;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.dto.property.PropertyContainerSetDTO;
-import com.whizzosoftware.hobson.rest.Authorizer;
+import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -27,8 +27,6 @@ import javax.inject.Inject;
 public class TaskActionSetsResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/tasks/actionSets";
 
-    @Inject
-    Authorizer authorizer;
     @Inject
     HubManager hubManager;
     @Inject
@@ -58,10 +56,8 @@ public class TaskActionSetsResource extends SelfInjectingServerResource {
      */
     @Override
     protected Representation get() throws ResourceException {
-        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
         ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
-
-        authorizer.authorizeHub(ctx.getHubContext());
 
         ItemListDTO results = new ItemListDTO(idProvider.createTaskActionSetsId(ctx.getHubContext()));
         boolean expandItems = expansions.has("item");

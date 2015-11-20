@@ -13,7 +13,7 @@ import com.whizzosoftware.hobson.api.task.TaskManager;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.dto.property.PropertyContainerClassDTO;
-import com.whizzosoftware.hobson.rest.Authorizer;
+import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -26,8 +26,6 @@ import javax.inject.Inject;
 public class TaskActionClassesResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/tasks/actionClasses";
 
-    @Inject
-    Authorizer authorizer;
     @Inject
     TaskManager taskManager;
     @Inject
@@ -60,10 +58,8 @@ public class TaskActionClassesResource extends SelfInjectingServerResource {
      */
     @Override
     protected Representation get() throws ResourceException {
-        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
         ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
-
-        authorizer.authorizeHub(ctx.getHubContext());
 
         boolean expandItems = expansions.has("item");
         boolean applyConstraints = Boolean.parseBoolean(getQueryValue("constraints"));

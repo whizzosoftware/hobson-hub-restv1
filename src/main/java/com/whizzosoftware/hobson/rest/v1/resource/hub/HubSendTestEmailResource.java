@@ -11,7 +11,7 @@ import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
 import com.whizzosoftware.hobson.api.HobsonRuntimeException;
 import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.dto.property.PropertyContainerDTO;
-import com.whizzosoftware.hobson.rest.Authorizer;
+import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
@@ -31,8 +31,6 @@ import javax.inject.Inject;
 public class HubSendTestEmailResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/configuration/sendTestEmail";
 
-    @Inject
-    Authorizer authorizer;
     @Inject
     HubManager hubManager;
 
@@ -63,8 +61,7 @@ public class HubSendTestEmailResource extends SelfInjectingServerResource {
     @Override
     protected Representation post(Representation entity) throws ResourceException {
         try {
-            HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-            authorizer.authorizeHub(ctx.getHubContext());
+            HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
             PropertyContainerDTO dto = new PropertyContainerDTO.Builder(JSONHelper.createJSONFromRepresentation(entity)).build();
 
             hubManager.sendTestEmail(

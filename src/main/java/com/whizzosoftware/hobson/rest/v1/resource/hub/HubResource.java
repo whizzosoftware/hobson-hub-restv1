@@ -19,7 +19,7 @@ import com.whizzosoftware.hobson.dto.DTOBuildContext;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.dto.hub.HobsonHubDTO;
 import com.whizzosoftware.hobson.json.JSONAttributes;
-import com.whizzosoftware.hobson.rest.Authorizer;
+import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.MediaVariableProxyProvider;
 import org.restlet.data.MediaType;
@@ -38,8 +38,6 @@ import javax.inject.Inject;
 public class HubResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}";
 
-    @Inject
-    Authorizer authorizer;
     @Inject
     HubManager hubManager;
     @Inject
@@ -92,12 +90,10 @@ public class HubResource extends SelfInjectingServerResource {
      */
     @Override
     protected Representation get() throws ResourceException {
-        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
         ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
         expansions.add(JSONAttributes.ITEM);
-
-        authorizer.authorizeHub(ctx.getHubContext());
 
         HobsonHub hub = hubManager.getHub(ctx.getHubContext());
         HobsonHubDTO dto = new HobsonHubDTO.Builder(

@@ -15,7 +15,7 @@ import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.dto.presence.PresenceEntityDTO;
 import com.whizzosoftware.hobson.json.JSONAttributes;
-import com.whizzosoftware.hobson.rest.Authorizer;
+import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import org.json.JSONObject;
@@ -36,8 +36,6 @@ import javax.inject.Inject;
 public class PresenceEntitiesResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/presence/entities";
 
-    @Inject
-    Authorizer authorizer;
     @Inject
     PresenceManager presenceManager;
     @Inject
@@ -69,10 +67,8 @@ public class PresenceEntitiesResource extends SelfInjectingServerResource {
      */
     @Override
     protected Representation get() {
-        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
         ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
-
-        authorizer.authorizeHub(ctx.getHubContext());
 
         ItemListDTO results = new ItemListDTO(idProvider.createPresenceEntitiesId(ctx.getHubContext()), true);
         boolean showDetails = expansions.has(JSONAttributes.ITEM);
@@ -103,8 +99,7 @@ public class PresenceEntitiesResource extends SelfInjectingServerResource {
      */
     @Override
     protected Representation post(Representation entity) {
-        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getHubContext());
+        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
         JSONObject json = JSONHelper.createJSONFromRepresentation(entity);
         if (json.has("name") && json.getString("name").trim().length() > 0) {
             presenceManager.addPresenceEntity(ctx.getHubContext(), json.getString("name"));
@@ -126,8 +121,7 @@ public class PresenceEntitiesResource extends SelfInjectingServerResource {
      */
     @Override
     protected Representation delete() {
-        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getHubContext());
+        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
         for (PresenceEntity entity : presenceManager.getAllPresenceEntities(ctx.getHubContext())) {
             presenceManager.deletePresenceEntity(entity.getContext());

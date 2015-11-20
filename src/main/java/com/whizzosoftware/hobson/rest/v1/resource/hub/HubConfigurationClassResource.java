@@ -10,7 +10,7 @@ package com.whizzosoftware.hobson.rest.v1.resource.hub;
 import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.dto.property.PropertyContainerClassDTO;
-import com.whizzosoftware.hobson.rest.Authorizer;
+import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import org.restlet.data.MediaType;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -23,8 +23,6 @@ import javax.inject.Inject;
 public class HubConfigurationClassResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/configurationClass";
 
-    @Inject
-    Authorizer authorizer;
     @Inject
     HubManager hubManager;
     @Inject
@@ -52,9 +50,7 @@ public class HubConfigurationClassResource extends SelfInjectingServerResource {
      */
     @Override
     protected Representation get() throws ResourceException {
-        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-
-        authorizer.authorizeHub(ctx.getHubContext());
+        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
         PropertyContainerClassDTO dto = new PropertyContainerClassDTO.Builder(
             idProvider.createHubConfigurationClassId(ctx.getHubContext()),

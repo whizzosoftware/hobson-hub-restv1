@@ -10,7 +10,7 @@ package com.whizzosoftware.hobson.rest.v1.resource.hub;
 import com.whizzosoftware.hobson.api.HobsonRuntimeException;
 import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.api.hub.LineRange;
-import com.whizzosoftware.hobson.rest.Authorizer;
+import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import org.restlet.data.Header;
 import org.restlet.data.MediaType;
@@ -33,8 +33,6 @@ import java.io.IOException;
 public class HubLogResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/log";
 
-    @Inject
-    Authorizer authorizer;
     @Inject
     HubManager hubManager;
 
@@ -85,8 +83,7 @@ public class HubLogResource extends SelfInjectingServerResource {
             endLine = range.hasEndLine() ? range.getEndLine() : Long.MAX_VALUE - 1;
         }
 
-        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getHubContext());
+        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
         AppendableRepresentation ar = new AppendableRepresentation();
         ar.setMediaType(MediaType.APPLICATION_JSON);

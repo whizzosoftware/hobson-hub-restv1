@@ -9,7 +9,7 @@ package com.whizzosoftware.hobson.rest.v1.resource.image;
 
 import com.whizzosoftware.hobson.api.image.ImageInputStream;
 import com.whizzosoftware.hobson.api.image.ImageManager;
-import com.whizzosoftware.hobson.rest.Authorizer;
+import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import org.apache.commons.codec.binary.Base64;
@@ -37,11 +37,8 @@ import java.io.IOException;
  * @author Dan Noguerol
  */
 public class HubImageResource extends SelfInjectingServerResource {
-    public static final String REL = "image";
     public static final String PATH = "/users/{userId}/hubs/{hubId}/image";
 
-    @Inject
-    Authorizer authorizer;
     @Inject
     ImageManager imageManager;
 
@@ -58,8 +55,7 @@ public class HubImageResource extends SelfInjectingServerResource {
      */
     @Override
     protected Representation get() throws ResourceException {
-        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getHubContext());
+        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
         ImageInputStream iis = imageManager.getHubImage(ctx.getHubContext());
         return new InputRepresentation(iis.getInputStream(), MediaType.valueOf(iis.getMediaType()));
     }
@@ -86,8 +82,7 @@ public class HubImageResource extends SelfInjectingServerResource {
      */
     @Override
     protected Representation put(Representation entity) throws ResourceException {
-        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getHubContext());
+        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
         if (MediaType.APPLICATION_JSON.equals(entity.getMediaType(), true)) {
             JSONObject json = JSONHelper.createJSONFromRepresentation(entity);

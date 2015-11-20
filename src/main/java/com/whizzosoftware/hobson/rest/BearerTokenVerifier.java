@@ -7,16 +7,26 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest;
 
-import com.whizzosoftware.hobson.api.user.HobsonUser;
+import org.restlet.Application;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.data.ChallengeScheme;
 import org.restlet.data.Cookie;
+import org.restlet.security.Role;
 import org.restlet.security.User;
 import org.restlet.security.Verifier;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class BearerTokenVerifier implements Verifier {
     TokenHelper tokenHelper = new TokenHelper();
+
+    private Application application;
+
+    public BearerTokenVerifier(Application application) {
+        this.application = application;
+    }
 
     public int verify(Request request, Response response) {
         int result = RESULT_INVALID;
@@ -35,23 +45,32 @@ public class BearerTokenVerifier implements Verifier {
         }
 
         if (token != null) {
-            HobsonUser user = tokenHelper.verifyToken(token);
-            if (user != null) {
+            TokenVerification tc = tokenHelper.verifyToken(token);
+            if (tc.hasUser()) {
                 result = RESULT_VALID;
                 request.getClientInfo().setUser(
                     new User(
-                        user.getId(),
+                        tc.getUser().getId(),
                         token,
-                        user.getGivenName(),
-                        user.getFamilyName(),
+                        tc.getUser().getGivenName(),
+                        tc.getUser().getFamilyName(),
                         null
                     )
                 );
+                request.getClientInfo().setRoles(createRoles(application, tc.getScope()));
             }
         } else {
             result = RESULT_MISSING;
         }
 
         return result;
+    }
+
+    protected List<Role> createRoles(Application application, String[] scope) {
+        List<Role> roles = new ArrayList<>();
+        for (String s : scope) {
+            roles.add(application.getRole(s));
+        }
+        return roles;
     }
 }

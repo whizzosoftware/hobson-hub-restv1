@@ -11,7 +11,7 @@ import com.whizzosoftware.hobson.api.HobsonRuntimeException;
 import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.variable.HobsonVariable;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
-import com.whizzosoftware.hobson.rest.Authorizer;
+import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.URIInfo;
 import com.whizzosoftware.hobson.rest.v1.util.URLVariableParser;
@@ -59,14 +59,11 @@ public class MediaProxyResource extends SelfInjectingServerResource {
     private static final int DEFAULT_REALM_PORT = 80;
 
     @Inject
-    Authorizer authorizer;
-    @Inject
     VariableManager variableManager;
 
     @Override
     public Representation head() {
-        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getHubContext());
+        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
         HobsonVariable hvar = variableManager.getDeviceVariable(DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId")), getAttribute("mediaId"));
         if (hvar != null && hvar.getValue() != null) {
             try {
@@ -99,8 +96,7 @@ public class MediaProxyResource extends SelfInjectingServerResource {
     @Override
     public Representation get() {
         try {
-            HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-            authorizer.authorizeHub(ctx.getHubContext());
+            HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
             String s = getQueryValue("base64");
             final boolean base64 = (s != null) && Boolean.parseBoolean(s);

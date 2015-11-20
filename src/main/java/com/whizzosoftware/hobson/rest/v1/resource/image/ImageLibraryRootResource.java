@@ -12,7 +12,7 @@ import com.whizzosoftware.hobson.api.image.ImageGroup;
 import com.whizzosoftware.hobson.api.image.ImageManager;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.json.JSONAttributes;
-import com.whizzosoftware.hobson.rest.Authorizer;
+import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.MapUtil;
 import org.json.JSONArray;
@@ -30,8 +30,6 @@ import java.util.List;
 public class ImageLibraryRootResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/imageLibrary";
 
-    @Inject
-    Authorizer authorizer;
     @Inject
     ImageManager imageManager;
     @Inject
@@ -61,8 +59,7 @@ public class ImageLibraryRootResource extends SelfInjectingServerResource {
      */
     @Override
     public Representation get() throws ResourceException {
-        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getHubContext());
+        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
         JSONArray results = new JSONArray();
         List<ImageGroup> groups = imageManager.getImageLibraryGroups(ctx.getHubContext());
         for (ImageGroup group : groups) {

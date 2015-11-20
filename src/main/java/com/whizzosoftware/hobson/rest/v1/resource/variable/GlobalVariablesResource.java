@@ -13,7 +13,7 @@ import com.whizzosoftware.hobson.api.variable.VariableManager;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.dto.variable.HobsonVariableDTO;
-import com.whizzosoftware.hobson.rest.Authorizer;
+import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -24,8 +24,6 @@ import javax.inject.Inject;
 public class GlobalVariablesResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/globalVariables";
 
-    @Inject
-    Authorizer authorizer;
     @Inject
     VariableManager variableManager;
     @Inject
@@ -55,10 +53,8 @@ public class GlobalVariablesResource extends SelfInjectingServerResource {
      */
     @Override
     protected Representation get() {
-        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
+        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
         ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
-
-        authorizer.authorizeHub(ctx.getHubContext());
 
         ItemListDTO results = new ItemListDTO(idProvider.createGlobalVariablesId(ctx.getHubContext()));
         for (HobsonVariable v : variableManager.getGlobalVariables(ctx.getHubContext())) {

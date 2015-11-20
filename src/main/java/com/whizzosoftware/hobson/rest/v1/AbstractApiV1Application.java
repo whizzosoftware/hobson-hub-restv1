@@ -10,6 +10,7 @@ package com.whizzosoftware.hobson.rest.v1;
 import com.whizzosoftware.hobson.rest.BearerTokenVerifier;
 import com.whizzosoftware.hobson.rest.HobsonApiApplication;
 import com.whizzosoftware.hobson.rest.HobsonStatusService;
+import com.whizzosoftware.hobson.rest.HobsonRole;
 import com.whizzosoftware.hobson.rest.v1.resource.hub.HubLogResource;
 import com.whizzosoftware.hobson.rest.v1.resource.hub.ShutdownResource;
 import com.whizzosoftware.hobson.rest.v1.resource.login.LoginResource;
@@ -38,6 +39,7 @@ import org.restlet.data.Status;
 import org.restlet.ext.guice.ResourceInjectingApplication;
 import org.restlet.routing.Filter;
 import org.restlet.routing.Router;
+import org.restlet.security.Authorizer;
 import org.restlet.security.ChallengeAuthenticator;
 
 import java.util.ArrayList;
@@ -56,7 +58,13 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
      */
     public AbstractApiV1Application() {
         super();
+
         setStatusService(new HobsonStatusService());
+
+        // set up application roles
+        for (HobsonRole r : HobsonRole.values()) {
+            getRoles().add(r.value());
+        }
     }
 
     @Override
@@ -115,10 +123,14 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
         secureRouter.attach(TasksResource.PATH, TasksResource.class);
         secureRouter.attach(UserResource.PATH, UserResource.class);
 
+        // create the authorizer
+        Authorizer authorizer = createAuthorizer();
+        authorizer.setNext(secureRouter);
+
         // create bearer token challenge authenticator
         ChallengeAuthenticator auth = new ChallengeAuthenticator(getContext(), ChallengeScheme.HTTP_OAUTH_BEARER, getRealmName());
-        auth.setVerifier(new BearerTokenVerifier());
-        auth.setNext(secureRouter);
+        auth.setVerifier(new BearerTokenVerifier(this));
+        auth.setNext(authorizer);
 
         // create the insecure router
         Router insecureRouter = newRouter();
@@ -148,5 +160,6 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
     }
 
     abstract protected String getRealmName();
+    abstract protected Authorizer createAuthorizer();
     abstract protected void createAdditionalResources(Router secureRouter, Router insecureRouter);
 }

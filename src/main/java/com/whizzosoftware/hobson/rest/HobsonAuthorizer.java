@@ -7,21 +7,11 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest;
 
-import com.whizzosoftware.hobson.api.hub.HubContext;
-
 /**
  * An interface for performing user authorization.
  *
  * @author Dan Noguerol
  */
-public interface Authorizer {
-    /**
-     * Verifies whether a user is authorized to acccess a hub.
-     *
-     * @param ctx the context of the hub being accessed
-     *
-     * @throws com.whizzosoftware.hobson.api.HobsonAuthException if authorization fails
-     *
-     */
-    public void authorizeHub(HubContext ctx);
+public interface HobsonAuthorizer {
+    String HUB_CONTEXT = "hubContext";
 }

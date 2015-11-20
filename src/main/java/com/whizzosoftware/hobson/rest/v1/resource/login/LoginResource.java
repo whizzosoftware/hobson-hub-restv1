@@ -1,3 +1,10 @@
+/*******************************************************************************
+ * Copyright (c) 2015 Whizzo Software, LLC.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.login;
 
 import com.whizzosoftware.hobson.api.HobsonAuthenticationException;
@@ -9,6 +16,7 @@ import com.whizzosoftware.hobson.api.user.HobsonUser;
 import com.whizzosoftware.hobson.api.user.UserStore;
 import com.whizzosoftware.hobson.dto.*;
 import com.whizzosoftware.hobson.json.JSONAttributes;
+import com.whizzosoftware.hobson.rest.HobsonRole;
 import com.whizzosoftware.hobson.rest.TokenHelper;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import org.json.JSONObject;
@@ -66,7 +74,7 @@ public class LoginResource extends SelfInjectingServerResource {
             boolean showDetails = expansions.has(JSONAttributes.USER);
 
             AuthResultDTO dto = new AuthResultDTO(
-                tokenHelper.createToken(user.getId()),
+                tokenHelper.createToken(user.getId(), HobsonRole.USER.value()),
                 new HobsonUserDTO.Builder(
                     new DTOBuildContext.Builder().
                         expansionFields(expansions.pushContext(JSONAttributes.USER)).

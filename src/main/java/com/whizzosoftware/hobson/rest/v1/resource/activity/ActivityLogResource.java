@@ -12,7 +12,7 @@ import com.whizzosoftware.hobson.api.activity.ActivityLogManager;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.dto.activity.ActivityEventDTO;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
-import com.whizzosoftware.hobson.rest.Authorizer;
+import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -29,8 +29,6 @@ import javax.inject.Inject;
 public class ActivityLogResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/activityLog";
 
-    @Inject
-    Authorizer authorizer;
     @Inject
     ActivityLogManager activityManager;
     @Inject
@@ -60,8 +58,7 @@ public class ActivityLogResource extends SelfInjectingServerResource {
      */
     @Override
     protected Representation get() throws ResourceException {
-        HobsonRestContext ctx = HobsonRestContext.createContext(this, getRequest());
-        authorizer.authorizeHub(ctx.getHubContext());
+        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
         ItemListDTO results = new ItemListDTO(idProvider.createActivityLogId(ctx.getHubContext()));
         for (ActivityLogEntry event : activityManager.getActivityLog(25)) {
