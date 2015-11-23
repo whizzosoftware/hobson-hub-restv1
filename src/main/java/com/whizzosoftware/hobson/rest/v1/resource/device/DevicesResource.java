@@ -55,6 +55,7 @@ public class DevicesResource extends SelfInjectingServerResource {
      * @apiDescription Retrieves a summary list of devices published by all plugins.
      * @apiGroup Devices
      * @apiParam (Query Parameters) {String} var Filter the list of devices to only those that publish the specified variable name
+     * @apiParam (Query Parameters) {String} type Filter the list of devices to only those of a specific type
      * @apiParam (Query Parameters) {String} expand A comma-separated list of attributes to expand (supported values are "item", "configurationClass", "configuration", "preferredVariable", "variables").
      * @apiSuccessExample {json} Success Response:
      * {
@@ -78,6 +79,7 @@ public class DevicesResource extends SelfInjectingServerResource {
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
         ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
         String varFilter = getQueryValue("var");
+        String typeFilter = getQueryValue("type");
 
         ItemListDTO results = new ItemListDTO(idProvider.createDevicesId(ctx.getHubContext()));
 
@@ -98,7 +100,7 @@ public class DevicesResource extends SelfInjectingServerResource {
             expansions.pushContext(JSONAttributes.ITEM);
 
             for (HobsonDevice device : devices) {
-                if (varFilter == null || variableManager.hasDeviceVariable(device.getContext(), varFilter)) {
+                if ((varFilter == null || variableManager.hasDeviceVariable(device.getContext(), varFilter)) && (typeFilter == null || device.getType().toString().equals(typeFilter))) {
                     HobsonDeviceDTO dto = new HobsonDeviceDTO.Builder(
                         dbc,
                         device,
