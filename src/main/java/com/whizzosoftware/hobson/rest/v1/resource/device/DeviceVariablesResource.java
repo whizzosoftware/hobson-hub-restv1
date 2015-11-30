@@ -45,8 +45,6 @@ public class DeviceVariablesResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/{pluginId}/devices/{deviceId}/variables";
 
     @Inject
-    HobsonAuthorizer authorizer;
-    @Inject
     VariableManager variableManager;
     @Inject
     IdProvider idProvider;

@@ -207,6 +207,11 @@ public class RestResourceIdProvider implements IdProvider {
     }
 
     @Override
+    public String createVariablesId(HubContext ctx) {
+        return null;
+    }
+
+    @Override
     public String createDevicesId(HubContext ctx) {
         return new Template(apiRoot + DevicesResource.PATH).format(createHubValues(ctx));
     }
@@ -245,6 +250,12 @@ public class RestResourceIdProvider implements IdProvider {
         Map<String,String> values = createDeviceValues(ctx);
         values.put(JSONAttributes.VARIABLE_NAME, name);
         return t.format(values);
+    }
+
+    @Override
+    public String createDeviceVariableName(String variableId) {
+        // TODO
+        return null;
     }
 
     @Override
@@ -316,6 +327,12 @@ public class RestResourceIdProvider implements IdProvider {
     @Override
     public String createDeviceTelemetryDatasetsId(DeviceContext ctx) {
         return new Template(apiRoot + DeviceTelemetryDatasetsResource.PATH).format(createDeviceValues(ctx));
+    }
+
+    @Override
+    public DeviceContext createDeviceVariableContext(String variableId) {
+        // TODO
+        return null;
     }
 
     @Override
