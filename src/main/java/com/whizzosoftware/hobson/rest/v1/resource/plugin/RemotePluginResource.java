@@ -7,12 +7,11 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.plugin;
 
-import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.api.plugin.PluginContext;
 import com.whizzosoftware.hobson.api.plugin.PluginDescriptor;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
-import com.whizzosoftware.hobson.dto.DTOBuildContext;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
+import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
 import com.whizzosoftware.hobson.dto.plugin.HobsonPluginDTO;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
@@ -31,7 +30,7 @@ public class RemotePluginResource extends SelfInjectingServerResource {
     @Inject
     PluginManager pluginManager;
     @Inject
-    IdProvider idProvider;
+    DTOBuildContextFactory dtoBuildContextFactory;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/remote/:pluginId/:pluginVersion Get remote plugin details
@@ -59,7 +58,13 @@ public class RemotePluginResource extends SelfInjectingServerResource {
         PluginContext pctx = PluginContext.create(ctx.getHubContext(), getQueryValue("pluginId"));
         PluginDescriptor pd = pluginManager.getRemotePluginDescriptor(pctx, version);
 
-        HobsonPluginDTO dto = new HobsonPluginDTO.Builder(new DTOBuildContext.Builder().pluginManager(pluginManager).expansionFields(expansions).idProvider(idProvider).build(), new PluginDescriptorAdaptor(pd, null), pd.getDescription(), pd.getVersionString(), true).build();
+        HobsonPluginDTO dto = new HobsonPluginDTO.Builder(
+            dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions),
+            new PluginDescriptorAdaptor(pd, null),
+            pd.getDescription(),
+            pd.getVersionString(),
+            true
+        ).build();
 
         JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
         jr.setMediaType(new MediaType(dto.getJSONMediaType()));

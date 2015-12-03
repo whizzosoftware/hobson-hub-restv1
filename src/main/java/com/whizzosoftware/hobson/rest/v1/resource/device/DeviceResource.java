@@ -10,15 +10,11 @@ package com.whizzosoftware.hobson.rest.v1.resource.device;
 import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.api.device.HobsonDevice;
-import com.whizzosoftware.hobson.api.persist.IdProvider;
-import com.whizzosoftware.hobson.api.telemetry.TelemetryManager;
-import com.whizzosoftware.hobson.api.variable.VariableManager;
-import com.whizzosoftware.hobson.dto.DTOBuildContext;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
+import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
 import com.whizzosoftware.hobson.dto.device.HobsonDeviceDTO;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.MediaVariableProxyProvider;
 import org.restlet.data.MediaType;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -38,11 +34,7 @@ public class DeviceResource extends SelfInjectingServerResource {
     @Inject
     DeviceManager deviceManager;
     @Inject
-    VariableManager variableManager;
-    @Inject
-    TelemetryManager telemetryManager;
-    @Inject
-    IdProvider idProvider;
+    DTOBuildContextFactory dtoBuildContextFactory;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/devices/:deviceId Get device details
@@ -88,13 +80,7 @@ public class DeviceResource extends SelfInjectingServerResource {
         HobsonDevice device = deviceManager.getDevice(dctx);
 
         HobsonDeviceDTO dto = new HobsonDeviceDTO.Builder(
-            new DTOBuildContext.Builder().
-                deviceManager(deviceManager).
-                variableManager(variableManager).
-                expansionFields(expansions).
-                idProvider(idProvider).
-                addProxyValueProvider(new MediaVariableProxyProvider(ctx)).
-                build(),
+            dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions),
             device,
             true
         ).build();

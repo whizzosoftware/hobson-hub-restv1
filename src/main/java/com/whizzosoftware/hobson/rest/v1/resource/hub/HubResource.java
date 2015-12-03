@@ -7,21 +7,14 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.hub;
 
-import com.whizzosoftware.hobson.api.device.DeviceManager;
-import com.whizzosoftware.hobson.api.persist.IdProvider;
-import com.whizzosoftware.hobson.api.presence.PresenceManager;
 import com.whizzosoftware.hobson.api.hub.HobsonHub;
 import com.whizzosoftware.hobson.api.hub.HubManager;
-import com.whizzosoftware.hobson.api.plugin.PluginManager;
-import com.whizzosoftware.hobson.api.task.TaskManager;
-import com.whizzosoftware.hobson.api.variable.VariableManager;
-import com.whizzosoftware.hobson.dto.DTOBuildContext;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
+import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
 import com.whizzosoftware.hobson.dto.hub.HobsonHubDTO;
 import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.MediaVariableProxyProvider;
 import org.restlet.data.MediaType;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -41,17 +34,7 @@ public class HubResource extends SelfInjectingServerResource {
     @Inject
     HubManager hubManager;
     @Inject
-    PluginManager pluginManager;
-    @Inject
-    DeviceManager deviceManager;
-    @Inject
-    VariableManager variableManager;
-    @Inject
-    TaskManager taskManager;
-    @Inject
-    PresenceManager presenceManager;
-    @Inject
-    IdProvider idProvider;
+    DTOBuildContextFactory dtoBuildContextFactory;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId Get Hub details
@@ -97,17 +80,7 @@ public class HubResource extends SelfInjectingServerResource {
 
         HobsonHub hub = hubManager.getHub(ctx.getHubContext());
         HobsonHubDTO dto = new HobsonHubDTO.Builder(
-            new DTOBuildContext.Builder().
-                hubManager(hubManager).
-                pluginManager(pluginManager).
-                deviceManager(deviceManager).
-                variableManager(variableManager).
-                taskManager(taskManager).
-                presenceManager(presenceManager).
-                expansionFields(expansions).
-                idProvider(idProvider).
-                addProxyValueProvider(new MediaVariableProxyProvider(ctx)).
-                build(),
+            dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions),
             hub,
             true
         ).build();

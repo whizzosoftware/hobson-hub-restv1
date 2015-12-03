@@ -13,6 +13,7 @@ import com.whizzosoftware.hobson.api.presence.PresenceEntity;
 import com.whizzosoftware.hobson.api.presence.PresenceManager;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
+import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
 import com.whizzosoftware.hobson.dto.presence.PresenceEntityDTO;
 import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
@@ -38,6 +39,8 @@ public class PresenceEntitiesResource extends SelfInjectingServerResource {
 
     @Inject
     PresenceManager presenceManager;
+    @Inject
+    DTOBuildContextFactory dtoBuildContextFactory;
     @Inject
     IdProvider idProvider;
 
@@ -74,7 +77,11 @@ public class PresenceEntitiesResource extends SelfInjectingServerResource {
         boolean showDetails = expansions.has(JSONAttributes.ITEM);
         expansions.pushContext(JSONAttributes.ITEM);
         for (PresenceEntity entity : presenceManager.getAllPresenceEntities(ctx.getHubContext())) {
-            results.add(new PresenceEntityDTO.Builder(entity, presenceManager, showDetails, expansions, idProvider).build());
+            results.add(new PresenceEntityDTO.Builder(
+                dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions),
+                entity,
+                showDetails
+            ).build());
         }
         expansions.popContext();
 

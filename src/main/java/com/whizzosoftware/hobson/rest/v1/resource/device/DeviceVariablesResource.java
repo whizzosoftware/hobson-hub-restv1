@@ -9,7 +9,6 @@ package com.whizzosoftware.hobson.rest.v1.resource.device;
 
 import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
-import com.whizzosoftware.hobson.dto.DTOBuildContext;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.api.HobsonNotFoundException;
@@ -22,7 +21,6 @@ import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
-import com.whizzosoftware.hobson.rest.v1.util.MediaVariableProxyProvider;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.restlet.data.Status;
@@ -82,10 +80,8 @@ public class DeviceVariablesResource extends SelfInjectingServerResource {
             Collection<HobsonVariable> variables = c.getCollection();
             boolean showDetails = expansions.has(JSONAttributes.ITEM);
             expansions.pushContext(JSONAttributes.ITEM);
-            DTOBuildContext dbc = new DTOBuildContext.Builder().addProxyValueProvider(new MediaVariableProxyProvider(ctx)).build();
             for (HobsonVariable v : variables) {
                 HobsonVariableDTO dto = new HobsonVariableDTO.Builder(
-                    dbc,
                     idProvider.createDeviceVariableId(dctx, v.getName()),
                     v,
                     showDetails

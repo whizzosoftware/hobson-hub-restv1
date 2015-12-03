@@ -7,24 +7,18 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.hub;
 
-import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.api.hub.HobsonHub;
 import com.whizzosoftware.hobson.api.hub.HubContext;
 import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
-import com.whizzosoftware.hobson.api.plugin.PluginManager;
-import com.whizzosoftware.hobson.api.presence.PresenceManager;
-import com.whizzosoftware.hobson.api.task.TaskManager;
-import com.whizzosoftware.hobson.api.variable.VariableManager;
-import com.whizzosoftware.hobson.dto.DTOBuildContext;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
+import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
 import com.whizzosoftware.hobson.dto.hub.HobsonHubDTO;
 import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
-import com.whizzosoftware.hobson.rest.v1.util.MediaVariableProxyProvider;
 import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -41,15 +35,7 @@ public class HubsResource extends SelfInjectingServerResource {
     @Inject
     HubManager hubManager;
     @Inject
-    PluginManager pluginManager;
-    @Inject
-    DeviceManager deviceManager;
-    @Inject
-    VariableManager variableManager;
-    @Inject
-    TaskManager taskManager;
-    @Inject
-    PresenceManager presenceManager;
+    DTOBuildContextFactory dtoBuildContextFactory;
     @Inject
     IdProvider idProvider;
 
@@ -83,23 +69,11 @@ public class HubsResource extends SelfInjectingServerResource {
 
         if (hubs != null) {
             boolean showDetails = expansions.has(JSONAttributes.ITEM);
-            DTOBuildContext dbc = new DTOBuildContext.Builder().
-                hubManager(hubManager).
-                pluginManager(pluginManager).
-                deviceManager(deviceManager).
-                variableManager(variableManager).
-                taskManager(taskManager).
-                presenceManager(presenceManager).
-                expansionFields(expansions).
-                idProvider(idProvider).
-                addProxyValueProvider(new MediaVariableProxyProvider(ctx)).
-                build();
-
             expansions.pushContext(JSONAttributes.ITEM);
 
             for (HobsonHub hub : hubs) {
                 itemList.add(new HobsonHubDTO.Builder(
-                    dbc,
+                    dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions),
                     hub,
                     showDetails
                 ).build());
@@ -141,6 +115,7 @@ public class HubsResource extends SelfInjectingServerResource {
     @Override
     protected Representation post(Representation entity) throws ResourceException {
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
+        ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
         HobsonHubDTO dto = new HobsonHubDTO.Builder(JSONHelper.createJSONFromRepresentation(entity)).build();
         HobsonHub hub = hubManager.addHub(ctx.getHubContext().getUserId(), dto.getName());
         String hubId = hub.getContext().getHubId();
@@ -149,15 +124,7 @@ public class HubsResource extends SelfInjectingServerResource {
         getResponse().setLocationRef(hubLink);
         return new JsonRepresentation(
             new HobsonHubDTO.Builder(
-                new DTOBuildContext.Builder().
-                    hubManager(hubManager).
-                    pluginManager(pluginManager).
-                    deviceManager(deviceManager).
-                    variableManager(variableManager).
-                    taskManager(taskManager).
-                    presenceManager(presenceManager).
-                    idProvider(idProvider).
-                    build(),
+                dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions),
                 hub,
                 false
             ).build().toJSON()

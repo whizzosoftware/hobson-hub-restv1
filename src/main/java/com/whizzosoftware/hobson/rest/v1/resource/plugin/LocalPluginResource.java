@@ -7,12 +7,11 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.plugin;
 
-import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.api.plugin.HobsonPlugin;
 import com.whizzosoftware.hobson.api.plugin.PluginContext;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
-import com.whizzosoftware.hobson.dto.DTOBuildContext;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
+import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
 import com.whizzosoftware.hobson.dto.plugin.HobsonPluginDTO;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
@@ -30,7 +29,7 @@ public class LocalPluginResource extends SelfInjectingServerResource {
     @Inject
     PluginManager pluginManager;
     @Inject
-    IdProvider idProvider;
+    DTOBuildContextFactory dtoBuildContextFactory;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/local/:pluginId Get local plugin details
@@ -73,7 +72,13 @@ public class LocalPluginResource extends SelfInjectingServerResource {
         PluginContext pctx = PluginContext.create(ctx.getHubContext(), getAttribute("pluginId"));
         HobsonPlugin plugin = pluginManager.getLocalPlugin(pctx);
 
-        HobsonPluginDTO dto = new HobsonPluginDTO.Builder(new DTOBuildContext.Builder().pluginManager(pluginManager).expansionFields(expansions).idProvider(idProvider).build(), plugin, null, null, true).build();
+        HobsonPluginDTO dto = new HobsonPluginDTO.Builder(
+            dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions),
+            plugin,
+            null,
+            null,
+            true
+        ).build();
         JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
         jr.setMediaType(new MediaType(dto.getJSONMediaType()));
         return jr;

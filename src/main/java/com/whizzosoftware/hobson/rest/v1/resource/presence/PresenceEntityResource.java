@@ -14,7 +14,9 @@ import com.whizzosoftware.hobson.api.presence.PresenceEntity;
 import com.whizzosoftware.hobson.api.presence.PresenceEntityContext;
 import com.whizzosoftware.hobson.api.presence.PresenceLocation;
 import com.whizzosoftware.hobson.api.presence.PresenceManager;
+import com.whizzosoftware.hobson.dto.context.DTOBuildContext;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
+import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
 import com.whizzosoftware.hobson.dto.presence.PresenceEntityDTO;
 import com.whizzosoftware.hobson.dto.presence.PresenceLocationDTO;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
@@ -44,7 +46,7 @@ public class PresenceEntityResource extends SelfInjectingServerResource {
     @Inject
     EventManager eventManager;
     @Inject
-    IdProvider idProvider;
+    DTOBuildContextFactory dtoBuildContextFactory;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/presence/entities/:entityId Get presence entity
@@ -70,7 +72,11 @@ public class PresenceEntityResource extends SelfInjectingServerResource {
         PresenceEntityContext pctx = PresenceEntityContext.create(ctx.getHubContext(), getAttribute("entityId"));
         PresenceEntity entity = presenceManager.getPresenceEntity(pctx);
 
-        PresenceEntityDTO dto = new PresenceEntityDTO.Builder(entity, presenceManager, true, expansions, idProvider).build();
+        PresenceEntityDTO dto = new PresenceEntityDTO.Builder(
+            dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions),
+            entity,
+            true
+        ).build();
         JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
         jr.setMediaType(new MediaType(dto.getJSONMediaType()));
         return jr;

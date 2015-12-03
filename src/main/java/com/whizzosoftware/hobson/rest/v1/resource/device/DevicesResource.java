@@ -13,11 +13,11 @@ import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.api.device.HobsonDevice;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
 import com.whizzosoftware.hobson.dto.*;
+import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
 import com.whizzosoftware.hobson.dto.device.HobsonDeviceDTO;
 import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.MediaVariableProxyProvider;
 import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.data.Tag;
@@ -45,6 +45,8 @@ public class DevicesResource extends SelfInjectingServerResource {
     DeviceManager deviceManager;
     @Inject
     VariableManager variableManager;
+    @Inject
+    DTOBuildContextFactory dtoBuildContextFactory;
     @Inject
     IdProvider idProvider;
 
@@ -89,20 +91,13 @@ public class DevicesResource extends SelfInjectingServerResource {
         if (devices != null) {
             // TODO: refactor so the JSON isn't built if the ETag matches
             boolean itemExpand = expansions.has(JSONAttributes.ITEM);
-            DTOBuildContext dbc = new DTOBuildContext.Builder().
-                deviceManager(deviceManager).
-                variableManager(variableManager).
-                expansionFields(expansions).
-                idProvider(idProvider).
-                addProxyValueProvider(new MediaVariableProxyProvider(ctx)).
-                build();
 
             expansions.pushContext(JSONAttributes.ITEM);
 
             for (HobsonDevice device : devices) {
                 if ((varFilter == null || variableManager.hasDeviceVariable(device.getContext(), varFilter)) && (typeFilter == null || device.getType().toString().equals(typeFilter))) {
                     HobsonDeviceDTO dto = new HobsonDeviceDTO.Builder(
-                        dbc,
+                        dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions),
                         device,
                         itemExpand
                     ).build();

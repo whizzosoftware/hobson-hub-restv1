@@ -11,9 +11,8 @@ import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.api.device.HobsonDevice;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.api.plugin.PluginContext;
-import com.whizzosoftware.hobson.api.variable.VariableManager;
-import com.whizzosoftware.hobson.dto.DTOBuildContext;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
+import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
 import com.whizzosoftware.hobson.dto.device.HobsonDeviceDTO;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.json.JSONAttributes;
@@ -37,7 +36,7 @@ public class PluginDevicesResource extends SelfInjectingServerResource {
     @Inject
     DeviceManager deviceManager;
     @Inject
-    VariableManager variableManager;
+    DTOBuildContextFactory dtoBuildContextFactory;
     @Inject
     IdProvider idProvider;
 
@@ -77,12 +76,7 @@ public class PluginDevicesResource extends SelfInjectingServerResource {
         for (HobsonDevice device : deviceManager.getAllDevices(PluginContext.create(ctx.getHubContext(), getAttribute("pluginId")))) {
             results.add(
                 new HobsonDeviceDTO.Builder(
-                    new DTOBuildContext.Builder().
-                        deviceManager(deviceManager).
-                        variableManager(variableManager).
-                        idProvider(idProvider).
-                        expansionFields(expansions).
-                        build(),
+                    dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions),
                     device,
                     showDetails
                 ).build()

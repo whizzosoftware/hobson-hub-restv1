@@ -14,6 +14,7 @@ import com.whizzosoftware.hobson.api.task.HobsonTask;
 import com.whizzosoftware.hobson.api.task.TaskContext;
 import com.whizzosoftware.hobson.api.task.TaskManager;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
+import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
 import com.whizzosoftware.hobson.dto.task.HobsonTaskDTO;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
@@ -40,6 +41,8 @@ public class TaskResource extends SelfInjectingServerResource {
     HubManager hubManager;
     @Inject
     TaskManager taskManager;
+    @Inject
+    DTOBuildContextFactory dtoBuildContextFactory;
     @Inject
     IdProvider idProvider;
 
@@ -83,11 +86,9 @@ public class TaskResource extends SelfInjectingServerResource {
         HobsonTask task = taskManager.getTask(TaskContext.create(ctx.getHubContext(), getAttribute("taskId")));
 
         HobsonTaskDTO dto = new HobsonTaskDTO.Builder(
+            dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions),
             task,
-            taskManager,
-            true,
-            expansions,
-            idProvider
+            true
         ).build();
 
         JsonRepresentation jr = new JsonRepresentation(dto.toJSON());

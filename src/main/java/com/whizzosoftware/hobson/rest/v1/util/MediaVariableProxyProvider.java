@@ -7,11 +7,11 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.util;
 
+import com.whizzosoftware.hobson.api.hub.HubContext;
 import com.whizzosoftware.hobson.api.variable.HobsonVariable;
 import com.whizzosoftware.hobson.api.variable.VariableConstants;
 import com.whizzosoftware.hobson.api.variable.VariableProxyType;
 import com.whizzosoftware.hobson.api.variable.VariableProxyValueProvider;
-import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.resource.device.MediaProxyResource;
 import org.restlet.routing.Template;
 
@@ -25,10 +25,10 @@ import java.util.Map;
  * @author Dan Noguerol
  */
 public class MediaVariableProxyProvider implements VariableProxyValueProvider {
-    private HobsonRestContext context;
+    private String apiRoot;
 
-    public MediaVariableProxyProvider(HobsonRestContext context) {
-        this.context = context;
+    public MediaVariableProxyProvider(String apiRoot) {
+        this.apiRoot = apiRoot;
     }
 
     @Override
@@ -36,12 +36,14 @@ public class MediaVariableProxyProvider implements VariableProxyValueProvider {
         return VariableProxyType.MEDIA;
     }
 
-    public Object getProxyValue(HobsonVariable v) {
+    public Object getProxyValue(HubContext hubContext, HobsonVariable v) {
         Object value = null;
 
         if (v != null) {
             if (VariableConstants.IMAGE_STATUS_URL.equals(v.getName()) || VariableConstants.VIDEO_STATUS_URL.equals(v.getName())) {
-                value = context.getApiRoot() + new Template(MediaProxyResource.PATH).format(createParamMap(v.getPluginId(), v.getDeviceId(), v.getName()));
+                value = apiRoot + new Template(MediaProxyResource.PATH).format(
+                    createParamMap(hubContext.getUserId(), hubContext.getHubId(), v.getPluginId(), v.getDeviceId(), v.getName())
+                );
             } else {
                 value = v.getValue();
             }
@@ -50,10 +52,10 @@ public class MediaVariableProxyProvider implements VariableProxyValueProvider {
         return value;
     }
 
-    private Map<String,String> createParamMap(String pluginId, String deviceId, String mediaId) {
+    private Map<String,String> createParamMap(String userId, String hubId, String pluginId, String deviceId, String mediaId) {
         Map<String,String> map = new HashMap<>();
-        map.put("userId", context.getHubContext().getUserId());
-        map.put("hubId", context.getHubContext().getHubId());
+        map.put("userId", userId);
+        map.put("hubId", hubId);
         map.put("pluginId", pluginId);
         map.put("deviceId", deviceId);
         map.put("mediaId", mediaId);

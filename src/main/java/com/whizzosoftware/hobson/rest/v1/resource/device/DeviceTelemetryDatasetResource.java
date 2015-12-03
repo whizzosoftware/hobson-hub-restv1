@@ -8,7 +8,6 @@
 package com.whizzosoftware.hobson.rest.v1.resource.device;
 
 import com.whizzosoftware.hobson.api.device.DeviceContext;
-import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.api.telemetry.TelemetryInterval;
 import com.whizzosoftware.hobson.api.telemetry.TelemetryManager;
@@ -28,8 +27,6 @@ import java.util.Collection;
 public class DeviceTelemetryDatasetResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/{pluginId}/devices/{deviceId}/telemetry/datasets/{datasetId}";
 
-    @Inject
-    DeviceManager deviceManager;
     @Inject
     TelemetryManager telemetryManager;
     @Inject

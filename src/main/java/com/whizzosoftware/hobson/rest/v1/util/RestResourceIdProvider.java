@@ -130,6 +130,11 @@ public class RestResourceIdProvider implements IdProvider {
     }
 
     @Override
+    public String createHubUploadCredentialsId(HubContext ctx) {
+        return null;
+    }
+
+    @Override
     public String createHubConfigurationClassId(HubContext ctx) {
         return new Template(apiRoot + HubConfigurationClassResource.PATH).format(createHubValues(ctx));
     }

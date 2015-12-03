@@ -10,14 +10,15 @@ package com.whizzosoftware.hobson.rest.v1.resource.login;
 import com.whizzosoftware.hobson.api.HobsonAuthenticationException;
 import com.whizzosoftware.hobson.api.hub.HubContext;
 import com.whizzosoftware.hobson.api.hub.HubManager;
-import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.api.property.PropertyContainer;
 import com.whizzosoftware.hobson.api.user.HobsonUser;
 import com.whizzosoftware.hobson.api.user.UserStore;
 import com.whizzosoftware.hobson.dto.*;
+import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
 import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.HobsonRole;
 import com.whizzosoftware.hobson.rest.TokenHelper;
+import com.whizzosoftware.hobson.rest.v1.AbstractApiV1Application;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import org.json.JSONObject;
 import org.restlet.data.MediaType;
@@ -37,7 +38,7 @@ public class LoginResource extends SelfInjectingServerResource {
     @Inject
     TokenHelper tokenHelper;
     @Inject
-    IdProvider idProvider;
+    DTOBuildContextFactory dtoBuildContextFactory;
 
     /**
      * @api {post} /api/v1/login Login user
@@ -76,11 +77,7 @@ public class LoginResource extends SelfInjectingServerResource {
             AuthResultDTO dto = new AuthResultDTO(
                 tokenHelper.createToken(user.getId(), HobsonRole.USER.value()),
                 new HobsonUserDTO.Builder(
-                    new DTOBuildContext.Builder().
-                        expansionFields(expansions.pushContext(JSONAttributes.USER)).
-                        idProvider(idProvider).
-                        hubManager(hubManager).
-                        build(),
+                    dtoBuildContextFactory.createContext(AbstractApiV1Application.API_ROOT, expansions),
                     user,
                     showDetails
                 ).build()
