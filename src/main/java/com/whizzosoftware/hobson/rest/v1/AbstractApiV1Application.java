@@ -72,8 +72,8 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
         // create the secure router
         Router secureRouter = newRouter();
         secureRouter.attach(ActivityLogResource.PATH, ActivityLogResource.class);
-        secureRouter.attach(DeviceBootstrapsResource.PATH, DeviceBootstrapsResource.class);
-        secureRouter.attach(DeviceBootstrapResource.PATH, DeviceBootstrapResource.class);
+        secureRouter.attach(DevicePassportsResource.PATH, DevicePassportsResource.class);
+        secureRouter.attach(DevicePassportResource.PATH, DevicePassportResource.class);
         secureRouter.attach(DeviceResource.PATH, DeviceResource.class);
         secureRouter.attach(DeviceConfigurationResource.PATH, DeviceConfigurationResource.class);
         secureRouter.attach(DeviceConfigurationClassResource.PATH, DeviceConfigurationClassResource.class);
@@ -111,7 +111,7 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
         secureRouter.attach(PresenceEntityResource.PATH, PresenceEntityResource.class);
         secureRouter.attach(PresenceLocationsResource.PATH, PresenceLocationsResource.class);
         secureRouter.attach(PresenceLocationResource.PATH, PresenceLocationResource.class);
-        secureRouter.attach(RegisterDeviceResource.PATH, RegisterDeviceResource.class);
+        secureRouter.attach(ActivateDevicePassportResource.PATH, ActivateDevicePassportResource.class);
         secureRouter.attach(RemotePluginsResource.PATH, RemotePluginsResource.class);
         secureRouter.attach(RemotePluginResource.PATH, RemotePluginResource.class);
         secureRouter.attach(RemotePluginInstallResource.PATH, RemotePluginInstallResource.class);

@@ -8,12 +8,13 @@
 package com.whizzosoftware.hobson.rest.v1.resource.device;
 
 import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
-import com.whizzosoftware.hobson.api.device.DeviceAlreadyBoostrappedException;
-import com.whizzosoftware.hobson.api.device.DeviceBootstrap;
+import com.whizzosoftware.hobson.api.device.DevicePassportAlreadyActivatedException;
+import com.whizzosoftware.hobson.api.device.DevicePassport;
 import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
-import com.whizzosoftware.hobson.dto.device.DeviceBootstrapDTO;
+import com.whizzosoftware.hobson.dto.device.DevicePassportDTO;
+import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
@@ -26,8 +27,8 @@ import org.restlet.resource.ResourceException;
 
 import javax.inject.Inject;
 
-public class RegisterDeviceResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/registerDevice";
+public class ActivateDevicePassportResource extends SelfInjectingServerResource {
+    public static final String PATH = "/users/{userId}/hubs/{hubId}/activatePassport";
 
     @Inject
     DeviceManager deviceManager;
@@ -37,10 +38,10 @@ public class RegisterDeviceResource extends SelfInjectingServerResource {
     IdProvider idProvider;
 
     /**
-     * @api {post} /api/v1/users/:userId/hubs/:hubId/registerDevice Register device
+     * @api {post} /api/v1/users/:userId/hubs/:hubId/activatePassport Activate device passport
      * @apiVersion 0.5.0
-     * @apiName RegisterDeviceBootstrap
-     * @apiDescription Registers a device for which a bootstrap has previously been created.
+     * @apiName ActivateDevicePassport
+     * @apiDescription Activates a device passport that has previously been created.
      * @apiGroup Devices
      * @apiSuccessExample {json} Success Response:
      * @apiParamExample {json} Example Request:
@@ -50,10 +51,10 @@ public class RegisterDeviceResource extends SelfInjectingServerResource {
      * @apiSuccessExample {json} Success Response:
      * HTTP/1.1 201 Created
      * {
-     *   "@id": "/api/v1/users/local/hubs/local/deviceBootstraps/30a34e54-50c0-11e5-885d-feff819cdc9f",
+     *   "@id": "/api/v1/users/local/hubs/local/devicePassports/30a34e54-50c0-11e5-885d-feff819cdc9f",
      *   "deviceId": "aG12Jca",
      *   "creationTime": 1441118757,
-     *   "bootstrapTime": 1441119000,
+     *   "activationTime": 1441119000,
      *   "secret": "0e15dc1a50b811e5885dfeff819cdc9f"
      * }
      */
@@ -62,15 +63,15 @@ public class RegisterDeviceResource extends SelfInjectingServerResource {
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
         JSONObject json = JSONHelper.createJSONFromRepresentation(entity);
-        DeviceBootstrap db = deviceManager.registerDeviceBootstrap(ctx.getHubContext(), json.getString("deviceId"));
+        DevicePassport db = deviceManager.activateDevicePassport(ctx.getHubContext(), json.getString(JSONAttributes.DEVICE_ID));
 
         try {
-            DeviceBootstrapDTO dto = new DeviceBootstrapDTO.Builder(idProvider.createDeviceBootstrapId(ctx.getHubContext(), db.getId()), db, true, true).build();
+            DevicePassportDTO dto = new DevicePassportDTO.Builder(idProvider.createDevicePassportId(ctx.getHubContext(), db.getId()), db, true, true).build();
             JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
             jr.setMediaType(new MediaType(dto.getJSONMediaType()));
             return jr;
-        } catch (DeviceAlreadyBoostrappedException e) {
-            throw new HobsonInvalidRequestException("Device has already been registered");
+        } catch (DevicePassportAlreadyActivatedException e) {
+            throw new HobsonInvalidRequestException("Device passport has already been activated");
         }
     }
 }

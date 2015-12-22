@@ -8,13 +8,13 @@
 package com.whizzosoftware.hobson.rest.v1.resource.device;
 
 import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
-import com.whizzosoftware.hobson.api.device.DeviceBootstrap;
+import com.whizzosoftware.hobson.api.device.DevicePassport;
 import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
-import com.whizzosoftware.hobson.dto.device.DeviceBootstrapDTO;
+import com.whizzosoftware.hobson.dto.device.DevicePassportDTO;
 import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
@@ -31,8 +31,8 @@ import org.restlet.resource.ResourceException;
 import javax.inject.Inject;
 import java.util.Collection;
 
-public class DeviceBootstrapsResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/deviceBootstraps";
+public class DevicePassportsResource extends SelfInjectingServerResource {
+    public static final String PATH = "/users/{userId}/hubs/{hubId}/devicePassports";
 
     @Inject
     DeviceManager deviceManager;
@@ -42,10 +42,10 @@ public class DeviceBootstrapsResource extends SelfInjectingServerResource {
     IdProvider idProvider;
 
     /**
-     * @api {get} /api/v1/users/:userId/hubs/:hubId/deviceBootstraps Get all device bootstraps
+     * @api {get} /api/v1/users/:userId/hubs/:hubId/devicePassports Get all device passports
      * @apiVersion 0.5.0
-     * @apiName GetAllDeviceBootstraps
-     * @apiDescription Retrieves a list of all device bootstraps that have been created.
+     * @apiName GetAllDevicePassports
+     * @apiDescription Retrieves a list of all device passports that have been created.
      * @apiGroup Devices
      * @apiParam (Query Parameters) {String} expand A comma-separated list of attributes to expand (the only supported value is "item").
      * @apiSuccessExample {json} Success Response:
@@ -54,12 +54,12 @@ public class DeviceBootstrapsResource extends SelfInjectingServerResource {
      *   "itemListElement": [
      *     {
      *       "item": {
-     *         "@id": "/api/v1/users/local/hubs/local/deviceBootstraps/f8a1e312-50bf-11e5-885d-feff819cdc9f",
+     *         "@id": "/api/v1/users/local/hubs/local/devicePassports/f8a1e312-50bf-11e5-885d-feff819cdc9f",
      *       }
      *     },
      *     {
      *       "item": {
-     *         "@id": "/api/v1/users/local/hubs/local/deviceBootstraps/30a34e54-50c0-11e5-885d-feff819cdc9f",
+     *         "@id": "/api/v1/users/local/hubs/local/devicePassports/30a34e54-50c0-11e5-885d-feff819cdc9f",
      *       }
      *     }
      *   ]
@@ -68,16 +68,16 @@ public class DeviceBootstrapsResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() throws ResourceException {
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
-        ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
+        ExpansionFields expansions = new ExpansionFields(getQueryValue(JSONAttributes.EXPAND));
         boolean itemExpand = expansions.has(JSONAttributes.ITEM);
 
-        Collection<DeviceBootstrap> bootstraps = deviceManager.getDeviceBootstraps(ctx.getHubContext());
-        ItemListDTO results = new ItemListDTO(idProvider.createDeviceBootstrapsId(ctx.getHubContext()), true);
+        Collection<DevicePassport> passports = deviceManager.getDevicePassports(ctx.getHubContext());
+        ItemListDTO results = new ItemListDTO(idProvider.createDevicePassportsId(ctx.getHubContext()), true);
 
         expansions.pushContext(JSONAttributes.ITEM);
 
-        for (DeviceBootstrap db : bootstraps) {
-            results.add(new DeviceBootstrapDTO.Builder(idProvider.createDeviceBootstrapId(ctx.getHubContext(), db.getId()), db, itemExpand, false).build());
+        for (DevicePassport db : passports) {
+            results.add(new DevicePassportDTO.Builder(idProvider.createDevicePassportId(ctx.getHubContext(), db.getId()), db, itemExpand, false).build());
         }
 
         expansions.popContext();
@@ -88,10 +88,10 @@ public class DeviceBootstrapsResource extends SelfInjectingServerResource {
     }
 
     /**
-     * @api {post} /api/v1/users/:userId/hubs/:hubId/deviceBootstraps Create device bootstrap
+     * @api {post} /api/v1/users/:userId/hubs/:hubId/devicePassports Create device passport
      * @apiVersion 0.5.0
-     * @apiName CreateDeviceBootstrap
-     * @apiDescription Creates a new device bootstrap.
+     * @apiName CreateDevicePassport
+     * @apiDescription Creates a new device passport.
      * @apiGroup Devices
      * @apiSuccessExample {json} Success Response:
      * @apiParamExample {json} Example Request:
@@ -107,7 +107,7 @@ public class DeviceBootstrapsResource extends SelfInjectingServerResource {
 
         JSONObject json = JSONHelper.createJSONFromRepresentation(entity);
 
-        DeviceBootstrap db = deviceManager.createDeviceBootstrap(ctx.getHubContext(), json.getString("deviceId"));
+        DevicePassport db = deviceManager.createDevicePassport(ctx.getHubContext(), json.getString(JSONAttributes.DEVICE_ID));
 
         if (db != null) {
             getResponse().setStatus(Status.SUCCESS_ACCEPTED);
@@ -118,10 +118,10 @@ public class DeviceBootstrapsResource extends SelfInjectingServerResource {
     }
 
     /**
-     * @api {delete} /api/v1/users/:userId/hubs/:hubId/deviceBootstraps Delete device bootstraps
+     * @api {delete} /api/v1/users/:userId/hubs/:hubId/devicePassports Delete device passports
      * @apiVersion 0.7.0
-     * @apiName DeleteDeviceBootstraps
-     * @apiDescription Delete all device bootstraps.
+     * @apiName DeleteDevicePassports
+     * @apiDescription Delete all device passports.
      * @apiGroup Devices
      * @apiSuccessExample {json} Success Response:
      * HTTP/1.1 202 Accepted
@@ -130,8 +130,8 @@ public class DeviceBootstrapsResource extends SelfInjectingServerResource {
     protected Representation delete() throws ResourceException {
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
-        for (DeviceBootstrap db : deviceManager.getDeviceBootstraps(ctx.getHubContext())) {
-            deviceManager.deleteDeviceBootstrap(ctx.getHubContext(), db.getId());
+        for (DevicePassport db : deviceManager.getDevicePassports(ctx.getHubContext())) {
+            deviceManager.deleteDevicePassport(ctx.getHubContext(), db.getId());
         }
 
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);

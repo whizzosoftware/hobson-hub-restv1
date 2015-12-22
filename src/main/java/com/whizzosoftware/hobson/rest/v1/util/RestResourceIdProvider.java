@@ -389,15 +389,15 @@ public class RestResourceIdProvider implements IdProvider {
     }
 
     @Override
-    public String createDeviceBootstrapsId(HubContext ctx) {
-        return new Template(apiRoot + DeviceBootstrapsResource.PATH).format(createHubValues(ctx));
+    public String createDevicePassportsId(HubContext ctx) {
+        return new Template(apiRoot + DevicePassportsResource.PATH).format(createHubValues(ctx));
     }
 
     @Override
-    public String createDeviceBootstrapId(HubContext ctx, String bootstrapId) {
-        Template t = new Template(apiRoot + DeviceBootstrapResource.PATH);
+    public String createDevicePassportId(HubContext ctx, String passportId) {
+        Template t = new Template(apiRoot + DevicePassportResource.PATH);
         Map<String,String> values = createHubValues(ctx);
-        values.put(JSONAttributes.BOOTSTRAP_ID, bootstrapId);
+        values.put(JSONAttributes.PASSPORT_ID, passportId);
         return t.format(values);
     }
 

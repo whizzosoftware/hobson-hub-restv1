@@ -8,11 +8,11 @@
 package com.whizzosoftware.hobson.rest.v1.resource.device;
 
 import com.whizzosoftware.hobson.api.HobsonNotFoundException;
-import com.whizzosoftware.hobson.api.device.DeviceBootstrap;
+import com.whizzosoftware.hobson.api.device.DevicePassport;
 import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
-import com.whizzosoftware.hobson.dto.device.DeviceBootstrapDTO;
+import com.whizzosoftware.hobson.dto.device.DevicePassportDTO;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import org.restlet.data.MediaType;
@@ -24,8 +24,8 @@ import org.restlet.resource.ResourceException;
 
 import javax.inject.Inject;
 
-public class DeviceBootstrapResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/deviceBootstraps/{bootstrapId}";
+public class DevicePassportResource extends SelfInjectingServerResource {
+    public static final String PATH = "/users/{userId}/hubs/{hubId}/devicePassports/{passportId}";
 
     @Inject
     DeviceManager deviceManager;
@@ -35,28 +35,28 @@ public class DeviceBootstrapResource extends SelfInjectingServerResource {
     IdProvider idProvider;
 
     /**
-     * @api {get} /api/v1/users/:userId/hubs/:hubId/deviceBootstraps/{bootstrapId} Get device bootstrap
+     * @api {get} /api/v1/users/:userId/hubs/:hubId/devicePassports/{passportId} Get device passport
      * @apiVersion 0.5.0
-     * @apiName GetDeviceBootstrap
-     * @apiDescription Retrieves a device bootstrap that has been created.
+     * @apiName GetDevicePassport
+     * @apiDescription Retrieves a device passport that has been created.
      * @apiGroup Devices
      * @apiSuccessExample {json} Success Response:
      * {
-     *   "@id": "/api/v1/users/local/hubs/local/deviceBootstraps/30a34e54-50c0-11e5-885d-feff819cdc9f",
+     *   "@id": "/api/v1/users/local/hubs/local/devicePassports/30a34e54-50c0-11e5-885d-feff819cdc9f",
      *   "deviceId": "aG12Jca",
      *   "creationTime": 0,
-     *   "bootstrapTime": 0
+     *   "activationTime": 0
      * }
      */
     @Override
     protected Representation get() throws ResourceException {
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
-        DeviceBootstrap db = deviceManager.getDeviceBootstrap(ctx.getHubContext(), getAttribute("bootstrapId"));
+        DevicePassport db = deviceManager.getDevicePassport(ctx.getHubContext(), getAttribute("passportId"));
 
         if (db != null) {
-            DeviceBootstrapDTO dto = new DeviceBootstrapDTO.Builder(
-                idProvider.createDeviceBootstrapId(ctx.getHubContext(), db.getId()),
+            DevicePassportDTO dto = new DevicePassportDTO.Builder(
+                idProvider.createDevicePassportId(ctx.getHubContext(), db.getId()),
                 db,
                 true,
                 false
@@ -66,15 +66,15 @@ public class DeviceBootstrapResource extends SelfInjectingServerResource {
             js.setMediaType(new MediaType(dto.getJSONMediaType()));
             return js;
         } else {
-            throw new HobsonNotFoundException("Device bootstrap not found");
+            throw new HobsonNotFoundException("Device passport not found");
         }
     }
 
     /**
-     * @api {post} /api/v1/users/:userId/hubs/:hubId/deviceBootstraps/{bootstrapId} Reset device bootstrap
+     * @api {post} /api/v1/users/:userId/hubs/:hubId/devicePassports/{passportId} Reset device passport
      * @apiVersion 0.5.0
-     * @apiName ResetDeviceBootstrap
-     * @apiDescription Resets the device bootstrap to its initially created state.
+     * @apiName ResetDevicePassport
+     * @apiDescription Resets device passport to its initially created state.
      * @apiGroup Devices
      * @apiSuccessExample {json} Success Response:
      * HTTP/1.1 202 Accepted
@@ -83,15 +83,15 @@ public class DeviceBootstrapResource extends SelfInjectingServerResource {
     protected Representation post(Representation entity) throws ResourceException {
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
-        deviceManager.resetDeviceBootstrap(ctx.getHubContext(), getAttribute("bootstrapId"));
+        deviceManager.resetDevicePassport(ctx.getHubContext(), getAttribute("passportId"));
         return new EmptyRepresentation();
     }
 
     /**
-     * @api {delete} /api/v1/users/:userId/hubs/:hubId/deviceBootstraps/{bootstrapId} Delete device bootstrap
+     * @api {delete} /api/v1/users/:userId/hubs/:hubId/deviceaPassports/{passportId} Delete device passport
      * @apiVersion 0.5.0
-     * @apiName DeleteDeviceBootstrap
-     * @apiDescription Deletes the device bootstrap.
+     * @apiName DeleteDevicePassport
+     * @apiDescription Deletes the device passport.
      * @apiGroup Devices
      * @apiSuccessExample {json} Success Response:
      * HTTP/1.1 202 Accepted
@@ -100,7 +100,7 @@ public class DeviceBootstrapResource extends SelfInjectingServerResource {
     protected Representation delete() throws ResourceException {
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
-        deviceManager.deleteDeviceBootstrap(ctx.getHubContext(), getAttribute("bootstrapId"));
+        deviceManager.deleteDevicePassport(ctx.getHubContext(), getAttribute("passportId"));
         return new EmptyRepresentation();
     }
 }
