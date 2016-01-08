@@ -8,7 +8,9 @@
 package com.whizzosoftware.hobson.rest.v1.resource.variable;
 
 import com.whizzosoftware.hobson.api.persist.IdProvider;
+import com.whizzosoftware.hobson.api.plugin.PluginContext;
 import com.whizzosoftware.hobson.api.variable.HobsonVariable;
+import com.whizzosoftware.hobson.api.variable.VariableContext;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
 import com.whizzosoftware.hobson.dto.variable.HobsonVariableDTO;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
@@ -46,7 +48,7 @@ public class GlobalVariableResource extends SelfInjectingServerResource {
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
         String varName = getAttribute("name");
-        HobsonVariable v = variableManager.getGlobalVariable(ctx.getHubContext(), varName);
+        HobsonVariable v = variableManager.getVariable(VariableContext.createGlobal(PluginContext.create(ctx.getHubContext(), null), varName));
         return new JsonRepresentation(
             new HobsonVariableDTO.Builder(idProvider.createGlobalVariableId(ctx.getHubContext(), varName))
                 .name(v.getName())

@@ -14,7 +14,6 @@ import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.api.HobsonNotFoundException;
 import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.variable.HobsonVariable;
-import com.whizzosoftware.hobson.api.variable.HobsonVariableCollection;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
 import com.whizzosoftware.hobson.dto.variable.HobsonVariableDTO;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
@@ -75,9 +74,8 @@ public class DeviceVariablesResource extends SelfInjectingServerResource {
         DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
         ItemListDTO results = new ItemListDTO(idProvider.createDeviceVariablesId(dctx));
 
-        HobsonVariableCollection c = variableManager.getDeviceVariables(dctx);
-        if (c != null) {
-            Collection<HobsonVariable> variables = c.getCollection();
+        Collection<HobsonVariable> variables = variableManager.getDeviceVariables(dctx);
+        if (variables != null) {
             boolean showDetails = expansions.has(JSONAttributes.ITEM);
             expansions.pushContext(JSONAttributes.ITEM);
             for (HobsonVariable v : variables) {

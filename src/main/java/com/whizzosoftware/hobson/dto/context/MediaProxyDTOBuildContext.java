@@ -10,15 +10,12 @@ package com.whizzosoftware.hobson.dto.context;
 import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.hub.HubContext;
 import com.whizzosoftware.hobson.api.variable.HobsonVariable;
-import com.whizzosoftware.hobson.api.variable.HobsonVariableCollection;
 import com.whizzosoftware.hobson.api.variable.ImmutableHobsonVariable;
+import com.whizzosoftware.hobson.api.variable.VariableContext;
 import com.whizzosoftware.hobson.rest.v1.resource.device.MediaProxyResource;
 import org.restlet.routing.Template;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * An implementation of DTOBuildContext that uses Hobson manager objects for data and replaces any variable
@@ -34,25 +31,23 @@ public class MediaProxyDTOBuildContext extends ManagerDTOBuildContext {
     }
 
     @Override
-    public HobsonVariableCollection getDeviceVariables(DeviceContext dctx) {
+    public Collection<HobsonVariable> getDeviceVariables(DeviceContext dctx) {
         List<HobsonVariable> results = new ArrayList<>();
-        for (HobsonVariable v : variableManager.getDeviceVariables(dctx).getCollection()) {
+        for (HobsonVariable v : variableManager.getDeviceVariables(dctx)) {
             results.add(createStubVariableIfNecessary(dctx.getHubContext(), v));
         }
-        return new HobsonVariableCollection(results);
+        return results;
     }
 
     @Override
     public HobsonVariable getDeviceVariable(DeviceContext dctx, String name) {
-        return createStubVariableIfNecessary(dctx.getHubContext(), variableManager.getDeviceVariable(dctx, name));
+        return createStubVariableIfNecessary(dctx.getHubContext(), variableManager.getVariable(VariableContext.create(dctx, name)));
     }
 
     private HobsonVariable createStubVariableIfNecessary(HubContext hctx, HobsonVariable v) {
         if (v.hasMediaType()) {
             return new ImmutableHobsonVariable(
-                v.getPluginId(),
-                v.getDeviceId(),
-                v.getName(),
+                v.getContext(),
                 v.getMask(),
                 getProxyValue(hctx, v),
                 v.getMediaType(),

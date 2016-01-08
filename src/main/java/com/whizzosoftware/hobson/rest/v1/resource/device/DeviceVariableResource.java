@@ -13,6 +13,7 @@ import com.whizzosoftware.hobson.api.event.EventManager;
 import com.whizzosoftware.hobson.api.event.VariableUpdateRequestEvent;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.api.variable.HobsonVariable;
+import com.whizzosoftware.hobson.api.variable.VariableContext;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
 import com.whizzosoftware.hobson.api.variable.VariableUpdate;
 import com.whizzosoftware.hobson.dto.variable.HobsonVariableDTO;
@@ -68,7 +69,7 @@ public class DeviceVariableResource extends SelfInjectingServerResource {
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
         DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
-        HobsonVariable var = variableManager.getDeviceVariable(dctx, getAttribute("variableName"));
+        HobsonVariable var = variableManager.getVariable(VariableContext.create(dctx, getAttribute("variableName")));
 
         HobsonVariableDTO dto = new HobsonVariableDTO.Builder(
             idProvider.createDeviceVariableId(dctx, var.getName()),
@@ -104,7 +105,7 @@ public class DeviceVariableResource extends SelfInjectingServerResource {
         String pluginId = getAttribute("pluginId");
         String deviceId = getAttribute("deviceId");
         String variableName = getAttribute("variableName");
-        eventManager.postEvent(ctx.getHubContext(), new VariableUpdateRequestEvent(System.currentTimeMillis(), new VariableUpdate(dctx, variableName, value)));
+        eventManager.postEvent(ctx.getHubContext(), new VariableUpdateRequestEvent(System.currentTimeMillis(), new VariableUpdate(VariableContext.create(dctx, variableName), value)));
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
 
         // TODO: is there a better way to do this? The Restlet request reference scheme is always HTTP for some reason...
