@@ -5,9 +5,9 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
-package com.whizzosoftware.hobson.rest.v1.resource.device;
+package com.whizzosoftware.hobson.rest.v1.resource.telemetry;
 
-import com.whizzosoftware.hobson.api.device.DeviceContext;
+import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.api.telemetry.TelemetryInterval;
 import com.whizzosoftware.hobson.api.telemetry.TelemetryManager;
@@ -21,28 +21,30 @@ import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.util.Collection;
 
-public class DeviceTelemetryDatasetResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/{pluginId}/devices/{deviceId}/telemetry/datasets/{datasetId}";
+public class TelemetryDatasetResource extends SelfInjectingServerResource {
+    public static final String PATH = "/users/{userId}/hubs/{hubId}/telemetry/{datasetId}";
 
     @Inject
+    @Nullable
     TelemetryManager telemetryManager;
     @Inject
     IdProvider idProvider;
 
     /**
-     * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/devices/:deviceId/telemetry/dataset/:datasetId Get device telemetry dataset
-     * @apiVersion 0.5.0
-     * @apiName GetDeviceTelemetryDataset
-     * @apiDescription Retrieves a specific device telemetry dataset.
+     * @api {get} /api/v1/users/:userId/hubs/:hubId/telemetry/:datasetId Get telemetry dataset
+     * @apiVersion 0.8.0
+     * @apiName GetTelemetryDataset
+     * @apiDescription Retrieves a specific telemetry dataset.
      * @apiGroup Devices
      * @apiSuccess {String} name The name of the data set.
      * @apiSuccess {Object} data The data in the set.
      * @apiSuccessExample {json} Success Response:
      * {
-     *   "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-sample/devices/thermostat/telemetry/datasets/tempF"
+     *   "@id": "/api/v1/users/local/hubs/local/telemetry/myDataSet"
      *   "name": "tempF",
      *   "data": {
      *     "numberOfItems": 2,
@@ -65,21 +67,24 @@ public class DeviceTelemetryDatasetResource extends SelfInjectingServerResource 
      */
     @Override
     protected Representation get() {
-        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
-        String datasetId = getAttribute("datasetId");
+        if (telemetryManager != null && !telemetryManager.isStub()) {
+            HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
+            String datasetId = getAttribute("datasetId");
 
-        DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
-        long endTime = System.currentTimeMillis() / 1000; // TODO: should be pulled from request
-        TelemetryInterval interval = TelemetryInterval.HOURS_24; // TODO: should be pulled from request
+            long endTime = System.currentTimeMillis() / 1000; // TODO: should be pulled from request
+            TelemetryInterval interval = TelemetryInterval.HOURS_24; // TODO: should be pulled from request
 
-        ItemListDTO results = new ItemListDTO(idProvider.createDeviceTelemetryDatasetId(dctx, datasetId));
-        Collection<TemporalValue> values = telemetryManager.getDeviceVariableTelemetry(dctx, datasetId, endTime, interval);
-        for (TemporalValue tv : values) {
-            results.add(new TemporalValueDTO(tv.getTime(), tv.getValue()));
+            ItemListDTO results = new ItemListDTO(idProvider.createTelemetryDatasetId(ctx.getHubContext(), datasetId));
+            Collection<TemporalValue> values = telemetryManager.getData(ctx.getHubContext(), datasetId, endTime, interval);
+            for (TemporalValue tv : values) {
+                results.add(new TemporalValueDTO(tv.getTime(), tv.getValue()));
+            }
+
+            JsonRepresentation jr = new JsonRepresentation(results.toJSON());
+            jr.setMediaType(new MediaType(results.getJSONMediaType()));
+            return jr;
+        } else {
+            throw new HobsonInvalidRequestException("No telemetry manager is available");
         }
-
-        JsonRepresentation jr = new JsonRepresentation(results.toJSON());
-        jr.setMediaType(new MediaType(results.getJSONMediaType()));
-        return jr;
     }
 }

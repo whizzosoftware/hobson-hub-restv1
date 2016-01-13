@@ -122,7 +122,7 @@ public class RestResourceIdProvider implements IdProvider {
     }
 
     @Override
-    public String createHubsId(String userId) {
+    public String createUserHubsId(String userId) {
         Template t = new Template(apiRoot + HubsResource.PATH);
         Map<String,String> values = new HashMap<>();
         values.put(JSONAttributes.USER_ID, userId);
@@ -274,6 +274,11 @@ public class RestResourceIdProvider implements IdProvider {
     }
 
     @Override
+    public String createTelemetryDatasetId(HubContext ctx, String dataSetId) {
+        return null;
+    }
+
+    @Override
     public String createLocalPluginConfigurationId(PluginContext ctx) {
         return new Template(apiRoot + LocalPluginConfigurationResource.PATH).format(createPluginValues(ctx));
     }
@@ -325,32 +330,19 @@ public class RestResourceIdProvider implements IdProvider {
     }
 
     @Override
-    public String createDeviceTelemetryId(DeviceContext ctx) {
-        return new Template(apiRoot + DeviceTelemetryResource.PATH).format(createDeviceValues(ctx));
-    }
-
-    @Override
-    public String createDeviceTelemetryDatasetsId(DeviceContext ctx) {
-        return new Template(apiRoot + DeviceTelemetryDatasetsResource.PATH).format(createDeviceValues(ctx));
-    }
-
-    @Override
     public DeviceContext createDeviceVariableContext(String variableId) {
         // TODO
         return null;
     }
 
     @Override
-    public String createDeviceTelemetryDatasetId(DeviceContext ctx, String dataSetId) {
-        Template t = new Template(apiRoot + DeviceTelemetryDatasetResource.PATH);
-        Map<String,String> values = createDeviceValues(ctx);
-        values.put("datasetId", dataSetId);
-        return t.format(values);
+    public String createActivityLogId(HubContext ctx) {
+        return new Template(apiRoot + ActivityLogResource.PATH).format(createHubValues(ctx));
     }
 
     @Override
-    public String createActivityLogId(HubContext ctx) {
-        return new Template(apiRoot + ActivityLogResource.PATH).format(createHubValues(ctx));
+    public String createAllHubsId() {
+        return null;
     }
 
     @Override

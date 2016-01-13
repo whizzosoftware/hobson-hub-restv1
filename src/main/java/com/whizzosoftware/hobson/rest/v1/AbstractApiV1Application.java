@@ -27,6 +27,7 @@ import com.whizzosoftware.hobson.rest.v1.resource.image.ImageLibraryImageResourc
 import com.whizzosoftware.hobson.rest.v1.resource.image.ImageLibraryRootResource;
 import com.whizzosoftware.hobson.rest.v1.resource.plugin.*;
 import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceEntitiesResource;
+import com.whizzosoftware.hobson.rest.v1.resource.telemetry.TelemetryDatasetResource;
 import com.whizzosoftware.hobson.rest.v1.resource.user.UserResource;
 import com.whizzosoftware.hobson.rest.v1.resource.variable.GlobalVariableResource;
 import com.whizzosoftware.hobson.rest.v1.resource.variable.GlobalVariablesResource;
@@ -77,9 +78,6 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
         secureRouter.attach(DeviceResource.PATH, DeviceResource.class);
         secureRouter.attach(DeviceConfigurationResource.PATH, DeviceConfigurationResource.class);
         secureRouter.attach(DeviceConfigurationClassResource.PATH, DeviceConfigurationClassResource.class);
-        secureRouter.attach(DeviceTelemetryResource.PATH, DeviceTelemetryResource.class);
-        secureRouter.attach(DeviceTelemetryDatasetResource.PATH, DeviceTelemetryDatasetResource.class);
-        secureRouter.attach(DeviceTelemetryDatasetsResource.PATH, DeviceTelemetryDatasetsResource.class);
         secureRouter.attach(DevicesResource.PATH, DevicesResource.class);
         secureRouter.attach(DeviceVariableResource.PATH, DeviceVariableResource.class);
         secureRouter.attach(DeviceVariablesResource.PATH, DeviceVariablesResource.class);
@@ -121,6 +119,7 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
         secureRouter.attach(TaskConditionClassesResource.PATH, TaskConditionClassesResource.class);
         secureRouter.attach(TaskResource.PATH, TaskResource.class);
         secureRouter.attach(TasksResource.PATH, TasksResource.class);
+        secureRouter.attach(TelemetryDatasetResource.PATH, TelemetryDatasetResource.class);
         secureRouter.attach(UserResource.PATH, UserResource.class);
 
         // create the authorizer
