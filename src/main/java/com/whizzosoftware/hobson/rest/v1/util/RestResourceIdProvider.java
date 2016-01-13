@@ -18,6 +18,7 @@ import com.whizzosoftware.hobson.api.property.PropertyContainerClass;
 import com.whizzosoftware.hobson.api.property.PropertyContainerClassContext;
 import com.whizzosoftware.hobson.api.property.PropertyContainerClassType;
 import com.whizzosoftware.hobson.api.task.TaskContext;
+import com.whizzosoftware.hobson.api.variable.VariableContext;
 import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.v1.resource.activity.ActivityLogResource;
 import com.whizzosoftware.hobson.rest.v1.resource.hub.HubLogResource;
@@ -127,6 +128,11 @@ public class RestResourceIdProvider implements IdProvider {
         Map<String,String> values = new HashMap<>();
         values.put(JSONAttributes.USER_ID, userId);
         return t.format(values);
+    }
+
+    @Override
+    public VariableContext createVariableContext(String variableId) {
+        return null;
     }
 
     @Override

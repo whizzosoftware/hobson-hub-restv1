@@ -21,7 +21,6 @@ import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.util.Collection;
 
@@ -29,7 +28,6 @@ public class TelemetryDatasetResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs/{hubId}/telemetry/{datasetId}";
 
     @Inject
-    @Nullable
     TelemetryManager telemetryManager;
     @Inject
     IdProvider idProvider;
