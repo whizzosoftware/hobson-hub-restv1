@@ -68,6 +68,11 @@ public class RestResourceIdProvider implements IdProvider {
     }
 
     @Override
+    public String createTaskPropertiesId(TaskContext ctx) {
+        return null;
+    }
+
+    @Override
     public String createTaskConditionClassesId(HubContext ctx) {
         return new Template(apiRoot + TaskConditionClassesResource.PATH).format(createHubValues(ctx));
     }
@@ -78,6 +83,21 @@ public class RestResourceIdProvider implements IdProvider {
         Map<String,String> values = createPluginValues(ctx.getPluginContext());
         values.put(JSONAttributes.CONDITION_CLASS_ID, ctx.getContainerClassId());
         return t.format(values);
+    }
+
+    @Override
+    public String createTaskConditionId(TaskContext ctx, String propertyContainerId) {
+        return null;
+    }
+
+    @Override
+    public String createTaskConditionPropertiesId(TaskContext ctx, String propertyContainerId) {
+        return null;
+    }
+
+    @Override
+    public String createTaskConditionsId(TaskContext ctx) {
+        return null;
     }
 
     @Override
@@ -133,6 +153,23 @@ public class RestResourceIdProvider implements IdProvider {
     @Override
     public VariableContext createVariableContext(String variableId) {
         return null;
+    }
+
+    @Override
+    public String createVariableId(VariableContext ctx) {
+        if (ctx.isGlobal()) {
+            Template t = new Template(apiRoot + GlobalVariableResource.PATH);
+            Map<String,String> values = new HashMap<>();
+            values.put(JSONAttributes.USER_ID, ctx.getUserId());
+            values.put(JSONAttributes.HUB_ID, ctx.getHubId());
+            values.put(JSONAttributes.NAME, ctx.getName());
+            return t.format(values);
+        } else {
+            Template t = new Template(apiRoot + DeviceVariableResource.PATH);
+            Map<String,String> values = createDeviceValues(ctx.getDeviceContext());
+            values.put(JSONAttributes.VARIABLE_NAME, ctx.getName());
+            return t.format(values);
+        }
     }
 
     @Override
@@ -218,6 +255,11 @@ public class RestResourceIdProvider implements IdProvider {
     }
 
     @Override
+    public String createUserId(String userId) {
+        return null;
+    }
+
+    @Override
     public String createVariablesId(HubContext ctx) {
         return null;
     }
@@ -253,20 +295,6 @@ public class RestResourceIdProvider implements IdProvider {
     @Override
     public String createDeviceId(DeviceContext ctx) {
         return new Template(apiRoot + DeviceResource.PATH).format(createDeviceValues(ctx));
-    }
-
-    @Override
-    public String createDeviceVariableId(DeviceContext ctx, String name) {
-        Template t = new Template(apiRoot + DeviceVariableResource.PATH);
-        Map<String,String> values = createDeviceValues(ctx);
-        values.put(JSONAttributes.VARIABLE_NAME, name);
-        return t.format(values);
-    }
-
-    @Override
-    public String createDeviceVariableName(String variableId) {
-        // TODO
-        return null;
     }
 
     @Override
@@ -336,8 +364,27 @@ public class RestResourceIdProvider implements IdProvider {
     }
 
     @Override
-    public DeviceContext createDeviceVariableContext(String variableId) {
-        // TODO
+    public String createActionId(HubContext ctx, String actionId) {
+        return null;
+    }
+
+    @Override
+    public String createActionSetId(HubContext ctx, String actionSetId) {
+        return null;
+    }
+
+    @Override
+    public String createActionSetActionsId(HubContext ctx, String actionSetId) {
+        return null;
+    }
+
+    @Override
+    public String createActionSetsId(HubContext ctx) {
+        return null;
+    }
+
+    @Override
+    public String createActionPropertiesId(HubContext ctx, String actionId) {
         return null;
     }
 

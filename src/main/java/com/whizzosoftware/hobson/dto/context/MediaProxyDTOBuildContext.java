@@ -50,8 +50,8 @@ public class MediaProxyDTOBuildContext extends ManagerDTOBuildContext {
                 v.getContext(),
                 v.getMask(),
                 getProxyValue(hctx, v),
-                v.getMediaType(),
-                v.getLastUpdate()
+                v.getLastUpdate(),
+                v.getMediaType()
             );
         } else {
             return v;

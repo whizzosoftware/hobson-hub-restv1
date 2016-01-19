@@ -17,6 +17,7 @@ import com.whizzosoftware.hobson.api.variable.VariableContext;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
 import com.whizzosoftware.hobson.api.variable.VariableUpdate;
 import com.whizzosoftware.hobson.dto.variable.HobsonVariableDTO;
+import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
@@ -68,11 +69,11 @@ public class DeviceVariableResource extends SelfInjectingServerResource {
     protected Representation get() {
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
-        DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
-        HobsonVariable var = variableManager.getVariable(VariableContext.create(dctx, getAttribute("variableName")));
+        DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute(JSONAttributes.PLUGIN_ID), getAttribute(JSONAttributes.DEVICE_ID));
+        HobsonVariable var = variableManager.getVariable(VariableContext.create(dctx, getAttribute(JSONAttributes.VARIABLE_NAME)));
 
         HobsonVariableDTO dto = new HobsonVariableDTO.Builder(
-            idProvider.createDeviceVariableId(dctx, var.getName()),
+            idProvider.createVariableId(var.getContext()),
             var,
             true
         ).build();
@@ -99,7 +100,7 @@ public class DeviceVariableResource extends SelfInjectingServerResource {
     protected Representation put(Representation entity) {
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
-        DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
+        DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute(JSONAttributes.PLUGIN_ID), getAttribute(JSONAttributes.DEVICE_ID));
 
         Object value = createDeviceVariableValue(JSONHelper.createJSONFromRepresentation(entity));
         String pluginId = getAttribute("pluginId");

@@ -80,7 +80,7 @@ public class DeviceVariablesResource extends SelfInjectingServerResource {
             expansions.pushContext(JSONAttributes.ITEM);
             for (HobsonVariable v : variables) {
                 HobsonVariableDTO dto = new HobsonVariableDTO.Builder(
-                    idProvider.createDeviceVariableId(dctx, v.getName()),
+                    idProvider.createVariableId(v.getContext()),
                     v,
                     showDetails
                 ).build();
