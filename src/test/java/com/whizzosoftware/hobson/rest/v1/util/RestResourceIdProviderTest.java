@@ -5,6 +5,7 @@ import com.whizzosoftware.hobson.api.plugin.PluginContext;
 import com.whizzosoftware.hobson.api.property.PropertyContainerClass;
 import com.whizzosoftware.hobson.api.property.PropertyContainerClassContext;
 import com.whizzosoftware.hobson.api.property.PropertyContainerClassType;
+import com.whizzosoftware.hobson.api.variable.VariableContext;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -43,5 +44,16 @@ public class RestResourceIdProviderTest {
         assertEquals("hub1", dc.getHubId());
         assertEquals("plugin1", dc.getPluginId());
         assertEquals("device1", dc.getDeviceId());
+    }
+
+    @Test
+    public void testCreateVariableContext() {
+        RestResourceIdProvider provider = new RestResourceIdProvider();
+        VariableContext c = provider.createVariableContext("/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-sample/devices/wstation/variables/outTempF");
+        assertEquals("local", c.getHubId());
+        assertEquals("local", c.getUserId());
+        assertEquals("com.whizzosoftware.hobson.hub.hobson-hub-sample", c.getPluginId());
+        assertEquals("wstation", c.getDeviceId());
+        assertEquals("outTempF", c.getName());
     }
 }

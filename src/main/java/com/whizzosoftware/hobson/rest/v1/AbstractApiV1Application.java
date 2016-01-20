@@ -27,7 +27,8 @@ import com.whizzosoftware.hobson.rest.v1.resource.image.ImageLibraryImageResourc
 import com.whizzosoftware.hobson.rest.v1.resource.image.ImageLibraryRootResource;
 import com.whizzosoftware.hobson.rest.v1.resource.plugin.*;
 import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceEntitiesResource;
-import com.whizzosoftware.hobson.rest.v1.resource.telemetry.TelemetryDatasetResource;
+import com.whizzosoftware.hobson.rest.v1.resource.telemetry.DataStreamResource;
+import com.whizzosoftware.hobson.rest.v1.resource.telemetry.DataStreamsResource;
 import com.whizzosoftware.hobson.rest.v1.resource.user.UserResource;
 import com.whizzosoftware.hobson.rest.v1.resource.variable.GlobalVariableResource;
 import com.whizzosoftware.hobson.rest.v1.resource.variable.GlobalVariablesResource;
@@ -73,6 +74,8 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
         // create the secure router
         Router secureRouter = newRouter();
         secureRouter.attach(ActivityLogResource.PATH, ActivityLogResource.class);
+        secureRouter.attach(DataStreamsResource.PATH, DataStreamsResource.class);
+        secureRouter.attach(DataStreamResource.PATH, DataStreamResource.class);
         secureRouter.attach(DevicePassportsResource.PATH, DevicePassportsResource.class);
         secureRouter.attach(DevicePassportResource.PATH, DevicePassportResource.class);
         secureRouter.attach(DeviceResource.PATH, DeviceResource.class);
@@ -119,7 +122,6 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
         secureRouter.attach(TaskConditionClassesResource.PATH, TaskConditionClassesResource.class);
         secureRouter.attach(TaskResource.PATH, TaskResource.class);
         secureRouter.attach(TasksResource.PATH, TasksResource.class);
-        secureRouter.attach(TelemetryDatasetResource.PATH, TelemetryDatasetResource.class);
         secureRouter.attach(UserResource.PATH, UserResource.class);
 
         // create the authorizer

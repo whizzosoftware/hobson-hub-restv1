@@ -30,6 +30,8 @@ import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceEntitiesResou
 import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceEntityResource;
 import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceLocationsResource;
 import com.whizzosoftware.hobson.rest.v1.resource.task.*;
+import com.whizzosoftware.hobson.rest.v1.resource.telemetry.DataStreamResource;
+import com.whizzosoftware.hobson.rest.v1.resource.telemetry.DataStreamsResource;
 import com.whizzosoftware.hobson.rest.v1.resource.user.UserResource;
 import com.whizzosoftware.hobson.rest.v1.resource.variable.GlobalVariableResource;
 import com.whizzosoftware.hobson.rest.v1.resource.variable.GlobalVariablesResource;
@@ -152,7 +154,10 @@ public class RestResourceIdProvider implements IdProvider {
 
     @Override
     public VariableContext createVariableContext(String variableId) {
-        return null;
+        Template t = new Template(apiRoot + DeviceVariableResource.PATH);
+        Map<String,Object> vars = new HashMap<>();
+        t.parse(variableId, vars);
+        return VariableContext.create(HubContext.create((String)vars.get(JSONAttributes.USER_ID), (String)vars.get(JSONAttributes.HUB_ID)), (String)vars.get(JSONAttributes.PLUGIN_ID), (String)vars.get(JSONAttributes.DEVICE_ID), (String)vars.get(JSONAttributes.VARIABLE_NAME));
     }
 
     @Override
@@ -395,6 +400,24 @@ public class RestResourceIdProvider implements IdProvider {
 
     @Override
     public String createAllHubsId() {
+        return null;
+    }
+
+    @Override
+    public String createDataStreamsId(HubContext ctx) {
+        return new Template(apiRoot + DataStreamsResource.PATH).format(createHubValues(ctx));
+    }
+
+    @Override
+    public String createDataStreamId(HubContext ctx, String dataStreamId) {
+        Template t = new Template(apiRoot + DataStreamResource.PATH);
+        Map<String,String> values = createHubValues(ctx);
+        values.put(JSONAttributes.DATA_STREAM_ID, dataStreamId);
+        return t.format(values);
+    }
+
+    @Override
+    public String createDataStreamVariablesId(HubContext ctx, String dataStreamId) {
         return null;
     }
 
