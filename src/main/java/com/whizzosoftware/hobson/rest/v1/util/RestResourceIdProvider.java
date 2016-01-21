@@ -153,6 +153,11 @@ public class RestResourceIdProvider implements IdProvider {
     }
 
     @Override
+    public String createUsersId() {
+        return null;
+    }
+
+    @Override
     public VariableContext createVariableContext(String variableId) {
         Template t = new Template(apiRoot + DeviceVariableResource.PATH);
         Map<String,Object> vars = new HashMap<>();
@@ -396,11 +401,6 @@ public class RestResourceIdProvider implements IdProvider {
     @Override
     public String createActivityLogId(HubContext ctx) {
         return new Template(apiRoot + ActivityLogResource.PATH).format(createHubValues(ctx));
-    }
-
-    @Override
-    public String createAllHubsId() {
-        return null;
     }
 
     @Override

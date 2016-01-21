@@ -32,7 +32,7 @@ public class LoginResource extends SelfInjectingServerResource {
     public static final String PATH = "/login";
 
     @Inject
-    UserStore userManager;
+    UserStore userStore;
     @Inject
     HubManager hubManager;
     @Inject
@@ -71,7 +71,7 @@ public class LoginResource extends SelfInjectingServerResource {
         JSONObject json = JSONHelper.createJSONFromRepresentation(entity);
 
         if (json.has("username") && json.has("password")) {
-            HobsonUser user = userManager.authenticate(json.getString("username"), json.getString("password"));
+            HobsonUser user = userStore.authenticate(json.getString("username"), json.getString("password"));
             boolean showDetails = expansions.has(JSONAttributes.USER);
 
             AuthResultDTO dto = new AuthResultDTO(
@@ -95,8 +95,8 @@ public class LoginResource extends SelfInjectingServerResource {
     @Override
     protected Representation options() {
         JSONObject json = new JSONObject();
-        if (userManager.hasDefaultUser()) {
-            json.put("defaultUser", userManager.getDefaultUser());
+        if (userStore.hasDefaultUser()) {
+            json.put("defaultUser", userStore.getDefaultUser());
         }
         HubContext hctx = HubContext.createLocal();
 

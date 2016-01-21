@@ -92,8 +92,8 @@ public class TokenHelper {
                 String scope = claims.getStringClaimValue(PROP_SCOPE);
                 return new TokenVerification(
                     new HobsonUser.Builder(claims.getSubject())
-                        .firstName(claims.getStringClaimValue(PROP_FIRST_NAME))
-                        .lastName(claims.getStringClaimValue(PROP_LAST_NAME))
+                        .givenName(claims.getStringClaimValue(PROP_FIRST_NAME))
+                        .familyName(claims.getStringClaimValue(PROP_LAST_NAME))
                         .build(),
                     StringUtils.split(scope)
                 );
