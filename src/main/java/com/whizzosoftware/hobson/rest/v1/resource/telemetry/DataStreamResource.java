@@ -48,8 +48,10 @@ public class DataStreamResource extends SelfInjectingServerResource {
      *       {
      *         "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-sample/devices/thermostat/variables/inTempF"
      *       }
-     *     ]
-     *   },
+     *   ],
+     *   "links": {
+     *     "data": "/api/v1/users/local/hubs/local/dataStreams/31c68ded-2364-4fb0-9bee-9d96b388476a/data"
+     *   }
      * }
      */
     @Override
