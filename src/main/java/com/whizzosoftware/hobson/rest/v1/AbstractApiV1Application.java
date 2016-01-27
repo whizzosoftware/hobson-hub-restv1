@@ -27,6 +27,7 @@ import com.whizzosoftware.hobson.rest.v1.resource.image.ImageLibraryImageResourc
 import com.whizzosoftware.hobson.rest.v1.resource.image.ImageLibraryRootResource;
 import com.whizzosoftware.hobson.rest.v1.resource.plugin.*;
 import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceEntitiesResource;
+import com.whizzosoftware.hobson.rest.v1.resource.telemetry.DataStreamDataResource;
 import com.whizzosoftware.hobson.rest.v1.resource.telemetry.DataStreamResource;
 import com.whizzosoftware.hobson.rest.v1.resource.telemetry.DataStreamsResource;
 import com.whizzosoftware.hobson.rest.v1.resource.user.UserResource;
@@ -76,6 +77,7 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
         secureRouter.attach(ActivityLogResource.PATH, ActivityLogResource.class);
         secureRouter.attach(DataStreamsResource.PATH, DataStreamsResource.class);
         secureRouter.attach(DataStreamResource.PATH, DataStreamResource.class);
+        secureRouter.attach(DataStreamDataResource.PATH, DataStreamDataResource.class);
         secureRouter.attach(DevicePassportsResource.PATH, DevicePassportsResource.class);
         secureRouter.attach(DevicePassportResource.PATH, DevicePassportResource.class);
         secureRouter.attach(DeviceResource.PATH, DeviceResource.class);

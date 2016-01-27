@@ -22,7 +22,7 @@ import org.restlet.representation.Representation;
 import javax.inject.Inject;
 
 public class DataStreamResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/dataStreams/{dataStreamId}";
+    public static final String PATH = "/users/{userId}/dataStreams/{dataStreamId}";
 
     @Inject
     TelemetryManager telemetryManager;
@@ -30,9 +30,9 @@ public class DataStreamResource extends SelfInjectingServerResource {
     DTOBuildContextFactory dtoBuildContextFactory;
 
     /**
-     * @api {get} /api/v1/users/:userId/hubs/:hubId/dataStreams/:dataStreamId Get data stream
+     * @api {get} /api/v1/users/:userId/dataStreams/:dataStreamId Get data stream
      * @apiVersion 0.8.0
-     * @apiName GetTelemetryDataStream
+     * @apiName GetDataStream
      * @apiDescription Retrieve details about a telemetry data stream.
      * @apiGroup Telemetry
      * @apiSuccess {String} name The name of the data stream.
@@ -59,7 +59,7 @@ public class DataStreamResource extends SelfInjectingServerResource {
             ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
             DataStreamDTO dto = new DataStreamDTO.Builder(
                 dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions),
-                telemetryManager.getDataStream(ctx.getHubContext(), getAttribute("dataStreamId")),
+                telemetryManager.getDataStream(ctx.getUserId(), getAttribute("dataStreamId")),
                 true
             ).build();
             JsonRepresentation jr = new JsonRepresentation(dto.toJSON());

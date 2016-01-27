@@ -9,6 +9,7 @@ package com.whizzosoftware.hobson.rest.v1.resource.user;
 
 import com.whizzosoftware.hobson.api.HobsonAuthorizationException;
 import com.whizzosoftware.hobson.api.HobsonRuntimeException;
+import com.whizzosoftware.hobson.api.telemetry.TelemetryManager;
 import com.whizzosoftware.hobson.api.user.HobsonUser;
 import com.whizzosoftware.hobson.api.user.UserStore;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
@@ -30,6 +31,8 @@ public class UserResource extends SelfInjectingServerResource {
 
     @Inject
     UserStore userStore;
+    @Inject
+    TelemetryManager telemetryManager;
     @Inject
     DTOBuildContextFactory dtoBuildContextFactory;
 
@@ -61,6 +64,7 @@ public class UserResource extends SelfInjectingServerResource {
                 HobsonUserDTO dto = new HobsonUserDTO.Builder(
                     dtoBuildContextFactory.createContext(ctx.getApiRoot(), new ExpansionFields(getQueryValue("expand"))),
                     hu,
+                    telemetryManager != null && !telemetryManager.isStub(),
                     true
                 ).build();
 

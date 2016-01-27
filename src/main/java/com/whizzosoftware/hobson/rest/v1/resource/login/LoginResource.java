@@ -11,6 +11,7 @@ import com.whizzosoftware.hobson.api.HobsonAuthenticationException;
 import com.whizzosoftware.hobson.api.hub.HubContext;
 import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.api.property.PropertyContainer;
+import com.whizzosoftware.hobson.api.telemetry.TelemetryManager;
 import com.whizzosoftware.hobson.api.user.HobsonUser;
 import com.whizzosoftware.hobson.api.user.UserStore;
 import com.whizzosoftware.hobson.dto.*;
@@ -35,6 +36,8 @@ public class LoginResource extends SelfInjectingServerResource {
     UserStore userStore;
     @Inject
     HubManager hubManager;
+    @Inject
+    TelemetryManager telemetryManager;
     @Inject
     TokenHelper tokenHelper;
     @Inject
@@ -79,6 +82,7 @@ public class LoginResource extends SelfInjectingServerResource {
                 new HobsonUserDTO.Builder(
                     dtoBuildContextFactory.createContext(AbstractApiV1Application.API_ROOT, expansions),
                     user,
+                    telemetryManager != null && !telemetryManager.isStub(),
                     showDetails
                 ).build()
             );

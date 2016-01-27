@@ -30,6 +30,7 @@ import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceEntitiesResou
 import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceEntityResource;
 import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceLocationsResource;
 import com.whizzosoftware.hobson.rest.v1.resource.task.*;
+import com.whizzosoftware.hobson.rest.v1.resource.telemetry.DataStreamDataResource;
 import com.whizzosoftware.hobson.rest.v1.resource.telemetry.DataStreamResource;
 import com.whizzosoftware.hobson.rest.v1.resource.telemetry.DataStreamsResource;
 import com.whizzosoftware.hobson.rest.v1.resource.user.UserResource;
@@ -39,6 +40,7 @@ import org.restlet.routing.Template;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -404,20 +406,30 @@ public class RestResourceIdProvider implements IdProvider {
     }
 
     @Override
-    public String createDataStreamsId(HubContext ctx) {
-        return new Template(apiRoot + DataStreamsResource.PATH).format(createHubValues(ctx));
+    public String createDataStreamsId(String userId) {
+        return new Template(apiRoot + DataStreamsResource.PATH).format(Collections.singletonMap(JSONAttributes.USER_ID, userId));
     }
 
     @Override
-    public String createDataStreamId(HubContext ctx, String dataStreamId) {
-        Template t = new Template(apiRoot + DataStreamResource.PATH);
-        Map<String,String> values = createHubValues(ctx);
+    public String createDataStreamId(String userId, String dataStreamId) {
+        return createDataStreamPathId(DataStreamResource.PATH, userId, dataStreamId);
+    }
+
+    @Override
+    public String createDataStreamDataId(String userId, String dataStreamId) {
+        return createDataStreamPathId(DataStreamDataResource.PATH, userId, dataStreamId);
+    }
+
+    private String createDataStreamPathId(String path, String userId, String dataStreamId) {
+        Template t = new Template(apiRoot + path);
+        Map<String,String> values = new HashMap<>();
+        values.put(JSONAttributes.USER_ID, userId);
         values.put(JSONAttributes.DATA_STREAM_ID, dataStreamId);
         return t.format(values);
     }
 
     @Override
-    public String createDataStreamVariablesId(HubContext ctx, String dataStreamId) {
+    public String createDataStreamVariablesId(String userId, String dataStreamId) {
         return null;
     }
 
