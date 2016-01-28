@@ -11,8 +11,8 @@ import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
 import com.whizzosoftware.hobson.api.device.DevicePassportAlreadyActivatedException;
 import com.whizzosoftware.hobson.api.device.DevicePassport;
 import com.whizzosoftware.hobson.api.device.DeviceManager;
-import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
+import com.whizzosoftware.hobson.dto.context.DTOBuildContext;
 import com.whizzosoftware.hobson.dto.device.DevicePassportDTO;
 import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
@@ -35,7 +35,7 @@ public class ActivateDevicePassportResource extends SelfInjectingServerResource 
     @Inject
     VariableManager variableManager;
     @Inject
-    IdProvider idProvider;
+    DTOBuildContext dtoBuildContext;
 
     /**
      * @api {post} /api/v1/users/:userId/hubs/:hubId/activatePassport Activate device passport
@@ -66,7 +66,7 @@ public class ActivateDevicePassportResource extends SelfInjectingServerResource 
         DevicePassport db = deviceManager.activateDevicePassport(ctx.getHubContext(), json.getString(JSONAttributes.DEVICE_ID));
 
         try {
-            DevicePassportDTO dto = new DevicePassportDTO.Builder(idProvider.createDevicePassportId(ctx.getHubContext(), db.getId()), db, true, true).build();
+            DevicePassportDTO dto = new DevicePassportDTO.Builder(dtoBuildContext, db, true, true).build();
             JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
             jr.setMediaType(new MediaType(dto.getJSONMediaType()));
             return jr;

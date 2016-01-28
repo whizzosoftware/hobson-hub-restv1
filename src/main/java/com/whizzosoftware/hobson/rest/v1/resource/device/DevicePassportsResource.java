@@ -14,6 +14,7 @@ import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
+import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
 import com.whizzosoftware.hobson.dto.device.DevicePassportDTO;
 import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
@@ -40,6 +41,8 @@ public class DevicePassportsResource extends SelfInjectingServerResource {
     VariableManager variableManager;
     @Inject
     IdProvider idProvider;
+    @Inject
+    DTOBuildContextFactory dtoBuildContextFactory;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/devicePassports Get all device passports
@@ -77,7 +80,12 @@ public class DevicePassportsResource extends SelfInjectingServerResource {
         expansions.pushContext(JSONAttributes.ITEM);
 
         for (DevicePassport db : passports) {
-            results.add(new DevicePassportDTO.Builder(idProvider.createDevicePassportId(ctx.getHubContext(), db.getId()), db, itemExpand, false).build());
+            results.add(new DevicePassportDTO.Builder(
+                dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions),
+                db,
+                itemExpand,
+                false
+            ).build());
         }
 
         expansions.popContext();

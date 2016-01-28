@@ -358,6 +358,11 @@ public class RestResourceIdProvider implements IdProvider {
     }
 
     @Override
+    public String createHubPasswordId(HubContext ctx) {
+        return new Template(apiRoot + HubPasswordResource.PATH).format(createHubValues(ctx));
+    }
+
+    @Override
     public String createLocalPluginIconId(PluginContext ctx) {
         return new Template(apiRoot + LocalPluginImageResource.PATH).format(createPluginValues(ctx));
     }
@@ -461,6 +466,11 @@ public class RestResourceIdProvider implements IdProvider {
         } catch (UnsupportedEncodingException e) {
             throw new HobsonRuntimeException("UTF8 is not supported on this platform", e);
         }
+    }
+
+    @Override
+    public String createSendTestEmailId(HubContext ctx) {
+        return new Template(apiRoot + HubSendTestEmailResource.PATH).format(createHubValues(ctx));
     }
 
     @Override

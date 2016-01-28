@@ -10,9 +10,11 @@ package com.whizzosoftware.hobson.rest.v1.resource.device;
 import com.whizzosoftware.hobson.api.HobsonNotFoundException;
 import com.whizzosoftware.hobson.api.device.DevicePassport;
 import com.whizzosoftware.hobson.api.device.DeviceManager;
-import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
+import com.whizzosoftware.hobson.dto.ExpansionFields;
+import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
 import com.whizzosoftware.hobson.dto.device.DevicePassportDTO;
+import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import org.restlet.data.MediaType;
@@ -32,7 +34,7 @@ public class DevicePassportResource extends SelfInjectingServerResource {
     @Inject
     VariableManager variableManager;
     @Inject
-    IdProvider idProvider;
+    DTOBuildContextFactory dtoBuildContextFactory;
 
     /**
      * @api {get} /api/v1/users/:userId/hubs/:hubId/devicePassports/{passportId} Get device passport
@@ -51,12 +53,13 @@ public class DevicePassportResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() throws ResourceException {
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
+        ExpansionFields expansions = new ExpansionFields(getQueryValue(JSONAttributes.EXPAND));
 
         DevicePassport db = deviceManager.getDevicePassport(ctx.getHubContext(), getAttribute("passportId"));
 
         if (db != null) {
             DevicePassportDTO dto = new DevicePassportDTO.Builder(
-                idProvider.createDevicePassportId(ctx.getHubContext(), db.getId()),
+                dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions),
                 db,
                 true,
                 false
