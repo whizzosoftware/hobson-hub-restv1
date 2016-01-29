@@ -320,11 +320,6 @@ public class RestResourceIdProvider implements IdProvider {
     }
 
     @Override
-    public String createTelemetryDatasetId(HubContext ctx, String dataSetId) {
-        return null;
-    }
-
-    @Override
     public String createLocalPluginConfigurationId(PluginContext ctx) {
         return new Template(apiRoot + LocalPluginConfigurationResource.PATH).format(createPluginValues(ctx));
     }

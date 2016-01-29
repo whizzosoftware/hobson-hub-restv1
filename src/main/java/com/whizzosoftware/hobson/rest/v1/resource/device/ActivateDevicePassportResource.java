@@ -12,7 +12,8 @@ import com.whizzosoftware.hobson.api.device.DevicePassportAlreadyActivatedExcept
 import com.whizzosoftware.hobson.api.device.DevicePassport;
 import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.api.variable.VariableManager;
-import com.whizzosoftware.hobson.dto.context.DTOBuildContext;
+import com.whizzosoftware.hobson.dto.ExpansionFields;
+import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
 import com.whizzosoftware.hobson.dto.device.DevicePassportDTO;
 import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
@@ -35,7 +36,7 @@ public class ActivateDevicePassportResource extends SelfInjectingServerResource 
     @Inject
     VariableManager variableManager;
     @Inject
-    DTOBuildContext dtoBuildContext;
+    DTOBuildContextFactory dtoBuildContextFactory;
 
     /**
      * @api {post} /api/v1/users/:userId/hubs/:hubId/activatePassport Activate device passport
@@ -61,12 +62,18 @@ public class ActivateDevicePassportResource extends SelfInjectingServerResource 
     @Override
     protected Representation post(Representation entity) throws ResourceException {
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
+        ExpansionFields expansions = new ExpansionFields(getQueryValue(JSONAttributes.EXPAND));
 
         JSONObject json = JSONHelper.createJSONFromRepresentation(entity);
         DevicePassport db = deviceManager.activateDevicePassport(ctx.getHubContext(), json.getString(JSONAttributes.DEVICE_ID));
 
         try {
-            DevicePassportDTO dto = new DevicePassportDTO.Builder(dtoBuildContext, db, true, true).build();
+            DevicePassportDTO dto = new DevicePassportDTO.Builder(
+                dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions),
+                db,
+                true,
+                true
+            ).build();
             JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
             jr.setMediaType(new MediaType(dto.getJSONMediaType()));
             return jr;
