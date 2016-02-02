@@ -101,7 +101,6 @@ public class DevicePassportsResource extends SelfInjectingServerResource {
      * @apiName CreateDevicePassport
      * @apiDescription Creates a new device passport.
      * @apiGroup Devices
-     * @apiSuccessExample {json} Success Response:
      * @apiParamExample {json} Example Request:
      * {
      *   "deviceId": "aG12Jca"

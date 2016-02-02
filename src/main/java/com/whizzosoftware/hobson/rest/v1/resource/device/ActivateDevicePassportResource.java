@@ -44,7 +44,6 @@ public class ActivateDevicePassportResource extends SelfInjectingServerResource 
      * @apiName ActivateDevicePassport
      * @apiDescription Activates a device passport that has previously been created.
      * @apiGroup Devices
-     * @apiSuccessExample {json} Success Response:
      * @apiParamExample {json} Example Request:
      * {
      *   "deviceId": "myDeviceId"
