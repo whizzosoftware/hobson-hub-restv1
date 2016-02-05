@@ -32,7 +32,20 @@ public class RestResourceIdProviderTest {
     public void testCreatePropertyContainerId() {
         RestResourceIdProvider provider = new RestResourceIdProvider();
         assertEquals("/api/v1/users/local/hubs/local/configuration", provider.createPropertyContainerId(
-            new PropertyContainerClass(PropertyContainerClassContext.create(PluginContext.createLocal("plugin1"), "configuration"), PropertyContainerClassType.HUB_CONFIG)
+            "configuration",
+            new PropertyContainerClass(PropertyContainerClassContext.create(PluginContext.createLocal("plugin1"), "configurationClass"), PropertyContainerClassType.HUB_CONFIG)
+        ));
+        assertEquals("/api/v1/users/local/hubs/local/plugins/local/plugin1/configuration", provider.createPropertyContainerId(
+            "configuration",
+            new PropertyContainerClass(PropertyContainerClassContext.create(PluginContext.createLocal("plugin1"), "configurationClass"), PropertyContainerClassType.PLUGIN_CONFIG)
+        ));
+        assertEquals("myCondition", provider.createPropertyContainerId(
+            "myCondition",
+            new PropertyContainerClass(PropertyContainerClassContext.create(PluginContext.createLocal("plugin1"), "turnsOn"), PropertyContainerClassType.CONDITION)
+        ));
+        assertEquals("myAction", provider.createPropertyContainerId(
+            "myAction",
+            new PropertyContainerClass(PropertyContainerClassContext.create(PluginContext.createLocal("plugin1"), "turnOn"), PropertyContainerClassType.CONDITION)
         ));
     }
 

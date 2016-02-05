@@ -208,21 +208,11 @@ public class RestResourceIdProvider implements IdProvider {
     }
 
     @Override
-    public String createPropertyContainerId(PropertyContainerClass pcc) {
+    public String createPropertyContainerId(String id, PropertyContainerClass pcc) {
         switch (pcc.getType()) {
-            case CONDITION: {
-                PropertyContainerClassContext pccc = pcc.getContext();
-                Template t = new Template(apiRoot + TaskConditionClassResource.PATH);
-                Map<String,String> values = createPluginValues(pcc.getContext().getPluginContext());
-                values.put(JSONAttributes.CONDITION_CLASS_ID, pccc.getContainerClassId());
-                return t.format(values);
-            }
+            case CONDITION:
             case ACTION: {
-                PropertyContainerClassContext pccc = pcc.getContext();
-                Template t = new Template(apiRoot + TaskActionClassResource.PATH);
-                Map<String,String> values = createPluginValues(pcc.getContext().getPluginContext());
-                values.put(JSONAttributes.ACTION_CLASS_ID, pccc.getContainerClassId());
-                return t.format(values);
+                return id;
             }
             case HUB_CONFIG: {
                 return createHubConfigurationId(pcc.getContext().getHubContext());

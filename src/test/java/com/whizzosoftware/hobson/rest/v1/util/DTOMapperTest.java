@@ -325,7 +325,6 @@ public class DTOMapperTest {
         // verify results
         assertEquals(1, pdtos.size());
         PropertyContainerDTO pdto = pdtos.get(0);
-        assertEquals("/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-scheduler/conditionClasses/schedule", pdto.getId());
         assertNull(pdto.getValues());
     }
 
