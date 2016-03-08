@@ -42,6 +42,8 @@ public class HobsonStatusService extends StatusService {
             return new Status(Status.CLIENT_ERROR_BAD_REQUEST, t.getLocalizedMessage());
         } else if (t instanceof HobsonRuntimeException) {
             return new Status(Status.SERVER_ERROR_INTERNAL, t, t.getLocalizedMessage());
+        } else if (t instanceof UnsupportedOperationException) {
+            return new Status(Status.SERVER_ERROR_NOT_IMPLEMENTED, t, t.getLocalizedMessage());
         } else {
             return new Status(Status.SERVER_ERROR_INTERNAL, t);
         }
