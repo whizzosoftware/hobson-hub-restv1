@@ -353,6 +353,16 @@ public class RestResourceIdProvider implements IdProvider {
     }
 
     @Override
+    public String createHubSerialPortsId(HubContext ctx) {
+        return new Template(apiRoot + HubSerialPortsResource.PATH).format(createHubValues(ctx));
+    }
+
+    @Override
+    public String createHubSerialPortId(HubContext ctx, String name) {
+        return name;
+    }
+
+    @Override
     public String createLocalPluginIconId(PluginContext ctx) {
         return new Template(apiRoot + LocalPluginImageResource.PATH).format(createPluginValues(ctx));
     }

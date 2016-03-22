@@ -98,6 +98,7 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
         secureRouter.attach(HubRemoteRepositoriesResource.PATH, HubRemoteRepositoriesResource.class);
         secureRouter.attach(HubRemoteRepositoryResource.PATH, HubRemoteRepositoryResource.class);
         secureRouter.attach(HubsResource.PATH, HubsResource.class);
+        secureRouter.attach(HubSerialPortsResource.PATH, HubSerialPortsResource.class);
         secureRouter.attach(ImageLibraryGroupResource.PATH, ImageLibraryGroupResource.class);
         secureRouter.attach(ImageLibraryImageResource.PATH, ImageLibraryImageResource.class);
         secureRouter.attach(ImageLibraryRootResource.PATH, ImageLibraryRootResource.class);
