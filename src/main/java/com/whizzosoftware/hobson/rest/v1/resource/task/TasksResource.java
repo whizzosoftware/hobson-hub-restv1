@@ -82,12 +82,14 @@ public class TasksResource extends SelfInjectingServerResource {
         if (tasks != null) {
             expansions.pushContext(JSONAttributes.ITEM);
             for (HobsonTask task : tasks) {
-                HobsonTaskDTO dto = new HobsonTaskDTO.Builder(
-                    dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions),
-                    task,
-                    showDetails
-                ).build();
-                results.add(dto);
+                if (task != null) {
+                    HobsonTaskDTO dto = new HobsonTaskDTO.Builder(
+                        dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions),
+                        task,
+                        showDetails
+                    ).build();
+                    results.add(dto);
+                }
             }
             expansions.popContext();
         }
