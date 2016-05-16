@@ -8,15 +8,16 @@
 package com.whizzosoftware.hobson.rest.v1.resource.hub;
 
 import com.whizzosoftware.hobson.api.hub.HubContext;
-import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
+import com.whizzosoftware.hobson.dto.context.DTOBuildContext;
 import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
 import com.whizzosoftware.hobson.dto.hub.HobsonHubDTO;
 import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.HobsonRestUser;
 import org.restlet.data.MediaType;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -29,8 +30,6 @@ import java.util.Collection;
 public class HubsResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs";
 
-    @Inject
-    HubManager hubManager;
     @Inject
     DTOBuildContextFactory dtoBuildContextFactory;
     @Inject
@@ -61,17 +60,19 @@ public class HubsResource extends SelfInjectingServerResource {
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
         ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
 
+        DTOBuildContext bctx = dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions);
         ItemListDTO itemList = new ItemListDTO(idProvider.createUserHubsId(ctx.getUserId()));
-        Collection<HubContext> hubs = hubManager.getHubs(ctx.getUserId());
+        HobsonRestUser user = (HobsonRestUser)getClientInfo().getUser();
+        Collection<String> hubs = user.getHubs();
 
         if (hubs != null) {
             boolean showDetails = expansions.has(JSONAttributes.ITEM);
             expansions.pushContext(JSONAttributes.ITEM);
 
-            for (HubContext hctx : hubs) {
+            for (String hubId : hubs) {
                 itemList.add(new HobsonHubDTO.Builder(
-                    dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions),
-                    hubManager.getHub(hctx),
+                    bctx,
+                    bctx.getHub(HubContext.create(ctx.getUserId(), hubId)),
                     showDetails
                 ).build());
             }

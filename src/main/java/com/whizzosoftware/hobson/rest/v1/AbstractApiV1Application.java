@@ -30,6 +30,7 @@ import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceEntitiesResou
 import com.whizzosoftware.hobson.rest.v1.resource.telemetry.DataStreamDataResource;
 import com.whizzosoftware.hobson.rest.v1.resource.telemetry.DataStreamResource;
 import com.whizzosoftware.hobson.rest.v1.resource.telemetry.DataStreamsResource;
+import com.whizzosoftware.hobson.rest.v1.resource.user.CurrentUserResource;
 import com.whizzosoftware.hobson.rest.v1.resource.user.UserResource;
 import com.whizzosoftware.hobson.rest.v1.resource.variable.GlobalVariableResource;
 import com.whizzosoftware.hobson.rest.v1.resource.variable.GlobalVariablesResource;
@@ -75,6 +76,7 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
         // create the secure router
         Router secureRouter = newRouter();
         secureRouter.attach(ActivityLogResource.PATH, ActivityLogResource.class);
+        secureRouter.attach(CurrentUserResource.PATH, CurrentUserResource.class);
         secureRouter.attach(DataStreamsResource.PATH, DataStreamsResource.class);
         secureRouter.attach(DataStreamResource.PATH, DataStreamResource.class);
         secureRouter.attach(DataStreamDataResource.PATH, DataStreamDataResource.class);

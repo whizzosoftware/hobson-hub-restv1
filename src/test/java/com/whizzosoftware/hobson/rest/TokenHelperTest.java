@@ -8,6 +8,7 @@
 package com.whizzosoftware.hobson.rest;
 
 import org.junit.Test;
+import org.restlet.security.Role;
 
 import static org.junit.Assert.*;
 
@@ -15,9 +16,9 @@ public class TokenHelperTest {
     @Test
     public void testCreateToken() {
         TokenHelper th = new TokenHelper();
-        String token = th.createToken("user1", new org.restlet.security.Role(HobsonRole.ADMIN.name()));
+        String token = th.createToken("user1", new Role(HobsonRole.ADMIN.name()), null);
         TokenVerification tc = th.verifyToken(token);
         assertEquals("user1", tc.getUser().getId());
-        assertTrue(tc.hasScope(HobsonRole.ADMIN.name()));
+        assertTrue(tc.hasRole(HobsonRole.ADMIN.name()));
     }
 }

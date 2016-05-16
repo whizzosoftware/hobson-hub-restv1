@@ -13,14 +13,14 @@ import org.restlet.Response;
 import org.restlet.data.ChallengeScheme;
 import org.restlet.data.Cookie;
 import org.restlet.security.Role;
-import org.restlet.security.User;
 import org.restlet.security.Verifier;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class BearerTokenVerifier implements Verifier {
-    TokenHelper tokenHelper = new TokenHelper();
+    private TokenHelper tokenHelper = new TokenHelper();
 
     private Application application;
 
@@ -48,16 +48,8 @@ public class BearerTokenVerifier implements Verifier {
             TokenVerification tc = tokenHelper.verifyToken(token);
             if (tc.hasUser()) {
                 result = RESULT_VALID;
-                request.getClientInfo().setUser(
-                    new User(
-                        tc.getUser().getId(),
-                        token,
-                        tc.getUser().getGivenName(),
-                        tc.getUser().getFamilyName(),
-                        null
-                    )
-                );
-                request.getClientInfo().setRoles(createRoles(application, tc.getScope()));
+                request.getClientInfo().setUser(new HobsonRestUser(tc.getUser(), token));
+                request.getClientInfo().setRoles(createRoles(application, tc.getRoles()));
             }
         } else {
             result = RESULT_MISSING;
@@ -66,10 +58,12 @@ public class BearerTokenVerifier implements Verifier {
         return result;
     }
 
-    protected List<Role> createRoles(Application application, String[] scope) {
+    private List<Role> createRoles(Application application, Collection<String> scope) {
         List<Role> roles = new ArrayList<>();
-        for (String s : scope) {
-            roles.add(application.getRole(s));
+        if (scope != null) {
+            for (String s : scope) {
+                roles.add(application.getRole(s));
+            }
         }
         return roles;
     }

@@ -8,7 +8,8 @@
 package com.whizzosoftware.hobson.rest;
 
 import com.whizzosoftware.hobson.api.user.HobsonUser;
-import org.apache.commons.lang3.ArrayUtils;
+
+import java.util.Collection;
 
 /**
  * A verification result for a token which provides the user and scope associated with it.
@@ -17,26 +18,26 @@ import org.apache.commons.lang3.ArrayUtils;
  */
 public class TokenVerification {
     private HobsonUser user;
-    private String[] scope;
+    private Collection<String> roles;
 
-    public TokenVerification(HobsonUser user, String[] scope) {
+    public TokenVerification(HobsonUser user, Collection<String> roles) {
         this.user = user;
-        this.scope = scope;
+        this.roles = roles;
     }
 
     public HobsonUser getUser() {
         return user;
     }
 
-    public String[] getScope() {
-        return scope;
+    public Collection<String> getRoles() {
+        return roles;
     }
 
     public boolean hasUser() {
         return (user != null);
     }
 
-    public boolean hasScope(String s) {
-        return ArrayUtils.contains(scope, s);
+    public boolean hasRole(String s) {
+        return roles.contains(s);
     }
 }

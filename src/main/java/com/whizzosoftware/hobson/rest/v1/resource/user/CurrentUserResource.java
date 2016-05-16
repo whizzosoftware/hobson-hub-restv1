@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Whizzo Software, LLC.
+ * Copyright (c) 2016 Whizzo Software, LLC.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,7 +7,6 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.user;
 
-import com.whizzosoftware.hobson.api.HobsonAuthorizationException;
 import com.whizzosoftware.hobson.api.HobsonRuntimeException;
 import com.whizzosoftware.hobson.api.telemetry.TelemetryManager;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
@@ -25,8 +24,8 @@ import org.restlet.security.User;
 
 import javax.inject.Inject;
 
-public class UserResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}";
+public class CurrentUserResource extends SelfInjectingServerResource {
+    public static final String PATH = "/user";
 
     @Inject
     TelemetryManager telemetryManager;
@@ -34,10 +33,10 @@ public class UserResource extends SelfInjectingServerResource {
     DTOBuildContextFactory dtoBuildContextFactory;
 
     /**
-     * @api {get} /api/v1/users/:userId Get user details
+     * @api {get} /api/v1/users/:userId Get authenticated user details
      * @apiVersion 0.5.0
-     * @apiName GetUser
-     * @apiDescription Retrieves details about a user.
+     * @apiName GetAuthenticatedUser
+     * @apiDescription Retrieves details about the currently authenticated user.
      * @apiGroup User
      * @apiSuccessExample Success Response:
      * {
@@ -55,20 +54,16 @@ public class UserResource extends SelfInjectingServerResource {
 
         User user = getRequest().getClientInfo().getUser();
         if (user != null && user instanceof HobsonRestUser) {
-            if (user.getIdentifier().equals(ctx.getUserId())) {
-                HobsonUserDTO dto = new HobsonUserDTO.Builder(
-                    dtoBuildContextFactory.createContext(ctx.getApiRoot(), new ExpansionFields(getQueryValue("expand"))),
-                    ((HobsonRestUser)user).getUser(),
-                    telemetryManager != null && !telemetryManager.isStub(),
-                    true
-                ).build();
+            HobsonUserDTO dto = new HobsonUserDTO.Builder(
+                dtoBuildContextFactory.createContext(ctx.getApiRoot(), new ExpansionFields(getQueryValue("expand"))),
+                ((HobsonRestUser)user).getUser(),
+                telemetryManager != null && !telemetryManager.isStub(),
+                true
+            ).build();
 
-                JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
-                jr.setMediaType(new MediaType(dto.getMediaType() + "+json"));
-                return jr;
-            } else {
-                throw new HobsonAuthorizationException("You are not authorized to access that information");
-            }
+            JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
+            jr.setMediaType(new MediaType(dto.getMediaType() + "+json"));
+            return jr;
         } else {
             throw new HobsonRuntimeException("No user information could be located");
         }

@@ -12,12 +12,11 @@ import com.whizzosoftware.hobson.api.hub.HubContext;
 import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.api.property.PropertyContainer;
 import com.whizzosoftware.hobson.api.telemetry.TelemetryManager;
-import com.whizzosoftware.hobson.api.user.HobsonUser;
+import com.whizzosoftware.hobson.api.user.UserAuthentication;
 import com.whizzosoftware.hobson.api.user.UserStore;
 import com.whizzosoftware.hobson.dto.*;
 import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
 import com.whizzosoftware.hobson.json.JSONAttributes;
-import com.whizzosoftware.hobson.rest.HobsonRole;
 import com.whizzosoftware.hobson.rest.TokenHelper;
 import com.whizzosoftware.hobson.rest.v1.AbstractApiV1Application;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
@@ -74,14 +73,14 @@ public class LoginResource extends SelfInjectingServerResource {
         JSONObject json = JSONHelper.createJSONFromRepresentation(entity);
 
         if (json.has("username") && json.has("password")) {
-            HobsonUser user = userStore.authenticate(json.getString("username"), json.getString("password"));
+            UserAuthentication auth = userStore.authenticate(json.getString("username"), json.getString("password"));
             boolean showDetails = expansions.has(JSONAttributes.USER);
 
             AuthResultDTO dto = new AuthResultDTO(
-                tokenHelper.createToken(user.getId(), HobsonRole.USER.value()),
+                auth.getToken(),
                 new HobsonUserDTO.Builder(
                     dtoBuildContextFactory.createContext(AbstractApiV1Application.API_ROOT, expansions),
-                    user,
+                    auth.getUser(),
                     telemetryManager != null && !telemetryManager.isStub(),
                     showDetails
                 ).build()
@@ -99,23 +98,19 @@ public class LoginResource extends SelfInjectingServerResource {
     @Override
     protected Representation options() {
         JSONObject json = new JSONObject();
+
+        // if there is a default user defined (as is the case with local hubs), include it
         if (userStore.hasDefaultUser()) {
             json.put("defaultUser", userStore.getDefaultUser());
         }
-        HubContext hctx = HubContext.createLocal();
 
-        // set the hub name
-        PropertyContainer config = hubManager.getConfiguration(hctx);
-        String hubName;
-        if (config != null) {
-            hubName = config.hasPropertyValue("name") ? config.getPropertyValue("name").toString() : "Unnamed";
-        } else {
-            hubName = "Unnamed";
+        // if there's an authUrl override, include it; otherwise, default to local hub auth
+        String authUrl = System.getenv("AUTH_URL");
+        if (authUrl == null) {
+            authUrl = "/login.html";
         }
-        json.put("hubName", hubName);
-
-        // set the hub version
-        json.put("hubVersion", hubManager.getVersion(hctx));
+        json.put("authUrl", authUrl);
+        json.put("authRedir", System.getenv("AUTH_REDIR"));
 
         return new JsonRepresentation(json);
     }
