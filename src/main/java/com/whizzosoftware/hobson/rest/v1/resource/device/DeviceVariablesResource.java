@@ -39,7 +39,7 @@ import java.util.Map;
  * @author Dan Noguerol
  */
 public class DeviceVariablesResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/{pluginId}/devices/{deviceId}/variables";
+    public static final String PATH = "/hubs/{hubId}/plugins/{pluginId}/devices/{deviceId}/variables";
 
     @Inject
     VariableManager variableManager;

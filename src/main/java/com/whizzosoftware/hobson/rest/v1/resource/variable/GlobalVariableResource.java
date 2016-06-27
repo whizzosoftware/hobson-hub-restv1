@@ -23,7 +23,7 @@ import org.restlet.representation.Representation;
 import javax.inject.Inject;
 
 public class GlobalVariableResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/globalVariables/{variableName}";
+    public static final String PATH = "/hubs/{hubId}/globalVariables/{variableName}";
 
     @Inject
     VariableManager variableManager;

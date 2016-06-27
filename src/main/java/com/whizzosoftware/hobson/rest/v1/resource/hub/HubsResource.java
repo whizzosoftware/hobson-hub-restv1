@@ -59,9 +59,10 @@ public class HubsResource extends SelfInjectingServerResource {
     protected Representation get() throws ResourceException {
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
         ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
+        String userId = getAttribute("userId");
 
         DTOBuildContext bctx = dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions);
-        ItemListDTO itemList = new ItemListDTO(idProvider.createUserHubsId(ctx.getUserId()));
+        ItemListDTO itemList = new ItemListDTO(idProvider.createUserHubsId(userId));
         HobsonRestUser user = (HobsonRestUser)getClientInfo().getUser();
         Collection<String> hubs = user.getHubs();
 
@@ -72,7 +73,7 @@ public class HubsResource extends SelfInjectingServerResource {
             for (String hubId : hubs) {
                 itemList.add(new HobsonHubDTO.Builder(
                     bctx,
-                    bctx.getHub(HubContext.create(ctx.getUserId(), hubId)),
+                    bctx.getHub(HubContext.create(hubId)),
                     showDetails
                 ).build());
             }

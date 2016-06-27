@@ -13,7 +13,7 @@ import org.restlet.resource.ResourceException;
 import javax.inject.Inject;
 
 public class ImageLibraryImageResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/imageLibrary/images/{imageId}";
+    public static final String PATH = "/hubs/{hubId}/imageLibrary/images/{imageId}";
 
     @Inject
     ImageManager imageManager;

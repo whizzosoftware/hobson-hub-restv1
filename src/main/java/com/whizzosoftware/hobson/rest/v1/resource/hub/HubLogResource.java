@@ -31,7 +31,7 @@ import java.io.IOException;
  * @author Dan Noguerol
  */
 public class HubLogResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/log";
+    public static final String PATH = "/hubs/{hubId}/log";
 
     @Inject
     HubManager hubManager;

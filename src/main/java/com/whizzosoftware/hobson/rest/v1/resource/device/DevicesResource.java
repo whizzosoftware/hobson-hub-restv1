@@ -40,7 +40,7 @@ import java.util.zip.CRC32;
  * @author Dan Noguerol
  */
 public class DevicesResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/devices";
+    public static final String PATH = "/hubs/{hubId}/devices";
 
     @Inject
     DeviceManager deviceManager;

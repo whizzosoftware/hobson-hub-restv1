@@ -24,7 +24,7 @@ import org.restlet.representation.Representation;
 import javax.inject.Inject;
 
 public class DataStreamDataResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/dataStreams/{dataStreamId}/data";
+    public static final String PATH = "/dataStreams/{dataStreamId}/data";
 
     @Inject
     TelemetryManager telemetryManager;
@@ -82,10 +82,10 @@ public class DataStreamDataResource extends SelfInjectingServerResource {
             }
 
             DataStreamDataDTO dto = new DataStreamDataDTO(
-                idProvider.createDataStreamDataId(ctx.getUserId(), dataStreamId),
+                idProvider.createDataStreamDataId(dataStreamId),
                 endTime,
                 inr,
-                telemetryManager.getData(ctx.getUserId(), dataStreamId, endTime, inr)
+                telemetryManager.getData(dataStreamId, endTime, inr)
             );
 
             JsonRepresentation jr = new JsonRepresentation(dto.toJSON());

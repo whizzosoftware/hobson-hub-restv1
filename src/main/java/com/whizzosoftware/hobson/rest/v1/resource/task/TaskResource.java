@@ -35,7 +35,7 @@ import javax.inject.Inject;
  * @author Dan Noguerol
  */
 public class TaskResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/tasks/{taskId}";
+    public static final String PATH = "/hubs/{hubId}/tasks/{taskId}";
 
     @Inject
     HubManager hubManager;

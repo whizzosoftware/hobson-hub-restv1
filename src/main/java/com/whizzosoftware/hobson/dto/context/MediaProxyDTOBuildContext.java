@@ -74,7 +74,6 @@ public class MediaProxyDTOBuildContext extends ManagerDTOBuildContext {
 
     private Map<String,String> createParamMap(HubContext hctx, String pluginId, String deviceId, String mediaId) {
         Map<String,String> map = new HashMap<>();
-        map.put("userId", hctx.getUserId());
         map.put("hubId", hctx.getHubId());
         map.put("pluginId", pluginId);
         map.put("deviceId", deviceId);

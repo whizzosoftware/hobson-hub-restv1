@@ -28,7 +28,7 @@ import org.restlet.representation.Representation;
 import javax.inject.Inject;
 
 public class PresenceLocationsResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/presence/locations";
+    public static final String PATH = "/hubs/{hubId}/presence/locations";
 
     @Inject
     PresenceManager presenceManager;

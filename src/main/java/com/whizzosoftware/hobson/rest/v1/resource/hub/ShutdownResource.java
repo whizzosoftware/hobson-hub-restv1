@@ -24,7 +24,7 @@ import javax.inject.Inject;
  * @author Dan Noguerol
  */
 public class ShutdownResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/shutdown";
+    public static final String PATH = "/hubs/{hubId}/shutdown";
 
     @Inject
     IdProvider idProvider;

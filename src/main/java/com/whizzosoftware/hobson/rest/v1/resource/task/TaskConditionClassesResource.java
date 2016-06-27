@@ -25,7 +25,7 @@ import org.restlet.resource.ResourceException;
 import javax.inject.Inject;
 
 public class TaskConditionClassesResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/tasks/conditionClasses";
+    public static final String PATH = "/hubs/{hubId}/tasks/conditionClasses";
 
     @Inject
     TaskManager taskManager;

@@ -24,8 +24,8 @@ import org.restlet.security.User;
 
 import javax.inject.Inject;
 
-public class CurrentUserResource extends SelfInjectingServerResource {
-    public static final String PATH = "/user";
+public class UserInfoResource extends SelfInjectingServerResource {
+    public static final String PATH = "/userInfo";
 
     @Inject
     TelemetryManager telemetryManager;

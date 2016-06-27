@@ -35,7 +35,7 @@ import javax.inject.Inject;
  * @author Dan Noguerol
  */
 public class LocalPluginConfigurationResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/local/{pluginId}/configuration";
+    public static final String PATH = "/hubs/{hubId}/plugins/local/{pluginId}/configuration";
 
     @Inject
     HubManager hubManager;

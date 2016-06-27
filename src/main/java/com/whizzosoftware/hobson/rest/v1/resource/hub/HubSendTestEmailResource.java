@@ -29,7 +29,7 @@ import javax.inject.Inject;
  * @author Dan Noguerol
  */
 public class HubSendTestEmailResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/configuration/sendTestEmail";
+    public static final String PATH = "/hubs/{hubId}/configuration/sendTestEmail";
 
     @Inject
     HubManager hubManager;

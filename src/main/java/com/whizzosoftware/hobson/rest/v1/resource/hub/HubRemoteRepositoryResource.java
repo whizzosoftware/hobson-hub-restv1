@@ -28,7 +28,7 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 
 public class HubRemoteRepositoryResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/repositories/{repositoryId}";
+    public static final String PATH = "/hubs/{hubId}/repositories/{repositoryId}";
 
     @Inject
     PluginManager pluginManager;

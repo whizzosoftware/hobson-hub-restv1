@@ -25,7 +25,7 @@ import javax.inject.Inject;
  * @author Dan Noguerol
  */
 public class MediaProxyResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/{pluginId}/devices/{deviceId}/media/{mediaId}";
+    public static final String PATH = "/hubs/{hubId}/plugins/{pluginId}/devices/{deviceId}/media/{mediaId}";
 
     @Inject
     VariableManager variableManager;

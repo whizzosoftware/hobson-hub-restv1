@@ -27,7 +27,7 @@ import org.restlet.resource.ResourceException;
 import javax.inject.Inject;
 
 public class HubConfigurationResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/configuration";
+    public static final String PATH = "/hubs/{hubId}/configuration";
 
     @Inject
     HubManager hubManager;

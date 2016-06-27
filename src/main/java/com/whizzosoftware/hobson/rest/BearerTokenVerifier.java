@@ -7,6 +7,10 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest;
 
+import com.whizzosoftware.hobson.rest.oidc.OIDCConfig;
+import com.whizzosoftware.hobson.rest.oidc.OIDCConfigProvider;
+import org.jose4j.jwt.consumer.JwtConsumer;
+import org.jose4j.jwt.consumer.JwtConsumerBuilder;
 import org.restlet.Application;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -14,18 +18,23 @@ import org.restlet.data.ChallengeScheme;
 import org.restlet.data.Cookie;
 import org.restlet.security.Role;
 import org.restlet.security.Verifier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 public class BearerTokenVerifier implements Verifier {
-    private TokenHelper tokenHelper = new TokenHelper();
+    private Logger logger = LoggerFactory.getLogger(BearerTokenVerifier.class);
 
     private Application application;
+    private OIDCConfigProvider oidcConfigProvider;
+    private JwtConsumer jwtConsumer;
 
-    public BearerTokenVerifier(Application application) {
+    public BearerTokenVerifier(Application application, OIDCConfigProvider oidcConfigProvider) {
         this.application = application;
+        this.oidcConfigProvider = oidcConfigProvider;
     }
 
     public int verify(Request request, Response response) {
@@ -45,17 +54,38 @@ public class BearerTokenVerifier implements Verifier {
         }
 
         if (token != null) {
-            TokenVerification tc = tokenHelper.verifyToken(token);
-            if (tc.hasUser()) {
-                result = RESULT_VALID;
-                request.getClientInfo().setUser(new HobsonRestUser(tc.getUser(), token));
-                request.getClientInfo().setRoles(createRoles(application, tc.getRoles()));
+            try {
+                TokenVerification tc = TokenHelper.verifyToken(getJwtConsumer(), token);
+                if (tc.hasUser()) {
+                    result = RESULT_VALID;
+                    request.getClientInfo().setUser(new HobsonRestUser(tc.getUser(), token));
+                    request.getClientInfo().setRoles(createRoles(application, tc.getRoles()));
+                }
+            } catch (Exception e) {
+                logger.error("Error verifying token", e);
             }
         } else {
             result = RESULT_MISSING;
         }
 
         return result;
+    }
+
+    private JwtConsumer getJwtConsumer() throws Exception {
+        if (jwtConsumer == null) {
+            OIDCConfig cfg = oidcConfigProvider.getConfig();
+            if (cfg != null) {
+                jwtConsumer = new JwtConsumerBuilder()
+                    .setRequireExpirationTime()
+                    .setAllowedClockSkewInSeconds(30)
+                    .setRequireSubject()
+                    .setExpectedIssuer(cfg.getIssuer())
+                    .setVerificationKey(cfg.getSigningKey().getKey())
+                    .setExpectedAudience("hobson-webconsole")
+                    .build();
+            }
+        }
+        return jwtConsumer;
     }
 
     private List<Role> createRoles(Application application, Collection<String> scope) {

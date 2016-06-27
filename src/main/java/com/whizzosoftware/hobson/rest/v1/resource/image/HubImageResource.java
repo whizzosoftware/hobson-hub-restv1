@@ -37,7 +37,7 @@ import java.io.IOException;
  * @author Dan Noguerol
  */
 public class HubImageResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/image";
+    public static final String PATH = "/hubs/{hubId}/image";
 
     @Inject
     ImageManager imageManager;

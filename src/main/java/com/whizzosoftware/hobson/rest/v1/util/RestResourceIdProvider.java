@@ -138,7 +138,7 @@ public class RestResourceIdProvider implements IdProvider {
         Template t = new Template(apiRoot + LocalPluginResource.PATH);
         Map<String,Object> vars = new HashMap<>();
         t.parse(pluginId, vars);
-        return PluginContext.create(HubContext.create((String)vars.get(JSONAttributes.USER_ID), (String)vars.get(JSONAttributes.HUB_ID)), (String)vars.get(JSONAttributes.PLUGIN_ID));
+        return PluginContext.create(HubContext.create((String)vars.get(JSONAttributes.HUB_ID)), (String)vars.get(JSONAttributes.PLUGIN_ID));
     }
 
     @Override
@@ -164,7 +164,7 @@ public class RestResourceIdProvider implements IdProvider {
         Template t = new Template(apiRoot + DeviceVariableResource.PATH);
         Map<String,Object> vars = new HashMap<>();
         t.parse(variableId, vars);
-        return VariableContext.create(HubContext.create((String)vars.get(JSONAttributes.USER_ID), (String)vars.get(JSONAttributes.HUB_ID)), (String)vars.get(JSONAttributes.PLUGIN_ID), (String)vars.get(JSONAttributes.DEVICE_ID), (String)vars.get(JSONAttributes.VARIABLE_NAME));
+        return VariableContext.create(HubContext.create((String)vars.get(JSONAttributes.HUB_ID)), (String)vars.get(JSONAttributes.PLUGIN_ID), (String)vars.get(JSONAttributes.DEVICE_ID), (String)vars.get(JSONAttributes.VARIABLE_NAME));
     }
 
     @Override
@@ -172,7 +172,6 @@ public class RestResourceIdProvider implements IdProvider {
         if (ctx.isGlobal()) {
             Template t = new Template(apiRoot + GlobalVariableResource.PATH);
             Map<String,String> values = new HashMap<>();
-            values.put(JSONAttributes.USER_ID, ctx.getUserId());
             values.put(JSONAttributes.HUB_ID, ctx.getHubId());
             values.put(JSONAttributes.NAME, ctx.getName());
             return t.format(values);
@@ -411,30 +410,29 @@ public class RestResourceIdProvider implements IdProvider {
     }
 
     @Override
-    public String createDataStreamsId(String userId) {
-        return new Template(apiRoot + DataStreamsResource.PATH).format(Collections.singletonMap(JSONAttributes.USER_ID, userId));
+    public String createDataStreamsId() {
+        return new Template(apiRoot + DataStreamsResource.PATH).format((Map<String,?>)null);
     }
 
     @Override
-    public String createDataStreamId(String userId, String dataStreamId) {
-        return createDataStreamPathId(DataStreamResource.PATH, userId, dataStreamId);
+    public String createDataStreamId(String dataStreamId) {
+        return createDataStreamPathId(DataStreamResource.PATH, dataStreamId);
     }
 
     @Override
-    public String createDataStreamDataId(String userId, String dataStreamId) {
-        return createDataStreamPathId(DataStreamDataResource.PATH, userId, dataStreamId);
+    public String createDataStreamDataId(String dataStreamId) {
+        return createDataStreamPathId(DataStreamDataResource.PATH, dataStreamId);
     }
 
-    private String createDataStreamPathId(String path, String userId, String dataStreamId) {
+    private String createDataStreamPathId(String path, String dataStreamId) {
         Template t = new Template(apiRoot + path);
         Map<String,String> values = new HashMap<>();
-        values.put(JSONAttributes.USER_ID, userId);
         values.put(JSONAttributes.DATA_STREAM_ID, dataStreamId);
         return t.format(values);
     }
 
     @Override
-    public String createDataStreamVariablesId(String userId, String dataStreamId) {
+    public String createDataStreamVariablesId(String dataStreamId) {
         return null;
     }
 
@@ -506,7 +504,7 @@ public class RestResourceIdProvider implements IdProvider {
         Template t = new Template(apiRoot + DeviceResource.PATH);
         Map<String,Object> vars = new HashMap<>();
         t.parse(deviceId, vars);
-        return DeviceContext.create(HubContext.create((String)vars.get(JSONAttributes.USER_ID), (String)vars.get(JSONAttributes.HUB_ID)), (String)vars.get(JSONAttributes.PLUGIN_ID), (String)vars.get(JSONAttributes.DEVICE_ID));
+        return DeviceContext.create(HubContext.create((String)vars.get(JSONAttributes.HUB_ID)), (String)vars.get(JSONAttributes.PLUGIN_ID), (String)vars.get(JSONAttributes.DEVICE_ID));
     }
 
     @Override
@@ -522,7 +520,7 @@ public class RestResourceIdProvider implements IdProvider {
         Template t = new Template(apiRoot + PresenceEntityResource.PATH);
         Map<String,Object> vars = new HashMap<>();
         t.parse(presenceEntityId, vars);
-        return PresenceEntityContext.create(HubContext.create((String)vars.get(JSONAttributes.USER_ID), (String)vars.get(JSONAttributes.HUB_ID)), (String)vars.get(JSONAttributes.ENTITY_ID));
+        return PresenceEntityContext.create(HubContext.create((String)vars.get(JSONAttributes.HUB_ID)), (String)vars.get(JSONAttributes.ENTITY_ID));
     }
 
     @Override
@@ -530,12 +528,11 @@ public class RestResourceIdProvider implements IdProvider {
         Template t = new Template(apiRoot + PresenceLocationResource.PATH);
         Map<String,Object> vars = new HashMap<>();
         t.parse(presenceLocationId, vars);
-        return PresenceLocationContext.create(HubContext.create((String)vars.get(JSONAttributes.USER_ID), (String)vars.get(JSONAttributes.HUB_ID)), (String)vars.get(JSONAttributes.LOCATION_ID));
+        return PresenceLocationContext.create(HubContext.create((String)vars.get(JSONAttributes.HUB_ID)), (String)vars.get(JSONAttributes.LOCATION_ID));
     }
 
     private Map<String,String> createHubValues(HubContext ctx) {
         Map<String,String> values = new HashMap<>();
-        values.put(JSONAttributes.USER_ID, ctx.getUserId());
         values.put(JSONAttributes.HUB_ID, ctx.getHubId());
         return values;
     }

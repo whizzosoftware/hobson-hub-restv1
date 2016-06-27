@@ -52,10 +52,11 @@ public class UserResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() throws ResourceException {
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
+        String userId = getAttribute("userId");
 
         User user = getRequest().getClientInfo().getUser();
         if (user != null && user instanceof HobsonRestUser) {
-            if (user.getIdentifier().equals(ctx.getUserId())) {
+            if (user.getIdentifier().equals(userId)) {
                 HobsonUserDTO dto = new HobsonUserDTO.Builder(
                     dtoBuildContextFactory.createContext(ctx.getApiRoot(), new ExpansionFields(getQueryValue("expand"))),
                     ((HobsonRestUser)user).getUser(),

@@ -19,7 +19,7 @@ import org.restlet.representation.Representation;
 import javax.inject.Inject;
 
 public class ExecuteTaskResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/{pluginId}/tasks/{taskId}/execute";
+    public static final String PATH = "/hubs/{hubId}/plugins/{pluginId}/tasks/{taskId}/execute";
 
     @Inject
     TaskManager taskManager;

@@ -27,7 +27,7 @@ import org.restlet.resource.ResourceException;
 import javax.inject.Inject;
 
 public class RemotePluginsResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/remote";
+    public static final String PATH = "/hubs/{hubId}/plugins/remote";
 
     @Inject
     PluginManager pluginManager;

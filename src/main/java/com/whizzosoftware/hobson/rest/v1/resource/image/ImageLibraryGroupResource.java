@@ -25,7 +25,7 @@ import javax.inject.Inject;
 import java.util.List;
 
 public class ImageLibraryGroupResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/imageLibrary/groups/{groupId}";
+    public static final String PATH = "/hubs/{hubId}/imageLibrary/groups/{groupId}";
 
     @Inject
     ImageManager imageManager;

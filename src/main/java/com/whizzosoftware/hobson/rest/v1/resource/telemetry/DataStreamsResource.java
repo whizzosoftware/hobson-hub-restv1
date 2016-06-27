@@ -34,7 +34,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DataStreamsResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/dataStreams";
+    public static final String PATH = "/dataStreams";
 
     @Inject
     TelemetryManager telemetryManager;
@@ -72,9 +72,9 @@ public class DataStreamsResource extends SelfInjectingServerResource {
         if (telemetryManager != null && !telemetryManager.isStub()) {
             HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
             ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
-            ItemListDTO results = new ItemListDTO(idProvider.createDataStreamsId(ctx.getUserId()));
+            ItemListDTO results = new ItemListDTO(idProvider.createDataStreamsId());
             DTOBuildContext bc = dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions);
-            for (DataStream ds : telemetryManager.getDataStreams(ctx.getUserId())) {
+            for (DataStream ds : telemetryManager.getDataStreams("local")) { // TODO
                 results.add(new DataStreamDTO.Builder(bc, ds, expansions.has(JSONAttributes.ITEM)).build());
             }
             JsonRepresentation jr = new JsonRepresentation(results.toJSON());
@@ -117,7 +117,7 @@ public class DataStreamsResource extends SelfInjectingServerResource {
                 vars.add(idProvider.createVariableContext(v.getId()));
             }
 
-            telemetryManager.createDataStream(ctx.getUserId(), dto.getName(), vars);
+            telemetryManager.createDataStream("local", dto.getName(), vars); // TODO
 
             getResponse().setStatus(Status.SUCCESS_CREATED);
             return new EmptyRepresentation();

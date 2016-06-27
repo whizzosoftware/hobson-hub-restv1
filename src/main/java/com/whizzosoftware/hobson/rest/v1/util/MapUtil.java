@@ -17,14 +17,12 @@ public class MapUtil {
 
     static public Map<String,Object> createEmptyMap(HobsonRestContext ctx) {
         Map<String,Object> map = new HashMap<>();
-        map.put(JSONAttributes.USER_ID, ctx.getUserId());
         map.put(JSONAttributes.HUB_ID, ctx.getHubId());
         return map;
     }
 
     static public Map<String,Object> createSingleEntryMap(HobsonRestContext ctx, String key, Object value) {
         Map<String,Object> map = new HashMap<>();
-        map.put(JSONAttributes.USER_ID, ctx.getUserId());
         map.put(JSONAttributes.HUB_ID, ctx.getHubId());
         map.put(key, value);
         return map;
@@ -32,7 +30,6 @@ public class MapUtil {
 
     static public Map<String,Object> createTripleEntryMap(HobsonRestContext ctx, String key1, String value1, String key2, String value2, String key3, String value3) {
         Map<String,Object> map = new HashMap<>();
-        map.put(JSONAttributes.USER_ID, ctx.getUserId());
         map.put(JSONAttributes.HUB_ID, ctx.getHubId());
         map.put(key1, value1);
         map.put(key2, value2);

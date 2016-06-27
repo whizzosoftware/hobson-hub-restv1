@@ -23,7 +23,7 @@ import org.restlet.resource.ResourceException;
 import javax.inject.Inject;
 
 public class DeviceConfigurationClassResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/{pluginId}/devices/{deviceId}/configurationClass";
+    public static final String PATH = "/hubs/{hubId}/plugins/{pluginId}/devices/{deviceId}/configurationClass";
 
     @Inject
     DeviceManager deviceManager;

@@ -29,7 +29,7 @@ import javax.inject.Inject;
  * @author Dan Noguerol
  */
 public class HubResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}";
+    public static final String PATH = "/hubs/{hubId}";
 
     @Inject
     HubManager hubManager;

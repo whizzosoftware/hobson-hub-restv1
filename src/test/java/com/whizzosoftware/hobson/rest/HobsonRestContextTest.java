@@ -7,10 +7,14 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest;
 
+import com.whizzosoftware.hobson.rest.oidc.OIDCConfigProvider;
 import com.whizzosoftware.hobson.rest.v1.AbstractApiV1Application;
+import org.restlet.data.ClientInfo;
 import org.restlet.routing.Router;
 import org.restlet.security.Authorizer;
 import org.junit.Test;
+import org.restlet.security.User;
+
 import static org.junit.Assert.*;
 
 public class HobsonRestContextTest {
@@ -21,26 +25,16 @@ public class HobsonRestContextTest {
         }
 
         @Override
-        protected Authorizer createAuthorizer() {
-            return null;
-        }
-
-        @Override
         protected void createAdditionalResources(Router secureRouter, Router insecureRouter) {
         }
     };
 
     @Test
-    public void testCreateContextWithUserPath() {
-        HobsonRestContext ctx = HobsonRestContext.createContext(app, "/api/v1/users/user1");
-        assertEquals("user1", ctx.getUserId());
-        assertNull(ctx.getHubId());
-    }
-
-    @Test
     public void testCreateContextWithUserAndHubPath() {
-        HobsonRestContext ctx = HobsonRestContext.createContext(app, "/api/v1/users/user1/hubs/hub1");
-        assertEquals("user1", ctx.getUserId());
+        ClientInfo ci = new ClientInfo();
+        ci.setUser(new User("local"));
+        HobsonRestContext ctx = HobsonRestContext.createContext(app, ci, "/api/v1/hubs/hub1");
+        assertEquals("local", ctx.getUserId());
         assertEquals("hub1", ctx.getHubId());
     }
 }

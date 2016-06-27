@@ -33,7 +33,7 @@ import javax.inject.Inject;
 import java.util.Collection;
 
 public class DevicePassportsResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/devicePassports";
+    public static final String PATH = "/hubs/{hubId}/devicePassports";
 
     @Inject
     DeviceManager deviceManager;

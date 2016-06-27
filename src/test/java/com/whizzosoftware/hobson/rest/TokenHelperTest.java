@@ -7,6 +7,13 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest;
 
+import com.whizzosoftware.hobson.api.user.HobsonUser;
+import com.whizzosoftware.hobson.rest.oidc.OIDCConfig;
+import com.whizzosoftware.hobson.rest.oidc.OIDCConfigProvider;
+import org.jose4j.jwk.RsaJsonWebKey;
+import org.jose4j.jwk.RsaJwkGenerator;
+import org.jose4j.jwt.consumer.JwtConsumer;
+import org.jose4j.jwt.consumer.JwtConsumerBuilder;
 import org.junit.Test;
 import org.restlet.security.Role;
 
@@ -14,10 +21,27 @@ import static org.junit.Assert.*;
 
 public class TokenHelperTest {
     @Test
-    public void testCreateToken() {
-        TokenHelper th = new TokenHelper();
-        String token = th.createToken("user1", new Role(HobsonRole.ADMIN.name()), null);
-        TokenVerification tc = th.verifyToken(token);
+    public void testCreateToken() throws Exception {
+        final RsaJsonWebKey rsaJsonWebKey = RsaJwkGenerator.generateJwk(2048);
+        final OIDCConfig cfg = new OIDCConfig("issuer", "/authorization", "/token", "/userInfo", "/jwks", rsaJsonWebKey);
+        String token = TokenHelper.createToken(new OIDCConfigProvider() {
+            @Override
+            public OIDCConfig getConfig() {
+                return cfg;
+            }
+        }, new HobsonUser("user1"), new Role(HobsonRole.ADMIN.name()), null);
+
+        JwtConsumer jwtConsumer = new JwtConsumerBuilder()
+                .setRequireExpirationTime()
+                .setAllowedClockSkewInSeconds(30)
+                .setRequireSubject()
+                .setExpectedIssuer(cfg.getIssuer())
+                .setVerificationKey(cfg.getSigningKey().getKey())
+                .setExpectedAudience("hobson-webconsole")
+                .build();
+
+
+        TokenVerification tc = TokenHelper.verifyToken(jwtConsumer, token);
         assertEquals("user1", tc.getUser().getId());
         assertTrue(tc.hasRole(HobsonRole.ADMIN.name()));
     }

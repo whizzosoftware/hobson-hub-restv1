@@ -28,7 +28,7 @@ import javax.inject.Inject;
  * @author Dan Noguerol
  */
 public class HubPasswordResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/password";
+    public static final String PATH = "/hubs/{hubId}/password";
 
     @Inject
     HubManager hubManager;

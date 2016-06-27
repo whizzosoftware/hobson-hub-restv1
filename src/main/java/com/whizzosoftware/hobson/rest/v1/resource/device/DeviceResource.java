@@ -29,7 +29,7 @@ import javax.inject.Inject;
  * @author Dan Noguerol
  */
 public class DeviceResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/{pluginId}/devices/{deviceId}";
+    public static final String PATH = "/hubs/{hubId}/plugins/{pluginId}/devices/{deviceId}";
 
     @Inject
     DeviceManager deviceManager;

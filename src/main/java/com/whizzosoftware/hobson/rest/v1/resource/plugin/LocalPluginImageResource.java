@@ -28,7 +28,7 @@ import java.io.InputStream;
  * @author Dan Noguerol
  */
 public class LocalPluginImageResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/{pluginId}/image";
+    public static final String PATH = "/hubs/{hubId}/plugins/{pluginId}/image";
 
     @Inject
     PluginManager pluginManager;

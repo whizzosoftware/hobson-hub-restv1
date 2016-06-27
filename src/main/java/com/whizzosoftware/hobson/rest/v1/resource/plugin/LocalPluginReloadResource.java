@@ -24,7 +24,7 @@ import javax.inject.Inject;
  * @author Dan Noguerol
  */
 public class LocalPluginReloadResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/local/{pluginId}/reload";
+    public static final String PATH = "/hubs/{hubId}/plugins/local/{pluginId}/reload";
 
     @Inject
     PluginManager pluginManager;

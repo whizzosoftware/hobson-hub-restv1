@@ -35,7 +35,7 @@ import javax.inject.Inject;
  * @author Dan Noguerol
  */
 public class PresenceEntitiesResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/presence/entities";
+    public static final String PATH = "/hubs/{hubId}/presence/entities";
 
     @Inject
     PresenceManager presenceManager;

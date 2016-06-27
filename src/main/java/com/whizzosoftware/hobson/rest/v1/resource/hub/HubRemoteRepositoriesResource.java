@@ -29,7 +29,7 @@ import javax.inject.Inject;
 import java.util.Collection;
 
 public class HubRemoteRepositoriesResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/repositories";
+    public static final String PATH = "/hubs/{hubId}/repositories";
 
     @Inject
     PluginManager pluginManager;

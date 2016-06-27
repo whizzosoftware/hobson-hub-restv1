@@ -41,7 +41,7 @@ import javax.inject.Inject;
  * @author Dan Noguerol
  */
 public class DeviceVariableResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/{pluginId}/devices/{deviceId}/variables/{variableName}";
+    public static final String PATH = "/hubs/{hubId}/plugins/{pluginId}/devices/{deviceId}/variables/{variableName}";
 
     @Inject
     VariableManager variableManager;

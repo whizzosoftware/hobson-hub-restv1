@@ -27,7 +27,7 @@ import javax.inject.Inject;
  * @author Dan Noguerol
  */
 public class ActivityLogResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/activityLog";
+    public static final String PATH = "/hubs/{hubId}/activityLog";
 
     @Inject
     ActivityLogManager activityManager;

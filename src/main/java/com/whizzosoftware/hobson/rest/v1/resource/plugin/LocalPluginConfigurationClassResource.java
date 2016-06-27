@@ -25,7 +25,7 @@ import org.restlet.resource.ResourceException;
 import javax.inject.Inject;
 
 public class LocalPluginConfigurationClassResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/plugins/local/{pluginId}/configurationClass";
+    public static final String PATH = "/hubs/{hubId}/plugins/local/{pluginId}/configurationClass";
 
     @Inject
     PluginManager pluginManager;

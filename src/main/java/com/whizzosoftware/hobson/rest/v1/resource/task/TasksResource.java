@@ -39,7 +39,7 @@ import java.util.Collection;
  * @author Dan Noguerol
  */
 public class TasksResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/hubs/{hubId}/tasks";
+    public static final String PATH = "/hubs/{hubId}/tasks";
 
     @Inject
     HubManager hubManager;

@@ -72,13 +72,13 @@ public class DTOMapperTest {
         Map<String,Object> values = new HashMap<>();
         values.put("name", "Hello");
         JSONObject deviceJson = new JSONObject();
-        deviceJson.put("@id", "/api/v1/users/local/hubs/local/plugins/plugin2/devices/device1");
+        deviceJson.put("@id", "/api/v1/hubs/local/plugins/plugin2/devices/device1");
         values.put("device", deviceJson);
 
         // create the DTO to map
         PropertyContainerDTO dto = new PropertyContainerDTO.Builder("pcid").
             containerClass(
-                new PropertyContainerClassDTO.Builder("/api/v1/users/local/hubs/local/plugins/plugin/conditionClasses/ccid").
+                new PropertyContainerClassDTO.Builder("/api/v1/hubs/local/plugins/plugin/conditionClasses/ccid").
                     build()
             ).
             values(values).
@@ -104,13 +104,11 @@ public class DTOMapperTest {
         assertEquals("pcid", pc.getId());
         assertNotNull(pc.getContainerClassContext());
         assertEquals("local", pc.getContainerClassContext().getHubId());
-        assertEquals("local", pc.getContainerClassContext().getUserId());
         assertEquals("ccid", pc.getContainerClassContext().getContainerClassId());
         assertTrue(pc.hasPropertyValues());
         assertEquals("Hello", pc.getStringPropertyValue("name"));
         assertTrue(pc.getPropertyValue("device") instanceof DeviceContext);
         assertEquals("local", ((DeviceContext)pc.getPropertyValue("device")).getHubId());
-        assertEquals("local", ((DeviceContext)pc.getPropertyValue("device")).getUserId());
         assertEquals("plugin2", ((DeviceContext)pc.getPropertyValue("device")).getPluginId());
         assertEquals("device1", ((DeviceContext)pc.getPropertyValue("device")).getDeviceId());
     }
@@ -126,12 +124,12 @@ public class DTOMapperTest {
         Map<String,Object> values = new HashMap<>();
         values.put("name", "Hello");
         JSONObject deviceJson = new JSONObject();
-        deviceJson.put("@id", "/api/v1/users/local/hubs/local/plugins/plugin1/devices/device2");
+        deviceJson.put("@id", "/api/v1/hubs/local/plugins/plugin1/devices/device2");
         values.put("device", deviceJson);
 
         // create the DTO to map
         PropertyContainerDTO dto = new PropertyContainerDTO.Builder("pcid").
-            containerClass(new PropertyContainerClassDTO.Builder("/api/v1/users/local/hubs/local/plugins/plugin/actionClasses/ccid").build()).
+            containerClass(new PropertyContainerClassDTO.Builder("/api/v1/hubs/local/plugins/plugin/actionClasses/ccid").build()).
             values(values).
             build();
 
@@ -155,13 +153,11 @@ public class DTOMapperTest {
         assertEquals("pcid", pc.getId());
         assertNotNull(pc.getContainerClassContext());
         assertEquals("local", pc.getContainerClassContext().getHubId());
-        assertEquals("local", pc.getContainerClassContext().getUserId());
         assertEquals("ccid", pc.getContainerClassContext().getContainerClassId());
         assertTrue(pc.hasPropertyValues());
         assertEquals("Hello", pc.getStringPropertyValue("name"));
         assertTrue(pc.getPropertyValue("device") instanceof DeviceContext);
         assertEquals("local", ((DeviceContext)pc.getPropertyValue("device")).getHubId());
-        assertEquals("local", ((DeviceContext)pc.getPropertyValue("device")).getUserId());
         assertEquals("plugin1", ((DeviceContext)pc.getPropertyValue("device")).getPluginId());
         assertEquals("device2", ((DeviceContext)pc.getPropertyValue("device")).getDeviceId());
     }
@@ -196,7 +192,6 @@ public class DTOMapperTest {
         assertEquals("pcid", pc.getId());
         assertNotNull(pc.getContainerClassContext());
         assertEquals("local", pc.getContainerClassContext().getHubId());
-        assertEquals("local", pc.getContainerClassContext().getUserId());
         assertEquals("configuration", pc.getContainerClassContext().getContainerClassId());
         assertTrue(pc.hasPropertyValues());
         assertEquals("Home", pc.getStringPropertyValue("name"));
@@ -213,13 +208,13 @@ public class DTOMapperTest {
         Map<String,Object> values = new HashMap<>();
         values.put("name", "Hello");
         JSONObject deviceJson = new JSONObject();
-        deviceJson.put("@id", "/api/v1/users/local/hubs/local/plugins/plugin2/devices/device1");
+        deviceJson.put("@id", "/api/v1/hubs/local/plugins/plugin2/devices/device1");
         values.put("device", deviceJson);
 
         // create the DTO to map
         PropertyContainerDTO dto = new PropertyContainerDTO.Builder("pcid").
             containerClass(
-                new PropertyContainerClassDTO.Builder("/api/v1/users/local/hubs/local/plugins/local/plugin1/configurationClass").
+                new PropertyContainerClassDTO.Builder("/api/v1/hubs/local/plugins/local/plugin1/configurationClass").
                     build()
             ).
             values(values).
@@ -245,14 +240,11 @@ public class DTOMapperTest {
         assertEquals("pcid", pc.getId());
         assertNotNull(pc.getContainerClassContext());
         assertEquals("local", pc.getContainerClassContext().getHubId());
-        assertEquals("local", pc.getContainerClassContext().getUserId());
-        assertEquals("local", pc.getContainerClassContext().getUserId());
         assertEquals("ccid", pc.getContainerClassContext().getContainerClassId());
         assertTrue(pc.hasPropertyValues());
         assertEquals("Hello", pc.getStringPropertyValue("name"));
         assertTrue(pc.getPropertyValue("device") instanceof DeviceContext);
         assertEquals("local", ((DeviceContext)pc.getPropertyValue("device")).getHubId());
-        assertEquals("local", ((DeviceContext)pc.getPropertyValue("device")).getUserId());
         assertEquals("plugin2", ((DeviceContext)pc.getPropertyValue("device")).getPluginId());
         assertEquals("device1", ((DeviceContext)pc.getPropertyValue("device")).getDeviceId());
     }
@@ -265,13 +257,13 @@ public class DTOMapperTest {
         values.put("time", "10:00:00");
         JSONArray jda = new JSONArray();
         JSONObject jd = new JSONObject();
-        jd.put("@id", "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-sample/devices/bulb");
+        jd.put("@id", "/api/v1/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-sample/devices/bulb");
         jda.put(jd);
         values.put("devices", jda);
         List<PropertyContainerDTO> dtos = new ArrayList<>();
         dtos.add(
             new PropertyContainerDTO.Builder()
-                .containerClass(new PropertyContainerClassDTO.Builder("/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-scheduler/conditionClasses/schedule")
+                .containerClass(new PropertyContainerClassDTO.Builder("/api/v1/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-scheduler/conditionClasses/schedule")
                     .build()
                 )
                 .values(values)
@@ -305,7 +297,6 @@ public class DTOMapperTest {
         PropertyContainer pc = pcs.get(0);
         PropertyContainerClassContext pcc = pc.getContainerClassContext();
         assertEquals("local", pcc.getHubId());
-        assertEquals("local", pcc.getUserId());
         assertEquals("com.whizzosoftware.hobson.hub.hobson-hub-scheduler", pcc.getPluginId());
         assertEquals("schedule", pcc.getContainerClassId());
         assertEquals("2015-09-09", pc.getPropertyValue("date"));
@@ -315,7 +306,6 @@ public class DTOMapperTest {
         assertEquals(1, l.size());
         DeviceContext dc = (DeviceContext)l.get(0);
         assertEquals("local", dc.getHubId());
-        assertEquals("local", dc.getUserId());
         assertEquals("com.whizzosoftware.hobson.hub.hobson-hub-sample", dc.getPluginId());
         assertEquals("bulb", dc.getDeviceId());
 

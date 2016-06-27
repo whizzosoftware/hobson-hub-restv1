@@ -22,7 +22,7 @@ import org.restlet.representation.Representation;
 import javax.inject.Inject;
 
 public class DataStreamResource extends SelfInjectingServerResource {
-    public static final String PATH = "/users/{userId}/dataStreams/{dataStreamId}";
+    public static final String PATH = "/dataStreams/{dataStreamId}";
 
     @Inject
     TelemetryManager telemetryManager;
@@ -61,7 +61,7 @@ public class DataStreamResource extends SelfInjectingServerResource {
             ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
             DataStreamDTO dto = new DataStreamDTO.Builder(
                 dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions),
-                telemetryManager.getDataStream(ctx.getUserId(), getAttribute("dataStreamId")),
+                telemetryManager.getDataStream(getAttribute("dataStreamId")), // TODO
                 true
             ).build();
             JsonRepresentation jr = new JsonRepresentation(dto.toJSON());

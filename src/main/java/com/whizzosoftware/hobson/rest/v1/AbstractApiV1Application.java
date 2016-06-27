@@ -7,13 +7,11 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1;
 
-import com.whizzosoftware.hobson.rest.BearerTokenVerifier;
-import com.whizzosoftware.hobson.rest.HobsonApiApplication;
-import com.whizzosoftware.hobson.rest.HobsonStatusService;
-import com.whizzosoftware.hobson.rest.HobsonRole;
+import com.google.inject.Inject;
+import com.whizzosoftware.hobson.rest.*;
+import com.whizzosoftware.hobson.rest.oidc.OIDCConfigProvider;
 import com.whizzosoftware.hobson.rest.v1.resource.hub.HubLogResource;
 import com.whizzosoftware.hobson.rest.v1.resource.hub.ShutdownResource;
-import com.whizzosoftware.hobson.rest.v1.resource.login.LoginResource;
 import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceLocationResource;
 import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceLocationsResource;
 import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceEntityResource;
@@ -30,7 +28,7 @@ import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceEntitiesResou
 import com.whizzosoftware.hobson.rest.v1.resource.telemetry.DataStreamDataResource;
 import com.whizzosoftware.hobson.rest.v1.resource.telemetry.DataStreamResource;
 import com.whizzosoftware.hobson.rest.v1.resource.telemetry.DataStreamsResource;
-import com.whizzosoftware.hobson.rest.v1.resource.user.CurrentUserResource;
+import com.whizzosoftware.hobson.rest.v1.resource.user.UserInfoResource;
 import com.whizzosoftware.hobson.rest.v1.resource.user.UserResource;
 import com.whizzosoftware.hobson.rest.v1.resource.variable.GlobalVariableResource;
 import com.whizzosoftware.hobson.rest.v1.resource.variable.GlobalVariablesResource;
@@ -39,12 +37,14 @@ import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.CacheDirective;
 import org.restlet.data.ChallengeScheme;
+import org.restlet.data.Parameter;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.ResourceInjectingApplication;
 import org.restlet.routing.Filter;
 import org.restlet.routing.Router;
 import org.restlet.security.Authorizer;
 import org.restlet.security.ChallengeAuthenticator;
+import org.restlet.util.Series;
 
 import java.util.ArrayList;
 
@@ -56,6 +56,11 @@ import java.util.ArrayList;
 abstract public class AbstractApiV1Application extends ResourceInjectingApplication implements HobsonApiApplication {
     public static final String API_ROOT = "/api/v1";
 
+    @Inject
+    Authorizer authorizer;
+    @Inject
+    OIDCConfigProvider oidcConfigProvider;
+
     /**
      * Constructor that creates an challenge-based authenticator using the fully-qualified class name specified in
      * the "hobson.rest.verifier" system property to instantiate a verifier.
@@ -64,6 +69,13 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
         super();
 
         setStatusService(new HobsonStatusService());
+
+        if (getContext() != null) {
+            Series<Parameter> s = getContext().getParameters();
+            if (s != null) {
+                s.add("useForwardedForHeader", "true");
+            }
+        }
 
         // set up application roles
         for (HobsonRole r : HobsonRole.values()) {
@@ -76,7 +88,7 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
         // create the secure router
         Router secureRouter = newRouter();
         secureRouter.attach(ActivityLogResource.PATH, ActivityLogResource.class);
-        secureRouter.attach(CurrentUserResource.PATH, CurrentUserResource.class);
+        secureRouter.attach(UserInfoResource.PATH, UserInfoResource.class);
         secureRouter.attach(DataStreamsResource.PATH, DataStreamsResource.class);
         secureRouter.attach(DataStreamResource.PATH, DataStreamResource.class);
         secureRouter.attach(DataStreamDataResource.PATH, DataStreamDataResource.class);
@@ -130,17 +142,15 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
         secureRouter.attach(UserResource.PATH, UserResource.class);
 
         // create the authorizer
-        Authorizer authorizer = createAuthorizer();
         authorizer.setNext(secureRouter);
 
         // create bearer token challenge authenticator
         ChallengeAuthenticator auth = new ChallengeAuthenticator(getContext(), ChallengeScheme.HTTP_OAUTH_BEARER, getRealmName());
-        auth.setVerifier(new BearerTokenVerifier(this));
+        auth.setVerifier(new BearerTokenVerifier(this, oidcConfigProvider));
         auth.setNext(authorizer);
 
         // create the insecure router
         Router insecureRouter = newRouter();
-        insecureRouter.attach(LoginResource.PATH, LoginResource.class);
         insecureRouter.attachDefault(auth);
 
         // allow subclasses to create any additional resources they need to
@@ -166,6 +176,5 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
     }
 
     abstract protected String getRealmName();
-    abstract protected Authorizer createAuthorizer();
     abstract protected void createAdditionalResources(Router secureRouter, Router insecureRouter);
 }

@@ -11,6 +11,7 @@ import com.whizzosoftware.hobson.api.hub.HubContext;
 import org.apache.commons.lang3.StringUtils;
 import org.restlet.Application;
 import org.restlet.Request;
+import org.restlet.data.ClientInfo;
 import org.restlet.resource.Resource;
 import org.restlet.security.User;
 
@@ -23,25 +24,23 @@ import java.util.Map;
  */
 public class HobsonRestContext {
     private String apiRoot;
+    private String userId;
     private HubContext hubContext;
 
-    public static HobsonRestContext createContext(Application application, String path) {
+    public static HobsonRestContext createContext(Application application, ClientInfo clientInfo, String path) {
         String apiRoot = ((HobsonApiApplication)application).getApiRoot();
         path = path.replace(apiRoot, "");
         String[] parts = StringUtils.split(path, '/');
-        String userId = null;
+        String userId = clientInfo.getUser().getIdentifier();
         String hubId = null;
-        if (parts.length > 1 && parts[0].equals("users")) {
-            userId = parts[1];
-        }
-        if (parts.length > 3 && parts[2].equals("hubs")) {
-            hubId = parts[3];
+        if (parts.length > 1 && parts[0].equals("hubs")) {
+            hubId = parts[1];
         }
         return new HobsonRestContext(application, userId, hubId);
     }
 
-    public static HobsonRestContext createContext(Resource resource, String userId, String hubId) {
-        return new HobsonRestContext(resource.getApplication(), userId, hubId);
+    public static HobsonRestContext createContext(Resource resource, ClientInfo clientInfo, String hubId) {
+        return new HobsonRestContext(resource.getApplication(), clientInfo.getUser().getIdentifier(), hubId);
     }
 
     public static HobsonRestContext createContext(Resource resource, Request request) {
@@ -63,7 +62,8 @@ public class HobsonRestContext {
         if (application != null) {
             this.apiRoot = ((HobsonApiApplication)application).getApiRoot();
         }
-        this.hubContext = HubContext.create(userId, hubId);
+        this.userId = userId;
+        this.hubContext = HubContext.create(hubId);
     }
 
     public String getApiRoot() {
@@ -75,7 +75,7 @@ public class HobsonRestContext {
     }
 
     public String getUserId() {
-        return hubContext.getUserId();
+        return userId;
     }
 
     public String getHubId() {

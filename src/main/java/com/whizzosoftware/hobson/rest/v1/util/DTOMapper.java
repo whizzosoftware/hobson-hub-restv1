@@ -85,7 +85,7 @@ public class DTOMapper {
         }
 
         if (containerName != null) {
-            return PropertyContainerClassContext.create((String)vars.get("userId"), (String)vars.get("hubId"), (String)vars.get("pluginId"), (String)vars.get("deviceId"), (String)vars.get(containerName));
+            return PropertyContainerClassContext.create((String)vars.get("hubId"), (String)vars.get("pluginId"), (String)vars.get("deviceId"), (String)vars.get(containerName));
         } else {
             return null;
         }
@@ -110,7 +110,7 @@ public class DTOMapper {
     static public PresenceLocationContext createPresenceLocationContext(String id) {
         Map<String,Object> vars = new HashMap<>();
         presenceLocationTemplate.parse(id, vars);
-        return PresenceLocationContext.create(HubContext.create((String)vars.get("userId"), (String)vars.get("hubId")), (String)vars.get("locationId"));
+        return PresenceLocationContext.create(HubContext.create((String)vars.get("hubId")), (String)vars.get("locationId"));
     }
 
     static public PasswordChange mapPasswordChangeDTO(PasswordChangeDTO dto) {
