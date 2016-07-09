@@ -7,6 +7,7 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest;
 
+import com.whizzosoftware.hobson.api.HobsonAuthenticationException;
 import com.whizzosoftware.hobson.rest.oidc.OIDCConfig;
 import com.whizzosoftware.hobson.rest.oidc.OIDCConfigProvider;
 import org.jose4j.jwt.consumer.JwtConsumer;
@@ -61,6 +62,8 @@ public class BearerTokenVerifier implements Verifier {
                     request.getClientInfo().setUser(new HobsonRestUser(tc.getUser(), token));
                     request.getClientInfo().setRoles(createRoles(application, tc.getRoles()));
                 }
+            } catch (HobsonAuthenticationException hae) {
+                logger.debug("Error verifying token: " + hae);
             } catch (Exception e) {
                 logger.error("Error verifying token", e);
             }
