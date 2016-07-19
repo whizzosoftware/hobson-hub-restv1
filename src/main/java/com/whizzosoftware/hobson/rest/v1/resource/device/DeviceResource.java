@@ -42,13 +42,12 @@ public class DeviceResource extends SelfInjectingServerResource {
      * @apiName GetDeviceDetails
      * @apiDescription Retrieves the details of a specific device.
      * @apiGroup Devices
-     * @apiParam (Query Parameters) {String} expand A comma-separated list of attributes to expand (supported values are "configuration", "configurationClass", "preferredVariable", "telemetry", "variables").
+     * @apiParam (Query Parameters) {String} expand A comma-separated list of attributes to expand (supported values are "configuration", "configurationClass", "preferredVariable", "variables").
      * @apiSuccess {String} name The device name.
      * @apiSuccess {String} type The device type.
      * @apiSuccess {Object} configuration The current configuration values for the device.
      * @apiSuccess {Object} configurationClass The device's configuration class.
      * @apiSuccess {Object} preferredVariable The device's "preferred variable" if it has one.
-     * @apiSuccess {Object} telemetry The device's telemetry information.
      * @apiSuccess {Object} variables The variables the device has published.
      * @apiSuccessExample {json} Success Response:
      * {
@@ -62,9 +61,6 @@ public class DeviceResource extends SelfInjectingServerResource {
      *   },
      *   "preferredVariable": {
      *     "@id": "/api/plugins/com.whizzosoftware.hobson.hub.hobson-hub-radiora/devices/1/variables/on"
-     *   },
-     *   "telemetry": {
-     *     "@id": "/api/plugins/com.whizzosoftware.hobson.hub.hobson-hub-radiora/devices/1/telemetry"
      *   },
      *   "variables": {
      *     "@id": "/api/plugins/com.whizzosoftware.hobson.hub.hobson-hub-radiora/devices/1/variables"

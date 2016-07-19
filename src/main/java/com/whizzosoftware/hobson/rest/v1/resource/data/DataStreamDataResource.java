@@ -11,8 +11,8 @@ import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
 import com.whizzosoftware.hobson.api.data.DataStream;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.api.persist.PropertyConstants;
-import com.whizzosoftware.hobson.api.data.TelemetryInterval;
-import com.whizzosoftware.hobson.api.data.TelemetryManager;
+import com.whizzosoftware.hobson.api.data.DataStreamInterval;
+import com.whizzosoftware.hobson.api.data.DataStreamManager;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
 import com.whizzosoftware.hobson.dto.data.DataStreamDataDTO;
@@ -29,7 +29,7 @@ public class DataStreamDataResource extends SelfInjectingServerResource {
     public static final String PATH = "/dataStreams/{dataStreamId}/data";
 
     @Inject
-    TelemetryManager telemetryManager;
+    DataStreamManager dataStreamManager;
     @Inject
     DTOBuildContextFactory dtoBuildContextFactory;
     @Inject
@@ -39,8 +39,8 @@ public class DataStreamDataResource extends SelfInjectingServerResource {
      * @api {get} /api/v1/users/:userId/dataStreams/:dataStreamId/data Get data stream data
      * @apiVersion 0.8.0
      * @apiName GetDataStreamData
-     * @apiDescription Retrieve the data for a telemetry data stream.
-     * @apiGroup Telemetry
+     * @apiDescription Retrieve the data for a data stream.
+     * @apiGroup DataStream
      * @apiSuccessExample {json} Success Response:
      * {
      *   "@id": "/api/v1/users/local/hubs/local/dataStreams/31c68ded-2364-4fb0-9bee-9d96b388476a/data",
@@ -66,7 +66,7 @@ public class DataStreamDataResource extends SelfInjectingServerResource {
      */
     @Override
     protected Representation get() {
-        if (telemetryManager != null && !telemetryManager.isStub()) {
+        if (dataStreamManager != null && !dataStreamManager.isStub()) {
             HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
             ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
 
@@ -80,26 +80,26 @@ public class DataStreamDataResource extends SelfInjectingServerResource {
                 endTime = System.currentTimeMillis();
             }
 
-            TelemetryInterval inr;
+            DataStreamInterval inr;
             s = getQueryValue("inr");
             if (s != null) {
-                inr = TelemetryInterval.valueOf(s);
+                inr = DataStreamInterval.valueOf(s);
             } else {
-                inr = TelemetryInterval.HOURS_1;
+                inr = DataStreamInterval.HOURS_1;
             }
 
-            DataStream ds = telemetryManager.getDataStream(ctx.getUserId(), dataStreamId);
+            DataStream ds = dataStreamManager.getDataStream(ctx.getUserId(), dataStreamId);
 
             DataStreamDataDTO dto = new DataStreamDataDTO.Builder(dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions), idProvider.createDataStreamId(dataStreamId), endTime, inr).
                 fields(ds.getFields()).
-                data(telemetryManager.getData(ctx.getUserId(), dataStreamId, endTime, inr)).
+                data(dataStreamManager.getData(ctx.getUserId(), dataStreamId, endTime, inr)).
                 build();
 
             JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
             jr.setMediaType(new MediaType(dto.getJSONMediaType()));
             return jr;
         } else {
-            throw new HobsonInvalidRequestException("No telemetry manager is available");
+            throw new HobsonInvalidRequestException("No data stream manager is available");
         }
     }
 }

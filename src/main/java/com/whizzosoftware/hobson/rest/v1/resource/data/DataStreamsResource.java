@@ -11,7 +11,7 @@ import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
 import com.whizzosoftware.hobson.api.data.DataStreamField;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.api.data.DataStream;
-import com.whizzosoftware.hobson.api.data.TelemetryManager;
+import com.whizzosoftware.hobson.api.data.DataStreamManager;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.dto.context.DTOBuildContext;
@@ -37,7 +37,7 @@ public class DataStreamsResource extends SelfInjectingServerResource {
     public static final String PATH = "/dataStreams";
 
     @Inject
-    TelemetryManager telemetryManager;
+    DataStreamManager dataStreamManager;
     @Inject
     IdProvider idProvider;
     @Inject
@@ -69,19 +69,19 @@ public class DataStreamsResource extends SelfInjectingServerResource {
      */
     @Override
     protected Representation get() {
-        if (telemetryManager != null && !telemetryManager.isStub()) {
+        if (dataStreamManager != null && !dataStreamManager.isStub()) {
             HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
             ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
             ItemListDTO results = new ItemListDTO(idProvider.createDataStreamsId());
             DTOBuildContext bc = dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions);
-            for (DataStream ds : telemetryManager.getDataStreams(ctx.getUserId())) { // TODO
+            for (DataStream ds : dataStreamManager.getDataStreams(ctx.getUserId())) { // TODO
                 results.add(new DataStreamDTO.Builder(bc, ds, expansions.has(JSONAttributes.ITEM)).build());
             }
             JsonRepresentation jr = new JsonRepresentation(results.toJSON());
             jr.setMediaType(new MediaType(results.getJSONMediaType()));
             return jr;
         } else {
-            throw new HobsonInvalidRequestException("No telemetry manager is available");
+            throw new HobsonInvalidRequestException("No data stream manager is available");
         }
     }
 
@@ -114,7 +114,7 @@ public class DataStreamsResource extends SelfInjectingServerResource {
      */
     @Override
     protected Representation post(Representation entity) {
-        if (telemetryManager != null && !telemetryManager.isStub()) {
+        if (dataStreamManager != null && !dataStreamManager.isStub()) {
             HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
             DataStreamDTO dto = new DataStreamDTO.Builder(JSONHelper.createJSONFromRepresentation(entity)).build();
 
@@ -123,12 +123,12 @@ public class DataStreamsResource extends SelfInjectingServerResource {
                 fields.add(new DataStreamField(v.getId(), v.getName(), idProvider.createVariableContext(v.getVariable().getId())));
             }
 
-            telemetryManager.createDataStream(ctx.getUserId(), dto.getName(), fields, null);
+            dataStreamManager.createDataStream(ctx.getUserId(), dto.getName(), fields, null);
 
             getResponse().setStatus(Status.SUCCESS_CREATED);
             return new EmptyRepresentation();
         } else {
-            throw new HobsonInvalidRequestException("No telemetry manager is available");
+            throw new HobsonInvalidRequestException("No data stream manager is available");
         }
     }
 }
