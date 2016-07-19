@@ -5,19 +5,19 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
-package com.whizzosoftware.hobson.rest.v1.resource.telemetry;
+package com.whizzosoftware.hobson.rest.v1.resource.data;
 
 import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
+import com.whizzosoftware.hobson.api.data.DataStreamField;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
-import com.whizzosoftware.hobson.api.telemetry.DataStream;
-import com.whizzosoftware.hobson.api.telemetry.TelemetryManager;
-import com.whizzosoftware.hobson.api.variable.VariableContext;
+import com.whizzosoftware.hobson.api.data.DataStream;
+import com.whizzosoftware.hobson.api.data.TelemetryManager;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.dto.context.DTOBuildContext;
 import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
-import com.whizzosoftware.hobson.dto.telemetry.DataStreamDTO;
-import com.whizzosoftware.hobson.dto.variable.HobsonVariableDTO;
+import com.whizzosoftware.hobson.dto.data.DataStreamDTO;
+import com.whizzosoftware.hobson.dto.data.DataStreamFieldDTO;
 import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
@@ -74,7 +74,7 @@ public class DataStreamsResource extends SelfInjectingServerResource {
             ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
             ItemListDTO results = new ItemListDTO(idProvider.createDataStreamsId());
             DTOBuildContext bc = dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions);
-            for (DataStream ds : telemetryManager.getDataStreams("local")) { // TODO
+            for (DataStream ds : telemetryManager.getDataStreams(ctx.getUserId())) { // TODO
                 results.add(new DataStreamDTO.Builder(bc, ds, expansions.has(JSONAttributes.ITEM)).build());
             }
             JsonRepresentation jr = new JsonRepresentation(results.toJSON());
@@ -96,12 +96,18 @@ public class DataStreamsResource extends SelfInjectingServerResource {
      * @apiSuccessExample {json} Success Response:
      * {
      *   "name": "House Temperature",
-     *   "variables": [
+     *   "fields": [
      *      {
-     *          "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-sample/devices/wstation/variables/outTempF"
+     *         "name": "Outdoor Temperature",
+     *         "variable": {
+     *            "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-sample/devices/wstation/variables/outTempF"
+     *         }
      *      },
      *      {
-     *          "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-sample/devices/thermostat/variables/inTempF"
+     *         "name": "Indoor Temperature",
+     *         "variable": {
+     *            "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-sample/devices/thermostat/variables/inTempF"
+     *         }
      *      }
      *   ]
      * }
@@ -112,12 +118,12 @@ public class DataStreamsResource extends SelfInjectingServerResource {
             HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
             DataStreamDTO dto = new DataStreamDTO.Builder(JSONHelper.createJSONFromRepresentation(entity)).build();
 
-            List<VariableContext> vars = new ArrayList<>();
-            for (HobsonVariableDTO v : dto.getVariables()) {
-                vars.add(idProvider.createVariableContext(v.getId()));
+            List<DataStreamField> fields = new ArrayList<>();
+            for (DataStreamFieldDTO v : dto.getFields()) {
+                fields.add(new DataStreamField(v.getId(), v.getName(), idProvider.createVariableContext(v.getVariable().getId())));
             }
 
-            telemetryManager.createDataStream("local", dto.getName(), vars); // TODO
+            telemetryManager.createDataStream(ctx.getUserId(), dto.getName(), fields, null);
 
             getResponse().setStatus(Status.SUCCESS_CREATED);
             return new EmptyRepresentation();

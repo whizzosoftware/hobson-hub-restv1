@@ -30,9 +30,9 @@ import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceEntitiesResou
 import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceEntityResource;
 import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceLocationsResource;
 import com.whizzosoftware.hobson.rest.v1.resource.task.*;
-import com.whizzosoftware.hobson.rest.v1.resource.telemetry.DataStreamDataResource;
-import com.whizzosoftware.hobson.rest.v1.resource.telemetry.DataStreamResource;
-import com.whizzosoftware.hobson.rest.v1.resource.telemetry.DataStreamsResource;
+import com.whizzosoftware.hobson.rest.v1.resource.data.DataStreamDataResource;
+import com.whizzosoftware.hobson.rest.v1.resource.data.DataStreamResource;
+import com.whizzosoftware.hobson.rest.v1.resource.data.DataStreamsResource;
 import com.whizzosoftware.hobson.rest.v1.resource.user.UserResource;
 import com.whizzosoftware.hobson.rest.v1.resource.variable.GlobalVariableResource;
 import com.whizzosoftware.hobson.rest.v1.resource.variable.GlobalVariablesResource;
@@ -40,7 +40,6 @@ import org.restlet.routing.Template;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -432,7 +431,17 @@ public class RestResourceIdProvider implements IdProvider {
     }
 
     @Override
-    public String createDataStreamVariablesId(String dataStreamId) {
+    public String createDataStreamFieldsId(String dataStreamId) {
+        return null;
+    }
+
+    @Override
+    public String createDataStreamTagsId(String dataStreamId) {
+        return null;
+    }
+
+    @Override
+    public String createDataStreamFieldId(String dataStreamId, String fieldId) {
         return null;
     }
 

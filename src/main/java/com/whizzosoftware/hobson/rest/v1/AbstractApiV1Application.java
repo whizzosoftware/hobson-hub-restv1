@@ -25,9 +25,9 @@ import com.whizzosoftware.hobson.rest.v1.resource.image.ImageLibraryImageResourc
 import com.whizzosoftware.hobson.rest.v1.resource.image.ImageLibraryRootResource;
 import com.whizzosoftware.hobson.rest.v1.resource.plugin.*;
 import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceEntitiesResource;
-import com.whizzosoftware.hobson.rest.v1.resource.telemetry.DataStreamDataResource;
-import com.whizzosoftware.hobson.rest.v1.resource.telemetry.DataStreamResource;
-import com.whizzosoftware.hobson.rest.v1.resource.telemetry.DataStreamsResource;
+import com.whizzosoftware.hobson.rest.v1.resource.data.DataStreamDataResource;
+import com.whizzosoftware.hobson.rest.v1.resource.data.DataStreamResource;
+import com.whizzosoftware.hobson.rest.v1.resource.data.DataStreamsResource;
 import com.whizzosoftware.hobson.rest.v1.resource.user.UserInfoResource;
 import com.whizzosoftware.hobson.rest.v1.resource.user.UserResource;
 import com.whizzosoftware.hobson.rest.v1.resource.variable.GlobalVariableResource;

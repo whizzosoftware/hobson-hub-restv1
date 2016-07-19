@@ -5,15 +5,17 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
-package com.whizzosoftware.hobson.rest.v1.resource.telemetry;
+package com.whizzosoftware.hobson.rest.v1.resource.data;
 
 import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
+import com.whizzosoftware.hobson.api.data.DataStream;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.api.persist.PropertyConstants;
-import com.whizzosoftware.hobson.api.telemetry.TelemetryInterval;
-import com.whizzosoftware.hobson.api.telemetry.TelemetryManager;
+import com.whizzosoftware.hobson.api.data.TelemetryInterval;
+import com.whizzosoftware.hobson.api.data.TelemetryManager;
+import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
-import com.whizzosoftware.hobson.dto.telemetry.DataStreamDataDTO;
+import com.whizzosoftware.hobson.dto.data.DataStreamDataDTO;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import org.restlet.data.MediaType;
@@ -44,16 +46,20 @@ public class DataStreamDataResource extends SelfInjectingServerResource {
      *   "@id": "/api/v1/users/local/hubs/local/dataStreams/31c68ded-2364-4fb0-9bee-9d96b388476a/data",
      *   "endTime": 1434097500,
      *   "interval": "HOURS_24",
+     *   "fields": {
+     *     "14688871247925949389": "Indoor Temperature",
+     *     "14688871247921547625": "Outdoor Temperature"
+     *   },
      *   "data": [
      *     {
      *       "timestamp": 1434097200,
-     *       "com.whizzosoftware.hobson.hub.hobson-hub-sample:thermostat:inTempF": 71.6,
-     *       "com.whizzosoftware.hobson.hub.hobson-hub-sample:wstation:outTempF": 42.5
+     *       "14688871247925949389": 71.6,
+     *       "14688871247921547625": 42.5
      *     },
      *     {
      *       "timestamp": 1434097500,
-     *       "com.whizzosoftware.hobson.hub.hobson-hub-sample:thermostat:inTempF": 70.7,
-     *       "com.whizzosoftware.hobson.hub.hobson-hub-sample:wstation:outTempF": 42.6
+     *       "14688871247925949389": 70.7,
+     *       "14688871247921547625": 42.6
      *     }
      *   ]
      * }
@@ -62,6 +68,7 @@ public class DataStreamDataResource extends SelfInjectingServerResource {
     protected Representation get() {
         if (telemetryManager != null && !telemetryManager.isStub()) {
             HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
+            ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
 
             String dataStreamId = getAttribute(PropertyConstants.DATA_STREAM_ID);
 
@@ -81,12 +88,12 @@ public class DataStreamDataResource extends SelfInjectingServerResource {
                 inr = TelemetryInterval.HOURS_1;
             }
 
-            DataStreamDataDTO dto = new DataStreamDataDTO(
-                idProvider.createDataStreamDataId(dataStreamId),
-                endTime,
-                inr,
-                telemetryManager.getData(dataStreamId, endTime, inr)
-            );
+            DataStream ds = telemetryManager.getDataStream(dataStreamId);
+
+            DataStreamDataDTO dto = new DataStreamDataDTO.Builder(dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions), idProvider.createDataStreamId(dataStreamId), endTime, inr).
+                fields(ds.getFields()).
+                data(telemetryManager.getData(dataStreamId, endTime, inr)).
+                build();
 
             JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
             jr.setMediaType(new MediaType(dto.getJSONMediaType()));
