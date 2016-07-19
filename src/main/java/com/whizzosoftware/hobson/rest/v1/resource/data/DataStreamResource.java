@@ -17,6 +17,7 @@ import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import org.restlet.data.MediaType;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
+import org.restlet.representation.EmptyRepresentation;
 import org.restlet.representation.Representation;
 
 import javax.inject.Inject;
@@ -67,12 +68,23 @@ public class DataStreamResource extends SelfInjectingServerResource {
             ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
             DataStreamDTO dto = new DataStreamDTO.Builder(
                 dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions),
-                telemetryManager.getDataStream(getAttribute("dataStreamId")), // TODO
+                telemetryManager.getDataStream(ctx.getUserId(), getAttribute("dataStreamId")),
                 true
             ).build();
             JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
             jr.setMediaType(new MediaType(dto.getJSONMediaType()));
             return jr;
+        } else {
+            throw new HobsonInvalidRequestException("No telemetry manager is available");
+        }
+    }
+
+    @Override
+    protected Representation delete() {
+        if (telemetryManager != null && !telemetryManager.isStub()) {
+            HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
+            telemetryManager.deleteDataStream(ctx.getUserId(), getAttribute("dataStreamId"));
+            return new EmptyRepresentation();
         } else {
             throw new HobsonInvalidRequestException("No telemetry manager is available");
         }

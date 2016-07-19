@@ -88,11 +88,11 @@ public class DataStreamDataResource extends SelfInjectingServerResource {
                 inr = TelemetryInterval.HOURS_1;
             }
 
-            DataStream ds = telemetryManager.getDataStream(dataStreamId);
+            DataStream ds = telemetryManager.getDataStream(ctx.getUserId(), dataStreamId);
 
             DataStreamDataDTO dto = new DataStreamDataDTO.Builder(dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions), idProvider.createDataStreamId(dataStreamId), endTime, inr).
                 fields(ds.getFields()).
-                data(telemetryManager.getData(dataStreamId, endTime, inr)).
+                data(telemetryManager.getData(ctx.getUserId(), dataStreamId, endTime, inr)).
                 build();
 
             JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
