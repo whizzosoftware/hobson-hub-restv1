@@ -341,7 +341,6 @@ public class DTOMapperTest {
     public void testMapTypedPropertyDTO() {
         List<TypedProperty> tps = new ArrayList<>();
         tps.add(new TypedProperty.Builder("tp1", "name1", "desc1", TypedProperty.Type.STRING).build());
-        tps.add(new TypedProperty.Builder("tp2", "name2", "desc2", TypedProperty.Type.STRING).isPublic(false).build());
         List<TypedPropertyDTO> dtos = DTOMapper.mapTypedPropertyList(tps);
         assertEquals(1, dtos.size());
         assertEquals("tp1", dtos.get(0).getId());
