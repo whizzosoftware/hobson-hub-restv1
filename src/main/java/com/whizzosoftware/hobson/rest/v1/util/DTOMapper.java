@@ -274,7 +274,9 @@ public class DTOMapper {
         if (props != null) {
             results = new ArrayList<>();
             for (TypedProperty tp : props) {
-                results.add(new TypedPropertyDTO.Builder(tp).build());
+                if (tp.isPublic()) {
+                    results.add(new TypedPropertyDTO.Builder(tp).build());
+                }
             }
         }
         return results;

@@ -150,6 +150,24 @@ public class TaskResource extends SelfInjectingServerResource {
     }
 
     /**
+     * @api {post} /api/v1/users/:userId/hubs/:hubId/tasks/:taskId Execute task
+     * @apiVersion 0.9.1
+     * @apiName ExecuteTask
+     * @apiDescription Executes an existing task.
+     * @apiGroup Tasks
+     * @apiSuccessExample Success Response:
+     * HTTP/1.1 202 Accepted
+     */
+    @Override
+    protected Representation post(Representation entity) {
+        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
+        taskManager.executeTask(TaskContext.create(ctx.getHubContext(), getAttribute("taskId")));
+        getResponse().setStatus(Status.SUCCESS_ACCEPTED);
+        return new EmptyRepresentation();
+    }
+
+
+    /**
      * @api {delete} /api/v1/users/:userId/hubs/:hubId/tasks/:taskId Delete task
      * @apiVersion 0.1.3
      * @apiName DeleteTask
