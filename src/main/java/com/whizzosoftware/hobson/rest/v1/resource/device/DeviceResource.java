@@ -9,7 +9,6 @@ package com.whizzosoftware.hobson.rest.v1.resource.device;
 
 import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.device.DeviceManager;
-import com.whizzosoftware.hobson.api.device.HobsonDevice;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
 import com.whizzosoftware.hobson.dto.device.HobsonDeviceDTO;
@@ -73,11 +72,9 @@ public class DeviceResource extends SelfInjectingServerResource {
         ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
 
         DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
-        HobsonDevice device = deviceManager.getDevice(dctx);
-
         HobsonDeviceDTO dto = new HobsonDeviceDTO.Builder(
             dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions),
-            device,
+            dctx,
             true
         ).build();
 

@@ -10,7 +10,6 @@ package com.whizzosoftware.hobson.rest.v1.resource.device;
 import com.whizzosoftware.hobson.api.HobsonNotFoundException;
 import com.whizzosoftware.hobson.api.device.DevicePassport;
 import com.whizzosoftware.hobson.api.device.DeviceManager;
-import com.whizzosoftware.hobson.api.variable.VariableManager;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
 import com.whizzosoftware.hobson.dto.device.DevicePassportDTO;
@@ -31,8 +30,6 @@ public class DevicePassportResource extends SelfInjectingServerResource {
 
     @Inject
     DeviceManager deviceManager;
-    @Inject
-    VariableManager variableManager;
     @Inject
     DTOBuildContextFactory dtoBuildContextFactory;
 

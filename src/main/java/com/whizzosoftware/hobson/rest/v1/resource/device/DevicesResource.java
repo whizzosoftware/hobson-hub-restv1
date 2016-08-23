@@ -7,12 +7,11 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.device;
 
+import com.whizzosoftware.hobson.api.device.DeviceDescription;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
-import com.whizzosoftware.hobson.api.variable.VariableContext;
+import com.whizzosoftware.hobson.api.variable.DeviceVariableContext;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.api.device.DeviceManager;
-import com.whizzosoftware.hobson.api.device.HobsonDevice;
-import com.whizzosoftware.hobson.api.variable.VariableManager;
 import com.whizzosoftware.hobson.dto.*;
 import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
 import com.whizzosoftware.hobson.dto.device.HobsonDeviceDTO;
@@ -44,8 +43,6 @@ public class DevicesResource extends SelfInjectingServerResource {
 
     @Inject
     DeviceManager deviceManager;
-    @Inject
-    VariableManager variableManager;
     @Inject
     DTOBuildContextFactory dtoBuildContextFactory;
     @Inject
@@ -86,7 +83,7 @@ public class DevicesResource extends SelfInjectingServerResource {
 
         ItemListDTO results = new ItemListDTO(idProvider.createDevicesId(ctx.getHubContext()));
 
-        Collection<HobsonDevice> devices = deviceManager.getAllDevices(ctx.getHubContext());
+        Collection<DeviceDescription> devices = deviceManager.getAllDeviceDescriptions(ctx.getHubContext());
         TreeMap<String, Long> etagMap = new TreeMap<>();
 
         if (devices != null) {
@@ -95,11 +92,11 @@ public class DevicesResource extends SelfInjectingServerResource {
 
             expansions.pushContext(JSONAttributes.ITEM);
 
-            for (HobsonDevice device : devices) {
-                if ((varFilter == null || variableManager.hasVariable(VariableContext.create(device.getContext(), varFilter))) && (typeFilter == null || device.getType().toString().equals(typeFilter))) {
+            for (DeviceDescription device : devices) {
+                if ((varFilter == null || deviceManager.hasDeviceVariableValue(DeviceVariableContext.create(device.getContext(), varFilter))) && (typeFilter == null || device.getDeviceType().toString().equals(typeFilter))) {
                     HobsonDeviceDTO dto = new HobsonDeviceDTO.Builder(
                         dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions),
-                        device,
+                        device.getContext(),
                         itemExpand
                     ).build();
                     results.add(dto);

@@ -9,21 +9,21 @@ package com.whizzosoftware.hobson.rest.v1.resource.device;
 
 import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
 import com.whizzosoftware.hobson.api.device.DeviceContext;
+import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.api.event.EventManager;
-import com.whizzosoftware.hobson.api.event.VariableUpdateRequestEvent;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
-import com.whizzosoftware.hobson.api.variable.HobsonVariable;
-import com.whizzosoftware.hobson.api.variable.VariableContext;
-import com.whizzosoftware.hobson.api.variable.VariableManager;
-import com.whizzosoftware.hobson.api.variable.VariableUpdate;
+import com.whizzosoftware.hobson.api.variable.DeviceVariable;
+import com.whizzosoftware.hobson.api.variable.DeviceVariableContext;
 import com.whizzosoftware.hobson.dto.variable.HobsonVariableDTO;
 import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import com.whizzosoftware.hobson.rest.v1.util.MapUtil;
+import io.netty.util.concurrent.Future;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.restlet.Response;
 import org.restlet.data.MediaType;
 import org.restlet.data.Reference;
 import org.restlet.data.Status;
@@ -44,7 +44,7 @@ public class DeviceVariableResource extends SelfInjectingServerResource {
     public static final String PATH = "/hubs/{hubId}/plugins/{pluginId}/devices/{deviceId}/variables/{variableName}";
 
     @Inject
-    VariableManager variableManager;
+    DeviceManager deviceManager;
     @Inject
     EventManager eventManager;
     @Inject
@@ -70,10 +70,10 @@ public class DeviceVariableResource extends SelfInjectingServerResource {
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
         DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute(JSONAttributes.PLUGIN_ID), getAttribute(JSONAttributes.DEVICE_ID));
-        HobsonVariable var = variableManager.getVariable(VariableContext.create(dctx, getAttribute(JSONAttributes.VARIABLE_NAME)));
+        DeviceVariable var = deviceManager.getDeviceVariable(DeviceVariableContext.create(dctx, getAttribute(JSONAttributes.VARIABLE_NAME)));
 
         HobsonVariableDTO dto = new HobsonVariableDTO.Builder(
-            idProvider.createVariableId(var.getContext()),
+            idProvider.createDeviceVariableId(var.getContext()),
             var,
             true
         ).build();
@@ -98,23 +98,33 @@ public class DeviceVariableResource extends SelfInjectingServerResource {
      */
     @Override
     protected Representation put(Representation entity) {
-        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
-
+        final HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
         DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute(JSONAttributes.PLUGIN_ID), getAttribute(JSONAttributes.DEVICE_ID));
 
         Object value = createDeviceVariableValue(JSONHelper.createJSONFromRepresentation(entity));
-        String pluginId = getAttribute("pluginId");
-        String deviceId = getAttribute("deviceId");
-        String variableName = getAttribute("variableName");
-        eventManager.postEvent(ctx.getHubContext(), new VariableUpdateRequestEvent(System.currentTimeMillis(), new VariableUpdate(VariableContext.create(dctx, variableName), value)));
-        getResponse().setStatus(Status.SUCCESS_ACCEPTED);
+        final String pluginId = getAttribute("pluginId");
+        final String deviceId = getAttribute("deviceId");
+        final String variableName = getAttribute("variableName");
 
-        // TODO: is there a better way to do this? The Restlet request reference scheme is always HTTP for some reason...
-        Reference requestRef = getRequest().getResourceRef();
-        if (Boolean.getBoolean(System.getProperty("useSSL"))) {
-            getResponse().setLocationRef(new Reference("https", requestRef.getHostDomain(), requestRef.getHostPort(), ctx.getApiRoot() + new Template(DeviceVariableResource.PATH).format(MapUtil.createTripleEntryMap(ctx, "pluginId", pluginId, "deviceId", deviceId, "variableName", variableName)), null, null));
-        } else {
-            getResponse().setLocationRef(requestRef);
+        Response response = getResponse();
+
+        try {
+            Future f = deviceManager.setDeviceVariable(DeviceVariableContext.create(dctx, variableName), value).await();
+            if (f.isSuccess()) {
+                response.setStatus(Status.SUCCESS_ACCEPTED);
+
+                // TODO: is there a better way to do this? The Restlet request reference scheme is always HTTP for some reason...
+                Reference requestRef = getRequest().getResourceRef();
+                if (Boolean.getBoolean(System.getProperty("useSSL"))) {
+                    response.setLocationRef(new Reference("https", requestRef.getHostDomain(), requestRef.getHostPort(), ctx.getApiRoot() + new Template(DeviceVariableResource.PATH).format(MapUtil.createTripleEntryMap(ctx, "pluginId", pluginId, "deviceId", deviceId, "variableName", variableName)), null, null));
+                } else {
+                    response.setLocationRef(requestRef);
+                }
+            } else {
+                response.setStatus(Status.SERVER_ERROR_INTERNAL, f.cause());
+            }
+        } catch (InterruptedException e) {
+            response.setStatus(Status.SERVER_ERROR_INTERNAL, e);
         }
 
         return new EmptyRepresentation();

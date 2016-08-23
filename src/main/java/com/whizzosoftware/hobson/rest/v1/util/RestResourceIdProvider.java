@@ -18,7 +18,8 @@ import com.whizzosoftware.hobson.api.property.PropertyContainerClass;
 import com.whizzosoftware.hobson.api.property.PropertyContainerClassContext;
 import com.whizzosoftware.hobson.api.property.PropertyContainerClassType;
 import com.whizzosoftware.hobson.api.task.TaskContext;
-import com.whizzosoftware.hobson.api.variable.VariableContext;
+import com.whizzosoftware.hobson.api.variable.DeviceVariableContext;
+import com.whizzosoftware.hobson.api.variable.GlobalVariableContext;
 import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.v1.resource.activity.ActivityLogResource;
 import com.whizzosoftware.hobson.rest.v1.resource.hub.HubLogResource;
@@ -159,27 +160,11 @@ public class RestResourceIdProvider implements IdProvider {
     }
 
     @Override
-    public VariableContext createVariableContext(String variableId) {
+    public DeviceVariableContext createDeviceVariableContext(String variableId) {
         Template t = new Template(apiRoot + DeviceVariableResource.PATH);
         Map<String,Object> vars = new HashMap<>();
         t.parse(variableId, vars);
-        return VariableContext.create(HubContext.create((String)vars.get(JSONAttributes.HUB_ID)), (String)vars.get(JSONAttributes.PLUGIN_ID), (String)vars.get(JSONAttributes.DEVICE_ID), (String)vars.get(JSONAttributes.VARIABLE_NAME));
-    }
-
-    @Override
-    public String createVariableId(VariableContext ctx) {
-        if (ctx.isGlobal()) {
-            Template t = new Template(apiRoot + GlobalVariableResource.PATH);
-            Map<String,String> values = new HashMap<>();
-            values.put(JSONAttributes.HUB_ID, ctx.getHubId());
-            values.put(JSONAttributes.NAME, ctx.getName());
-            return t.format(values);
-        } else {
-            Template t = new Template(apiRoot + DeviceVariableResource.PATH);
-            Map<String,String> values = createDeviceValues(ctx.getDeviceContext());
-            values.put(JSONAttributes.VARIABLE_NAME, ctx.getName());
-            return t.format(values);
-        }
+        return DeviceVariableContext.create(HubContext.create((String)vars.get(JSONAttributes.HUB_ID)), (String)vars.get(JSONAttributes.PLUGIN_ID), (String)vars.get(JSONAttributes.DEVICE_ID), (String)vars.get(JSONAttributes.VARIABLE_NAME));
     }
 
     @Override
@@ -265,11 +250,6 @@ public class RestResourceIdProvider implements IdProvider {
     }
 
     @Override
-    public String createVariablesId(HubContext ctx) {
-        return null;
-    }
-
-    @Override
     public String createDevicesId(HubContext ctx) {
         return new Template(apiRoot + DevicesResource.PATH).format(createHubValues(ctx));
     }
@@ -308,8 +288,34 @@ public class RestResourceIdProvider implements IdProvider {
     }
 
     @Override
+    public String createDeviceVariableDescriptionId(DeviceVariableContext vctx) {
+        return null;
+    }
+
+    @Override
+    public String createDeviceVariableId(DeviceVariableContext vctx) {
+        Template t = new Template(apiRoot + DeviceVariableResource.PATH);
+        Map<String,String> values = createDeviceValues(vctx.getDeviceContext());
+        values.put(JSONAttributes.VARIABLE_NAME, vctx.getName());
+        return t.format(values);
+    }
+
+    @Override
     public String createDeviceConfigurationClassId(DeviceContext ctx) {
         return new Template(apiRoot + DeviceConfigurationClassResource.PATH).format(createDeviceValues(ctx));
+    }
+
+    @Override
+    public String createPluginDeviceConfigurationClassesId(PluginContext ctx) {
+        return new Template(apiRoot + LocalPluginDeviceConfigurationClassesResource.PATH).format(createPluginValues(ctx));
+    }
+
+    @Override
+    public String createPluginDeviceConfigurationClassId(PluginContext ctx, String name) {
+        Template t = new Template(apiRoot + LocalPluginDeviceConfigurationClassResource.PATH);
+        Map<String,String> map = createPluginValues(ctx);
+        map.put(JSONAttributes.NAME, name);
+        return t.format(map);
     }
 
     @Override
@@ -371,10 +377,10 @@ public class RestResourceIdProvider implements IdProvider {
     }
 
     @Override
-    public String createGlobalVariableId(HubContext ctx, String name) {
+    public String createGlobalVariableId(GlobalVariableContext gvctx) {
         Template t = new Template(apiRoot + GlobalVariableResource.PATH);
-        Map<String,String> values = createHubValues(ctx);
-        values.put(JSONAttributes.NAME, name);
+        Map<String,String> values = createHubValues(gvctx.getHubContext());
+        values.put(JSONAttributes.NAME, gvctx.getName());
         return t.format(values);
     }
 

@@ -8,7 +8,7 @@
 package com.whizzosoftware.hobson.rest.v1.util;
 
 import com.whizzosoftware.hobson.api.hub.HubContext;
-import com.whizzosoftware.hobson.api.variable.HobsonVariable;
+import com.whizzosoftware.hobson.api.variable.DeviceVariable;
 import org.restlet.Response;
 import org.restlet.data.Form;
 import org.restlet.representation.Representation;
@@ -19,5 +19,5 @@ import org.restlet.representation.Representation;
  * @author Dan Noguerol
  */
 public interface MediaProxyHandler {
-    Representation createRepresentation(HubContext hctx, HobsonVariable v, Form query, Response response);
+    Representation createRepresentation(HubContext hctx, DeviceVariable v, Form query, Response response);
 }

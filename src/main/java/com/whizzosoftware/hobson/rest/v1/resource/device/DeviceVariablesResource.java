@@ -8,20 +8,23 @@
 package com.whizzosoftware.hobson.rest.v1.resource.device;
 
 import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
+import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
+import com.whizzosoftware.hobson.api.variable.DeviceVariable;
+import com.whizzosoftware.hobson.api.variable.DeviceVariableContext;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.api.HobsonNotFoundException;
 import com.whizzosoftware.hobson.api.device.DeviceContext;
-import com.whizzosoftware.hobson.api.variable.HobsonVariable;
-import com.whizzosoftware.hobson.api.variable.VariableManager;
 import com.whizzosoftware.hobson.dto.variable.HobsonVariableDTO;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
+import io.netty.util.concurrent.Future;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.restlet.Response;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -42,7 +45,7 @@ public class DeviceVariablesResource extends SelfInjectingServerResource {
     public static final String PATH = "/hubs/{hubId}/plugins/{pluginId}/devices/{deviceId}/variables";
 
     @Inject
-    VariableManager variableManager;
+    DeviceManager deviceManager;
     @Inject
     IdProvider idProvider;
 
@@ -74,13 +77,13 @@ public class DeviceVariablesResource extends SelfInjectingServerResource {
         DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
         ItemListDTO results = new ItemListDTO(idProvider.createDeviceVariablesId(dctx));
 
-        Collection<HobsonVariable> variables = variableManager.getDeviceVariables(dctx);
+        Collection<DeviceVariable> variables = deviceManager.getDeviceVariables(dctx);
         if (variables != null) {
             boolean showDetails = expansions.has(JSONAttributes.ITEM);
             expansions.pushContext(JSONAttributes.ITEM);
-            for (HobsonVariable v : variables) {
+            for (DeviceVariable v : variables) {
                 HobsonVariableDTO dto = new HobsonVariableDTO.Builder(
-                    idProvider.createVariableId(v.getContext()),
+                    idProvider.createDeviceVariableId(v.getContext()),
                     v,
                     showDetails
                 ).build();
@@ -112,22 +115,28 @@ public class DeviceVariablesResource extends SelfInjectingServerResource {
     @Override
     protected Representation put(Representation entity) {
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
-
+        Response response = getResponse();
         DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
-
-        variableManager.setDeviceVariables(dctx, createDeviceVariableValues(JSONHelper.createJSONFromRepresentation(entity)));
-
-        getResponse().setStatus(Status.SUCCESS_ACCEPTED);
+        try {
+            Future f = deviceManager.setDeviceVariables(createDeviceVariableValues(dctx, JSONHelper.createJSONFromRepresentation(entity))).await();
+            if (f.isSuccess()) {
+                response.setStatus(Status.SUCCESS_ACCEPTED);
+            } else {
+                response.setStatus(Status.SERVER_ERROR_INTERNAL, f.cause());
+            }
+        } catch (InterruptedException e) {
+            response.setStatus(Status.SERVER_ERROR_INTERNAL, e);
+        }
         return new EmptyRepresentation();
     }
 
-    private Map<String,Object> createDeviceVariableValues(JSONObject json) {
+    private Map<DeviceVariableContext,Object> createDeviceVariableValues(DeviceContext dctx, JSONObject json) {
         try {
-            Map<String,Object> map = new HashMap<>();
+            Map<DeviceVariableContext,Object> map = new HashMap<>();
             JSONObject values = json.getJSONObject("values");
             for (Object o : values.keySet()) {
                 String key = (String)o;
-                map.put(key, values.get(key));
+                map.put(DeviceVariableContext.create(dctx, key), values.get(key));
             }
             return map;
         } catch (JSONException e) {

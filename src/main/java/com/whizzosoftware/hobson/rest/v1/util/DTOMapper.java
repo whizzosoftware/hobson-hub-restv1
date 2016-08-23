@@ -266,7 +266,8 @@ public class DTOMapper {
     }
 
     static public TypedProperty mapTypedPropertyDTO(TypedPropertyDTO dto) {
-        return new TypedProperty.Builder(dto.getId(), dto.getName(), dto.getDescription(), TypedProperty.Type.valueOf(dto.getMediaType())).build();
+//        return TypedProperty.Builder(dto.getId(), dto.getName(), dto.getDescription(), TypedProperty.Type.valueOf(dto.getMediaType())).build();
+        return null;
     }
 
     static public List<TypedPropertyDTO> mapTypedPropertyList(List<TypedProperty> props) {

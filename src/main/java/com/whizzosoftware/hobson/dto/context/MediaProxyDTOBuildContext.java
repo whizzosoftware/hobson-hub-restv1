@@ -9,9 +9,7 @@ package com.whizzosoftware.hobson.dto.context;
 
 import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.hub.HubContext;
-import com.whizzosoftware.hobson.api.variable.HobsonVariable;
-import com.whizzosoftware.hobson.api.variable.ImmutableHobsonVariable;
-import com.whizzosoftware.hobson.api.variable.VariableContext;
+import com.whizzosoftware.hobson.api.variable.*;
 import com.whizzosoftware.hobson.rest.v1.resource.device.MediaProxyResource;
 import org.restlet.routing.Template;
 
@@ -31,41 +29,36 @@ public class MediaProxyDTOBuildContext extends ManagerDTOBuildContext {
     }
 
     @Override
-    public Collection<HobsonVariable> getDeviceVariables(DeviceContext dctx) {
-        List<HobsonVariable> results = new ArrayList<>();
-        for (HobsonVariable v : variableManager.getDeviceVariables(dctx)) {
+    public Collection<DeviceVariable> getDeviceVariables(DeviceContext dctx) {
+        List<DeviceVariable> results = new ArrayList<>();
+        for (DeviceVariable v : deviceManager.getDeviceVariables(dctx)) {
             results.add(createStubVariableIfNecessary(dctx.getHubContext(), v));
         }
         return results;
     }
 
     @Override
-    public HobsonVariable getDeviceVariable(DeviceContext dctx, String name) {
-        return createStubVariableIfNecessary(dctx.getHubContext(), variableManager.getVariable(VariableContext.create(dctx, name)));
+    public DeviceVariable getDeviceVariable(DeviceVariableContext vctx) {
+        return createStubVariableIfNecessary(vctx.getHubContext(), deviceManager.getDeviceVariable(vctx));
     }
 
-    private HobsonVariable createStubVariableIfNecessary(HubContext hctx, HobsonVariable v) {
-        if (v.hasMediaType()) {
-            return new ImmutableHobsonVariable(
-                v.getContext(),
-                v.getMask(),
-                getProxyValue(hctx, v),
-                v.getLastUpdate(),
-                v.getMediaType()
-            );
+    private DeviceVariable createStubVariableIfNecessary(HubContext hctx, DeviceVariable v) {
+        if (v != null && v.getDescription().hasMediaType()) {
+            return new DeviceVariable(v.getDescription(), getProxyValue(hctx, v), v.getLastUpdate());
         } else {
             return v;
         }
     }
 
-    private Object getProxyValue(HubContext hctx, HobsonVariable v) {
+    private Object getProxyValue(HubContext hctx, DeviceVariable v) {
         Object value = null;
 
         if (v != null) {
             value = v.getValue();
-            if (v.hasMediaType()) {
+            DeviceVariableDescription vd = v.getDescription();
+            if (vd != null && vd.hasMediaType()) {
                 value = apiRoot + new Template(MediaProxyResource.PATH).format(
-                    createParamMap(hctx, v.getPluginId(), v.getDeviceId(), v.getName())
+                    createParamMap(hctx, vd.getContext().getPluginId(), vd.getContext().getDeviceId(), vd.getName())
                 );
             }
         }

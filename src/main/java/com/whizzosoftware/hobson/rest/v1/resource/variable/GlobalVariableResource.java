@@ -7,11 +7,12 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.variable;
 
+import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.api.plugin.PluginContext;
-import com.whizzosoftware.hobson.api.variable.HobsonVariable;
-import com.whizzosoftware.hobson.api.variable.VariableContext;
-import com.whizzosoftware.hobson.api.variable.VariableManager;
+import com.whizzosoftware.hobson.api.variable.DeviceVariableDescription;
+import com.whizzosoftware.hobson.api.variable.GlobalVariable;
+import com.whizzosoftware.hobson.api.variable.GlobalVariableContext;
 import com.whizzosoftware.hobson.dto.variable.HobsonVariableDTO;
 import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
@@ -23,15 +24,15 @@ import org.restlet.representation.Representation;
 import javax.inject.Inject;
 
 public class GlobalVariableResource extends SelfInjectingServerResource {
-    public static final String PATH = "/hubs/{hubId}/globalVariables/{variableName}";
+    public static final String PATH = "/hubs/{hubId}/plugins/{pluginId}/globalVariables/{variableName}";
 
     @Inject
-    VariableManager variableManager;
+    HubManager hubManager;
     @Inject
     IdProvider idProvider;
 
     /**
-     * @api {get} /api/v1/users/:userId/hubs/:hubId/globalVariables/:name Get global variable
+     * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/globalVariables/:name Get global variable
      * @apiVersion 0.1.7
      * @apiName GetGlobalVariable
      * @apiDescription Retrieves a global variable (i.e. a variable not associated with a particular device).
@@ -48,12 +49,15 @@ public class GlobalVariableResource extends SelfInjectingServerResource {
     protected Representation get() {
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
+        String pluginId = getAttribute(JSONAttributes.PLUGIN_ID);
         String varName = getAttribute(JSONAttributes.VARIABLE_NAME);
-        HobsonVariable v = variableManager.getVariable(VariableContext.createGlobal(PluginContext.create(ctx.getHubContext(), null), varName));
+
+        GlobalVariableContext gctx = GlobalVariableContext.create(PluginContext.create(ctx.getHubContext(), pluginId), varName);
+        GlobalVariable v = hubManager.getGlobalVariable(gctx);
         return new JsonRepresentation(
-            new HobsonVariableDTO.Builder(idProvider.createGlobalVariableId(ctx.getHubContext(), varName))
-                .name(v.getName())
-                .mask(v.getMask())
+            new HobsonVariableDTO.Builder(idProvider.createGlobalVariableId(gctx))
+                .name(v.getDescription().getName())
+                .mask(DeviceVariableDescription.Mask.READ_ONLY) // TODO
                 .lastUpdate(v.getLastUpdate())
                 .value(v.getValue())
                 .build()

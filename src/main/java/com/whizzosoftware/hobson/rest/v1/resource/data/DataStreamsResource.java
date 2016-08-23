@@ -120,7 +120,7 @@ public class DataStreamsResource extends SelfInjectingServerResource {
 
             List<DataStreamField> fields = new ArrayList<>();
             for (DataStreamFieldDTO v : dto.getFields()) {
-                fields.add(new DataStreamField(v.getId(), v.getName(), idProvider.createVariableContext(v.getVariable().getId())));
+                fields.add(new DataStreamField(v.getId(), v.getName(), idProvider.createDeviceVariableContext(v.getVariable().getId())));
             }
 
             dataStreamManager.createDataStream(ctx.getUserId(), dto.getName(), fields, null);
