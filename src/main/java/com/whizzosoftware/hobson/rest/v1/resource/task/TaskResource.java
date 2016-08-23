@@ -161,7 +161,7 @@ public class TaskResource extends SelfInjectingServerResource {
     @Override
     protected Representation post(Representation entity) {
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
-        taskManager.executeTask(TaskContext.create(ctx.getHubContext(), getAttribute("taskId")));
+        taskManager.fireTaskTrigger(TaskContext.create(ctx.getHubContext(), getAttribute("taskId")));
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();
     }
