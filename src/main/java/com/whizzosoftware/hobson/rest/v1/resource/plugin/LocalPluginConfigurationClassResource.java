@@ -9,7 +9,7 @@ package com.whizzosoftware.hobson.rest.v1.resource.plugin;
 
 import com.whizzosoftware.hobson.api.HobsonNotFoundException;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
-import com.whizzosoftware.hobson.api.plugin.HobsonPlugin;
+import com.whizzosoftware.hobson.api.plugin.HobsonLocalPluginDescriptor;
 import com.whizzosoftware.hobson.api.plugin.PluginContext;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
 import com.whizzosoftware.hobson.api.property.PropertyContainerClass;
@@ -63,7 +63,7 @@ public class LocalPluginConfigurationClassResource extends SelfInjectingServerRe
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
         PluginContext pctx = PluginContext.create(ctx.getHubContext(), getAttribute("pluginId"));
-        HobsonPlugin plugin = pluginManager.getLocalPlugin(pctx);
+        HobsonLocalPluginDescriptor plugin = pluginManager.getLocalPlugin(pctx);
         if (plugin != null) {
             PropertyContainerClass pcc = plugin.getConfigurationClass();
             if (pcc != null) {

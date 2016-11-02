@@ -7,9 +7,8 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.device;
 
-import com.whizzosoftware.hobson.api.device.DeviceDescription;
+import com.whizzosoftware.hobson.api.device.HobsonDeviceDescriptor;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
-import com.whizzosoftware.hobson.api.variable.DeviceVariableContext;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.dto.*;
@@ -83,7 +82,7 @@ public class DevicesResource extends SelfInjectingServerResource {
 
         ItemListDTO results = new ItemListDTO(idProvider.createDevicesId(ctx.getHubContext()));
 
-        Collection<DeviceDescription> devices = deviceManager.getAllDeviceDescriptions(ctx.getHubContext());
+        Collection<HobsonDeviceDescriptor> devices = deviceManager.getDevices(ctx.getHubContext());
         TreeMap<String, Long> etagMap = new TreeMap<>();
 
         if (devices != null) {
@@ -92,8 +91,8 @@ public class DevicesResource extends SelfInjectingServerResource {
 
             expansions.pushContext(JSONAttributes.ITEM);
 
-            for (DeviceDescription device : devices) {
-                if ((varFilter == null || deviceManager.hasDeviceVariableValue(DeviceVariableContext.create(device.getContext(), varFilter))) && (typeFilter == null || device.getDeviceType().toString().equals(typeFilter))) {
+            for (HobsonDeviceDescriptor device : devices) {
+                if ((varFilter == null || device.hasVariable(varFilter)) && (typeFilter == null || device.getType().toString().equals(typeFilter))) {
                     HobsonDeviceDTO dto = new HobsonDeviceDTO.Builder(
                         dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions),
                         device.getContext(),

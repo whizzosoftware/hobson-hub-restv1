@@ -1,17 +1,22 @@
-/*******************************************************************************
+/*
+ *******************************************************************************
  * Copyright (c) 2014 Whizzo Software, LLC.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/
+ *******************************************************************************
+*/
 package com.whizzosoftware.hobson.rest.v1;
 
 import com.google.inject.Inject;
 import com.whizzosoftware.hobson.rest.*;
 import com.whizzosoftware.hobson.rest.oidc.OIDCConfigProvider;
+import com.whizzosoftware.hobson.rest.v1.resource.action.ActionClassesResource;
+import com.whizzosoftware.hobson.rest.v1.resource.action.ActionSetsResource;
 import com.whizzosoftware.hobson.rest.v1.resource.hub.HubLogResource;
 import com.whizzosoftware.hobson.rest.v1.resource.hub.ShutdownResource;
+import com.whizzosoftware.hobson.rest.v1.resource.job.JobResource;
 import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceLocationResource;
 import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceLocationsResource;
 import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceEntityResource;
@@ -87,22 +92,23 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
     public Restlet createInboundRoot() {
         // create the secure router
         Router secureRouter = newRouter();
+        secureRouter.attach(ActionSetsResource.PATH, ActionSetsResource.class);
         secureRouter.attach(ActivityLogResource.PATH, ActivityLogResource.class);
         secureRouter.attach(UserInfoResource.PATH, UserInfoResource.class);
         secureRouter.attach(DataStreamsResource.PATH, DataStreamsResource.class);
         secureRouter.attach(DataStreamResource.PATH, DataStreamResource.class);
         secureRouter.attach(DataStreamDataResource.PATH, DataStreamDataResource.class);
-        secureRouter.attach(DevicePassportsResource.PATH, DevicePassportsResource.class);
-        secureRouter.attach(DevicePassportResource.PATH, DevicePassportResource.class);
         secureRouter.attach(DeviceResource.PATH, DeviceResource.class);
         secureRouter.attach(DeviceConfigurationResource.PATH, DeviceConfigurationResource.class);
         secureRouter.attach(DeviceConfigurationClassResource.PATH, DeviceConfigurationClassResource.class);
+        secureRouter.attach(DeviceNameResource.PATH, DeviceNameResource.class);
         secureRouter.attach(DevicesResource.PATH, DevicesResource.class);
         secureRouter.attach(DeviceVariableResource.PATH, DeviceVariableResource.class);
         secureRouter.attach(DeviceVariablesResource.PATH, DeviceVariablesResource.class);
         secureRouter.attach(ExecuteTaskResource.PATH, ExecuteTaskResource.class);
         secureRouter.attach(GlobalVariableResource.PATH, GlobalVariableResource.class);
         secureRouter.attach(GlobalVariablesResource.PATH, GlobalVariablesResource.class);
+        secureRouter.attach(ActionClassesResource.PATH, ActionClassesResource.class);
         secureRouter.attach(HubConfigurationResource.PATH, HubConfigurationResource.class);
         secureRouter.attach(HubConfigurationClassResource.PATH, HubConfigurationClassResource.class);
         secureRouter.attach(HubImageResource.PATH, HubImageResource.class);
@@ -116,8 +122,11 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
         secureRouter.attach(ImageLibraryGroupResource.PATH, ImageLibraryGroupResource.class);
         secureRouter.attach(ImageLibraryImageResource.PATH, ImageLibraryImageResource.class);
         secureRouter.attach(ImageLibraryRootResource.PATH, ImageLibraryRootResource.class);
+        secureRouter.attach(JobResource.PATH, JobResource.class);
         secureRouter.attach(LocalPluginsResource.PATH, LocalPluginsResource.class);
         secureRouter.attach(LocalPluginResource.PATH, LocalPluginResource.class);
+        secureRouter.attach(LocalPluginActionClassResource.PATH, LocalPluginActionClassResource.class);
+        secureRouter.attach(LocalPluginActionClassesResource.PATH, LocalPluginActionClassesResource.class);
         secureRouter.attach(LocalPluginConfigurationResource.PATH, LocalPluginConfigurationResource.class);
         secureRouter.attach(LocalPluginConfigurationClassResource.PATH, LocalPluginConfigurationClassResource.class);
         secureRouter.attach(LocalPluginImageResource.PATH, LocalPluginImageResource.class);
@@ -129,13 +138,10 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
         secureRouter.attach(PresenceEntityResource.PATH, PresenceEntityResource.class);
         secureRouter.attach(PresenceLocationsResource.PATH, PresenceLocationsResource.class);
         secureRouter.attach(PresenceLocationResource.PATH, PresenceLocationResource.class);
-        secureRouter.attach(ActivateDevicePassportResource.PATH, ActivateDevicePassportResource.class);
         secureRouter.attach(RemotePluginsResource.PATH, RemotePluginsResource.class);
         secureRouter.attach(RemotePluginResource.PATH, RemotePluginResource.class);
         secureRouter.attach(RemotePluginInstallResource.PATH, RemotePluginInstallResource.class);
         secureRouter.attach(ShutdownResource.PATH, ShutdownResource.class);
-        secureRouter.attach(TaskActionClassesResource.PATH, TaskActionClassesResource.class);
-        secureRouter.attach(TaskActionSetsResource.PATH, TaskActionSetsResource.class);
         secureRouter.attach(TaskConditionClassesResource.PATH, TaskConditionClassesResource.class);
         secureRouter.attach(TaskResource.PATH, TaskResource.class);
         secureRouter.attach(TasksResource.PATH, TasksResource.class);

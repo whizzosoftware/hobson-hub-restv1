@@ -25,7 +25,7 @@ public class RestResourceIdProviderTest {
     @Test
     public void testCreateTaskActionClassId() {
         RestResourceIdProvider provider = new RestResourceIdProvider();
-        assertEquals("/api/v1/hubs/hub1/plugins/plugin1/actionClasses/actionclass1", provider.createTaskActionClassId(PropertyContainerClassContext.create("hub1", "plugin1", null, "actionclass1")));
+        assertEquals("/api/v1/hubs/hub1/plugins/local/plugin1/actionClasses/actionclass1", provider.createActionClassId(PropertyContainerClassContext.create("hub1", "plugin1", null, "actionclass1")));
     }
 
     @Test

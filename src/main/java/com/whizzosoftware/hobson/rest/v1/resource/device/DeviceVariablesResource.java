@@ -1,18 +1,21 @@
-/*******************************************************************************
+/*
+ *******************************************************************************
  * Copyright (c) 2014 Whizzo Software, LLC.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/
+ *******************************************************************************
+*/
 package com.whizzosoftware.hobson.rest.v1.resource.device;
 
 import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
 import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
-import com.whizzosoftware.hobson.api.variable.DeviceVariable;
 import com.whizzosoftware.hobson.api.variable.DeviceVariableContext;
+import com.whizzosoftware.hobson.api.variable.DeviceVariableDescriptor;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
+import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
 import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.api.HobsonNotFoundException;
 import com.whizzosoftware.hobson.api.device.DeviceContext;
@@ -47,6 +50,8 @@ public class DeviceVariablesResource extends SelfInjectingServerResource {
     @Inject
     DeviceManager deviceManager;
     @Inject
+    DTOBuildContextFactory contextFactory;
+    @Inject
     IdProvider idProvider;
 
     /**
@@ -77,14 +82,16 @@ public class DeviceVariablesResource extends SelfInjectingServerResource {
         DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
         ItemListDTO results = new ItemListDTO(idProvider.createDeviceVariablesId(dctx));
 
-        Collection<DeviceVariable> variables = deviceManager.getDeviceVariables(dctx);
+        Collection<DeviceVariableDescriptor> variables = deviceManager.getDevice(dctx).getVariables();
         if (variables != null) {
             boolean showDetails = expansions.has(JSONAttributes.ITEM);
             expansions.pushContext(JSONAttributes.ITEM);
-            for (DeviceVariable v : variables) {
+            for (DeviceVariableDescriptor v : variables) {
                 HobsonVariableDTO dto = new HobsonVariableDTO.Builder(
+                    contextFactory.createContext(ctx.getApiRoot(), null),
                     idProvider.createDeviceVariableId(v.getContext()),
                     v,
+                    deviceManager.getDeviceVariable(v.getContext()),
                     showDetails
                 ).build();
                 results.add(dto);

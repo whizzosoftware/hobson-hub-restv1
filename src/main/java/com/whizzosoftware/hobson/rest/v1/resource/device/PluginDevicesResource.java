@@ -11,9 +11,6 @@ import com.whizzosoftware.hobson.api.device.*;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.api.plugin.PluginContext;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
-import com.whizzosoftware.hobson.api.property.PropertyContainerClass;
-import com.whizzosoftware.hobson.api.property.PropertyContainerClassContext;
-import com.whizzosoftware.hobson.api.property.PropertyContainerClassProvider;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
 import com.whizzosoftware.hobson.dto.device.HobsonDeviceDTO;
@@ -21,12 +18,9 @@ import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
-import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import org.restlet.data.MediaType;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
-import org.restlet.representation.EmptyRepresentation;
 import org.restlet.representation.Representation;
 
 import javax.inject.Inject;
@@ -81,7 +75,7 @@ public class PluginDevicesResource extends SelfInjectingServerResource {
 
         expansions.pushContext(JSONAttributes.ITEM);
 
-        for (DeviceDescription device : deviceManager.getAllDeviceDescriptions(PluginContext.create(ctx.getHubContext(), getAttribute("pluginId")))) {
+        for (HobsonDeviceDescriptor device : deviceManager.getDevices(PluginContext.create(ctx.getHubContext(), getAttribute("pluginId")))) {
             results.add(
                 new HobsonDeviceDTO.Builder(
                     dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions),
@@ -98,22 +92,23 @@ public class PluginDevicesResource extends SelfInjectingServerResource {
         return jr;
     }
 
-    @Override
-    protected Representation post(Representation entity) {
-        final HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
-        final PluginContext pctx = PluginContext.create(ctx.getHubContext(), getAttribute("pluginId"));
-        final HobsonDeviceDTO dto = new HobsonDeviceDTO.Builder(JSONHelper.createJSONFromRepresentation(entity)).build();
-        final DeviceType deviceType = dto.getType();
-
-        PropertyContainerClassProvider pccp = new PropertyContainerClassProvider() {
-            @Override
-            public PropertyContainerClass getPropertyContainerClass(PropertyContainerClassContext ctx) {
-                return deviceManager.getDeviceTypeConfigurationClass(pctx, deviceType);
-            }
-        };
-
-        deviceManager.sendDeviceHint(new DeviceDescription.Builder(DeviceContext.create(pctx, null)).name(dto.getName()).type(deviceType).build(), DTOMapper.mapPropertyContainerDTO(dto.getConfiguration(), pccp, idProvider));
-        return new EmptyRepresentation();
-    }
+//    @Override
+//    protected Representation post(Representation entity) {
+//        final HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
+//        final PluginContext pctx = PluginContext.create(ctx.getHubContext(), getAttribute("pluginId"));
+//        final HobsonDeviceDTO dto = new HobsonDeviceDTO.Builder(JSONHelper.createJSONFromRepresentation(entity)).build();
+//        final DeviceType type = dto.getType();
+//
+//        PropertyContainerClassProvider pccp = new PropertyContainerClassProvider() {
+//            @Override
+//            public PropertyContainerClass getPropertyContainerClass(PropertyContainerClassContext ctx) {
+//                return deviceManager.getPluginDeviceType(pctx, type).getConfig();
+//            }
+//        };
+//
+//        AddDeviceResult adr = deviceManager.addDevice(pctx, type, dto.getName(), DTOMapper.mapPropertyContainerDTO(dto.getConfiguration(), pccp, idProvider));
+//        getResponse().setLocationRef(idProvider.createJobId(ctx.getHubContext(), adr.getJobId()));
+//        return new EmptyRepresentation();
+//    }
 
 }

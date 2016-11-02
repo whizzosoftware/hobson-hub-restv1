@@ -10,9 +10,9 @@ package com.whizzosoftware.hobson.rest.v1.resource.variable;
 import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.api.plugin.PluginContext;
-import com.whizzosoftware.hobson.api.variable.DeviceVariableDescription;
 import com.whizzosoftware.hobson.api.variable.GlobalVariable;
 import com.whizzosoftware.hobson.api.variable.GlobalVariableContext;
+import com.whizzosoftware.hobson.api.variable.VariableMask;
 import com.whizzosoftware.hobson.dto.variable.HobsonVariableDTO;
 import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
@@ -57,7 +57,7 @@ public class GlobalVariableResource extends SelfInjectingServerResource {
         return new JsonRepresentation(
             new HobsonVariableDTO.Builder(idProvider.createGlobalVariableId(gctx))
                 .name(v.getDescription().getName())
-                .mask(DeviceVariableDescription.Mask.READ_ONLY) // TODO
+                .mask(VariableMask.READ_ONLY) // TODO
                 .lastUpdate(v.getLastUpdate())
                 .value(v.getValue())
                 .build()

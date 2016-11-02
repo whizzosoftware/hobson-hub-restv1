@@ -9,6 +9,7 @@ package com.whizzosoftware.hobson.rest.v1.resource.device;
 
 import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.device.DeviceManager;
+import com.whizzosoftware.hobson.api.device.HobsonDeviceDescriptor;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.api.property.*;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
@@ -70,7 +71,7 @@ public class DeviceConfigurationResource extends SelfInjectingServerResource {
                 new PropertyContainerClassProvider() {
                     @Override
                     public PropertyContainerClass getPropertyContainerClass(PropertyContainerClassContext ctx) {
-                        return deviceManager.getDeviceConfigurationClass(dctx);
+                        return deviceManager.getDevice(dctx).getConfigurationClass();
                     }
                 },
                 PropertyContainerClassType.DEVICE_CONFIG,
@@ -106,7 +107,8 @@ public class DeviceConfigurationResource extends SelfInjectingServerResource {
         DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
         PropertyContainerDTO dto = new PropertyContainerDTO.Builder(JSONHelper.createJSONFromRepresentation(entity)).build();
 
-        deviceManager.setDeviceConfigurationProperties(dctx, dto.getValues(), true);
+        HobsonDeviceDescriptor desc = deviceManager.getDevice(dctx);
+        deviceManager.setDeviceConfiguration(dctx, desc.getConfigurationClass(), dto.getValues());
 
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();

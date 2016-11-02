@@ -8,8 +8,7 @@
 package com.whizzosoftware.hobson.rest.v1.resource.plugin;
 
 import com.whizzosoftware.hobson.api.persist.IdProvider;
-import com.whizzosoftware.hobson.api.plugin.PluginContext;
-import com.whizzosoftware.hobson.api.plugin.PluginDescriptor;
+import com.whizzosoftware.hobson.api.plugin.HobsonPluginDescriptor;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
@@ -17,7 +16,6 @@ import com.whizzosoftware.hobson.dto.plugin.HobsonPluginDTO;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.PluginDescriptorAdaptor;
 import org.restlet.data.MediaType;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -69,16 +67,17 @@ public class RemotePluginsResource extends SelfInjectingServerResource {
         ItemListDTO results = new ItemListDTO(idProvider.createRemotePluginsId(ctx.getHubContext()), true);
 
         boolean itemExpand = expansions.has("item");
-        for (PluginDescriptor pd : pluginManager.getRemotePluginDescriptors(ctx.getHubContext())) {
+        for (HobsonPluginDescriptor pd : pluginManager.getRemotePlugins(ctx.getHubContext())) {
             HobsonPluginDTO dto = new HobsonPluginDTO.Builder(
                 dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions),
-                new PluginDescriptorAdaptor(pd, null),
+                ctx.getHubContext(),
+                pd,
                 pd.getDescription(),
-                pd.getVersionString(),
+                pd.getVersion(),
                 itemExpand
             ).build();
             if (itemExpand) {
-                dto.addLink("install", idProvider.createRemotePluginInstallId(PluginContext.create(ctx.getHubContext(), pd.getId()), pd.getVersionString()));
+                dto.addLink("install", idProvider.createRemotePluginInstallId(ctx.getHubContext(), pd.getId(), pd.getVersion()));
             }
             results.add(dto);
         }

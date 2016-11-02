@@ -71,7 +71,7 @@ public class TaskConditionClassesResource extends SelfInjectingServerResource {
         }
 
         ItemListDTO results = new ItemListDTO(idProvider.createTaskConditionClassesId(ctx.getHubContext()));
-        for (TaskConditionClass conditionClass : taskManager.getAllConditionClasses(ctx.getHubContext(), type, applyConstraints)) {
+        for (TaskConditionClass conditionClass : taskManager.getConditionClasses(ctx.getHubContext(), type, applyConstraints)) {
             TaskConditionClassDTO.Builder builder = new TaskConditionClassDTO.Builder(
                     idProvider.createTaskConditionClassId(conditionClass.getContext())
             );

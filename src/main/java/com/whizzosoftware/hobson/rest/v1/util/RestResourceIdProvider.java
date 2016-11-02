@@ -21,10 +21,14 @@ import com.whizzosoftware.hobson.api.task.TaskContext;
 import com.whizzosoftware.hobson.api.variable.DeviceVariableContext;
 import com.whizzosoftware.hobson.api.variable.GlobalVariableContext;
 import com.whizzosoftware.hobson.json.JSONAttributes;
+import com.whizzosoftware.hobson.rest.v1.resource.action.ActionClassesResource;
+import com.whizzosoftware.hobson.rest.v1.resource.action.ActionSetResource;
+import com.whizzosoftware.hobson.rest.v1.resource.action.ActionSetsResource;
 import com.whizzosoftware.hobson.rest.v1.resource.activity.ActivityLogResource;
 import com.whizzosoftware.hobson.rest.v1.resource.hub.HubLogResource;
 import com.whizzosoftware.hobson.rest.v1.resource.device.*;
 import com.whizzosoftware.hobson.rest.v1.resource.hub.*;
+import com.whizzosoftware.hobson.rest.v1.resource.job.JobResource;
 import com.whizzosoftware.hobson.rest.v1.resource.plugin.*;
 import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceLocationResource;
 import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceEntitiesResource;
@@ -105,13 +109,13 @@ public class RestResourceIdProvider implements IdProvider {
     }
 
     @Override
-    public String createTaskActionClassesId(HubContext ctx) {
-        return new Template(apiRoot + TaskActionClassesResource.PATH).format(createHubValues(ctx));
+    public String createActionClassesId(HubContext ctx) {
+        return new Template(apiRoot + ActionClassesResource.PATH).format(createHubValues(ctx));
     }
 
     @Override
-    public String createTaskActionClassId(PropertyContainerClassContext ctx) {
-        Template t = new Template(apiRoot + TaskActionClassResource.PATH);
+    public String createActionClassId(PropertyContainerClassContext ctx) {
+        Template t = new Template(apiRoot + LocalPluginActionClassResource.PATH);
         Map<String,String> values = createPluginValues(ctx.getPluginContext());
         values.put(JSONAttributes.ACTION_CLASS_ID, ctx.getContainerClassId());
         return t.format(values);
@@ -119,7 +123,7 @@ public class RestResourceIdProvider implements IdProvider {
 
     @Override
     public String createTaskActionSetId(HubContext ctx, String actionSetId) {
-        Template t = new Template(apiRoot + TaskActionSetResource.PATH);
+        Template t = new Template(apiRoot + ActionSetResource.PATH);
         Map<String,String> values = createHubValues(ctx);
         values.put(JSONAttributes.ACTION_SET_ID, actionSetId);
         return t.format(values);
@@ -170,6 +174,13 @@ public class RestResourceIdProvider implements IdProvider {
     @Override
     public String createHubUploadCredentialsId(HubContext ctx) {
         return null;
+    }
+
+    @Override
+    public String createJobId(HubContext ctx, String jobId) {
+        Map<String,String> values = createHubValues(ctx);
+        values.put(JSONAttributes.JOB_ID, jobId);
+        return new Template(apiRoot + JobResource.PATH).format(values);
     }
 
     @Override
@@ -224,7 +235,7 @@ public class RestResourceIdProvider implements IdProvider {
                 case CONDITION:
                     return createTaskConditionClassId(pccc);
                 case ACTION:
-                    return createTaskActionClassId(pccc);
+                    return createActionClassId(pccc);
                 case HUB_CONFIG:
                     return createHubConfigurationClassId(pccc.getHubContext());
                 case PLUGIN_CONFIG:
@@ -270,9 +281,10 @@ public class RestResourceIdProvider implements IdProvider {
     }
 
     @Override
-    public String createRemotePluginId(PluginContext ctx, String version) {
+    public String createRemotePluginId(HubContext ctx, String pluginId, String version) {
         Template t = new Template(apiRoot + RemotePluginResource.PATH);
-        Map<String,String> values = createPluginValues(ctx);
+        Map<String,String> values = createHubValues(ctx);
+        values.put(JSONAttributes.PLUGIN_ID, pluginId);
         values.put(JSONAttributes.PLUGIN_VERSION, version);
         return t.format(values);
     }
@@ -285,6 +297,11 @@ public class RestResourceIdProvider implements IdProvider {
     @Override
     public String createDeviceConfigurationId(DeviceContext ctx) {
         return new Template(apiRoot + DeviceConfigurationResource.PATH).format(createDeviceValues(ctx));
+    }
+
+    @Override
+    public String createDeviceNameId(DeviceContext ctx) {
+        return new Template(apiRoot + DeviceNameResource.PATH).format(createDeviceValues(ctx));
     }
 
     @Override
@@ -334,16 +351,17 @@ public class RestResourceIdProvider implements IdProvider {
     }
 
     @Override
-    public String createRemotePluginInstallId(PluginContext ctx, String version) {
+    public String createRemotePluginInstallId(HubContext ctx, String pluginId, String version) {
         Template t = new Template(apiRoot + RemotePluginInstallResource.PATH);
-        Map<String,String> values = createPluginValues(ctx);
+        Map<String,String> values = createHubValues(ctx);
+        values.put(JSONAttributes.PLUGIN_ID, pluginId);
         values.put(JSONAttributes.PLUGIN_VERSION, version);
         return t.format(values);
     }
 
     @Override
     public String createTaskActionSetsId(HubContext ctx) {
-        return new Template(apiRoot + TaskActionSetsResource.PATH).format(createHubValues(ctx));
+        return new Template(apiRoot + ActionSetsResource.PATH).format(createHubValues(ctx));
     }
 
     @Override
@@ -489,19 +507,6 @@ public class RestResourceIdProvider implements IdProvider {
     @Override
     public String createRepositoriesId(HubContext ctx) {
         return new Template(apiRoot + HubRemoteRepositoriesResource.PATH).format(createHubValues(ctx));
-    }
-
-    @Override
-    public String createDevicePassportsId(HubContext ctx) {
-        return new Template(apiRoot + DevicePassportsResource.PATH).format(createHubValues(ctx));
-    }
-
-    @Override
-    public String createDevicePassportId(HubContext ctx, String passportId) {
-        Template t = new Template(apiRoot + DevicePassportResource.PATH);
-        Map<String,String> values = createHubValues(ctx);
-        values.put(JSONAttributes.PASSPORT_ID, passportId);
-        return t.format(values);
     }
 
     @Override

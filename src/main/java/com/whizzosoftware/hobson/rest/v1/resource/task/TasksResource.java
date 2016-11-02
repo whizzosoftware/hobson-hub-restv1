@@ -77,7 +77,7 @@ public class TasksResource extends SelfInjectingServerResource {
         ItemListDTO results = new ItemListDTO(idProvider.createTasksId(ctx.getHubContext()));
         boolean showDetails = expansions.has("item");
 
-        Collection<HobsonTask> tasks = taskManager.getAllTasks(ctx.getHubContext());
+        Collection<HobsonTask> tasks = taskManager.getTasks(ctx.getHubContext());
 
         if (tasks != null) {
             expansions.pushContext(JSONAttributes.ITEM);
@@ -175,7 +175,7 @@ public class TasksResource extends SelfInjectingServerResource {
     protected Representation delete() {
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
-        for (HobsonTask task : taskManager.getAllTasks(ctx.getHubContext())) {
+        for (HobsonTask task : taskManager.getTasks(ctx.getHubContext())) {
             taskManager.deleteTask(task.getContext());
         }
 

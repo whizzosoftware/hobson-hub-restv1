@@ -9,7 +9,7 @@ package com.whizzosoftware.hobson.rest.v1.resource.plugin;
 
 import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
-import com.whizzosoftware.hobson.api.plugin.HobsonPlugin;
+import com.whizzosoftware.hobson.api.plugin.HobsonLocalPluginDescriptor;
 import com.whizzosoftware.hobson.api.plugin.PluginContext;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
 import com.whizzosoftware.hobson.api.property.*;
@@ -73,7 +73,7 @@ public class LocalPluginConfigurationResource extends SelfInjectingServerResourc
 
         String pluginId = getAttribute("pluginId");
         PluginContext pctx = PluginContext.create(ctx.getHubContext(), pluginId);
-        final HobsonPlugin plugin = pluginManager.getLocalPlugin(pctx);
+        final HobsonLocalPluginDescriptor plugin = pluginManager.getLocalPlugin(pctx);
         PropertyContainer config = pluginManager.getLocalPluginConfiguration(pctx);
 
         PropertyContainerDTO dto = new PropertyContainerDTO.Builder(
@@ -122,7 +122,7 @@ public class LocalPluginConfigurationResource extends SelfInjectingServerResourc
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
         PluginContext pc = PluginContext.create(ctx.getHubContext(), getAttribute("pluginId"));
-        final HobsonPlugin plugin = pluginManager.getLocalPlugin(pc);
+        final HobsonLocalPluginDescriptor plugin = pluginManager.getLocalPlugin(pc);
 
         PropertyContainerDTO dto = new PropertyContainerDTO.Builder(JSONHelper.createJSONFromRepresentation(entity)).build();
 

@@ -9,8 +9,8 @@ package com.whizzosoftware.hobson.rest.v1.resource.variable;
 
 import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
-import com.whizzosoftware.hobson.api.variable.DeviceVariableDescription;
 import com.whizzosoftware.hobson.api.variable.GlobalVariable;
+import com.whizzosoftware.hobson.api.variable.VariableMask;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.dto.variable.HobsonVariableDTO;
@@ -58,11 +58,11 @@ public class GlobalVariablesResource extends SelfInjectingServerResource {
         ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
 
         ItemListDTO results = new ItemListDTO(idProvider.createGlobalVariablesId(ctx.getHubContext()));
-        for (GlobalVariable v : hubManager.getAllGlobalVariables(ctx.getHubContext())) {
+        for (GlobalVariable v : hubManager.getGlobalVariables(ctx.getHubContext())) {
             HobsonVariableDTO.Builder builder = new HobsonVariableDTO.Builder(idProvider.createGlobalVariableId(v.getDescription().getContext()));
             if (expansions.has("item")) {
                 builder.name(v.getDescription().getName())
-                    .mask(DeviceVariableDescription.Mask.READ_ONLY)
+                    .mask(VariableMask.READ_ONLY)
                     .lastUpdate(v.getLastUpdate())
                     .value(v.getValue());
             }

@@ -90,9 +90,7 @@ public class DTOMapperTest {
             public PropertyContainerClass getPropertyContainerClass(PropertyContainerClassContext ctx) {
                 return new PropertyContainerClass(
                     PropertyContainerClassContext.create(HubContext.createLocal(), "ccid"),
-                    "name",
                     PropertyContainerClassType.CONDITION,
-                    "",
                     properties
                 );
             }
@@ -139,9 +137,7 @@ public class DTOMapperTest {
             public PropertyContainerClass getPropertyContainerClass(PropertyContainerClassContext ctx) {
                 return new PropertyContainerClass(
                     PropertyContainerClassContext.create(HubContext.createLocal(), "ccid"),
-                    "name",
                     PropertyContainerClassType.ACTION,
-                    "",
                     properties
                 );
             }
@@ -226,9 +222,7 @@ public class DTOMapperTest {
             public PropertyContainerClass getPropertyContainerClass(PropertyContainerClassContext ctx) {
             return new PropertyContainerClass(
                 PropertyContainerClassContext.create(HubContext.createLocal(), "ccid"),
-                "name",
                 PropertyContainerClassType.PLUGIN_CONFIG,
-                "",
                 properties
             );
             }
@@ -281,9 +275,7 @@ public class DTOMapperTest {
                 props.add(new TypedProperty.Builder("devices", "devices", "devices", TypedProperty.Type.DEVICES).build());
                 return new PropertyContainerClass(
                     PropertyContainerClassContext.create(PluginContext.createLocal("com.whizzosoftware.hobson.hub.hobson-hub-scheduler"), "schedule"),
-                    "schedule",
                     PropertyContainerClassType.CONDITION,
-                    "",
                     props
                 );
             }

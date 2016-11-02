@@ -24,9 +24,9 @@ import com.whizzosoftware.hobson.dto.property.TypedPropertyDTO;
 import com.whizzosoftware.hobson.json.TypedPropertyValueSerializer;
 import com.whizzosoftware.hobson.rest.v1.resource.device.DeviceConfigurationClassResource;
 import com.whizzosoftware.hobson.rest.v1.resource.hub.HubConfigurationClassResource;
+import com.whizzosoftware.hobson.rest.v1.resource.plugin.LocalPluginActionClassResource;
 import com.whizzosoftware.hobson.rest.v1.resource.plugin.LocalPluginConfigurationClassResource;
 import com.whizzosoftware.hobson.rest.v1.resource.presence.PresenceLocationResource;
-import com.whizzosoftware.hobson.rest.v1.resource.task.TaskActionClassResource;
 import com.whizzosoftware.hobson.rest.v1.resource.task.TaskConditionClassResource;
 import org.json.JSONException;
 import org.restlet.routing.Template;
@@ -48,7 +48,7 @@ public class DTOMapper {
     private static Template presenceLocationTemplate;
 
     static {
-        actionClassesTemplate = new Template(RestResourceIdProvider.API_ROOT + TaskActionClassResource.PATH);
+        actionClassesTemplate = new Template(RestResourceIdProvider.API_ROOT + LocalPluginActionClassResource.PATH);
         conditionClassesTemplate = new Template(RestResourceIdProvider.API_ROOT + TaskConditionClassResource.PATH);
         hubConfigClassesTemplate = new Template(RestResourceIdProvider.API_ROOT + HubConfigurationClassResource.PATH);
         pluginConfigClassesTemplate = new Template(RestResourceIdProvider.API_ROOT + LocalPluginConfigurationClassResource.PATH);
@@ -195,7 +195,7 @@ public class DTOMapper {
             PropertyContainerClassType type = createPropertyContainerClassType(dto.getId());
             if (type != null) {
                 pcc = new PropertyContainerClass(createPropertyContainerClassContext(type, dto.getId()), type);
-                pcc.setName(dto.getName());
+//                pcc.setName(dto.getName());
                 pcc.setSupportedProperties(mapTypedPropertyDTOList(dto.getSupportedProperties()));
             }
         }

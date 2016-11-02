@@ -15,7 +15,6 @@ import com.whizzosoftware.hobson.dto.plugin.HobsonPluginDTO;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.PluginDescriptorAdaptor;
 import org.restlet.data.MediaType;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -66,13 +65,14 @@ public class LocalPluginsResource extends SelfInjectingServerResource {
         ItemListDTO results = new ItemListDTO(idProvider.createLocalPluginsId(ctx.getHubContext()));
 
         boolean itemExpand = expansions.has("item");
-        for (PluginDescriptor pd : pluginManager.getLocalPluginDescriptors(ctx.getHubContext())) {
-            PluginContext pctx = PluginContext.create(ctx.getHubContext(), pd.getId());
-            final HobsonPlugin plugin = pd.isConfigurable() ? pluginManager.getLocalPlugin(pctx) : null;
+        for (HobsonLocalPluginDescriptor plugin : pluginManager.getLocalPlugins(ctx.getHubContext())) {
+//            PluginContext pctx = PluginContext.create(ctx.getHubContext(), pd.getId());
+//            final HobsonPlugin plugin = pd.isConfigurable() ? pluginManager.getLocalPlugin(pctx) : null;
             results.add(new HobsonPluginDTO.Builder(
                 dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions),
-                new PluginDescriptorAdaptor(pd, plugin),
-                pd.getDescription(),
+                ctx.getHubContext(),
+                plugin,
+                plugin.getDescription(),
                 null,
                 itemExpand
             ).build());

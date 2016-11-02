@@ -1,10 +1,12 @@
-/*******************************************************************************
+/*
+ *******************************************************************************
  * Copyright (c) 2014 Whizzo Software, LLC.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/
+ *******************************************************************************
+*/
 package com.whizzosoftware.hobson.rest.v1.resource.device;
 
 import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
@@ -12,8 +14,9 @@ import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.api.event.EventManager;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
-import com.whizzosoftware.hobson.api.variable.DeviceVariable;
 import com.whizzosoftware.hobson.api.variable.DeviceVariableContext;
+import com.whizzosoftware.hobson.api.variable.DeviceVariableDescriptor;
+import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
 import com.whizzosoftware.hobson.dto.variable.HobsonVariableDTO;
 import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
@@ -48,6 +51,8 @@ public class DeviceVariableResource extends SelfInjectingServerResource {
     @Inject
     EventManager eventManager;
     @Inject
+    DTOBuildContextFactory contextFactory;
+    @Inject
     IdProvider idProvider;
 
     /**
@@ -70,11 +75,13 @@ public class DeviceVariableResource extends SelfInjectingServerResource {
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
         DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute(JSONAttributes.PLUGIN_ID), getAttribute(JSONAttributes.DEVICE_ID));
-        DeviceVariable var = deviceManager.getDeviceVariable(DeviceVariableContext.create(dctx, getAttribute(JSONAttributes.VARIABLE_NAME)));
+        DeviceVariableDescriptor var = deviceManager.getDevice(dctx).getVariable(getAttribute(JSONAttributes.VARIABLE_NAME));
 
         HobsonVariableDTO dto = new HobsonVariableDTO.Builder(
+            contextFactory.createContext(ctx.getApiRoot(), null),
             idProvider.createDeviceVariableId(var.getContext()),
             var,
+            deviceManager.getDeviceVariable(var.getContext()),
             true
         ).build();
 

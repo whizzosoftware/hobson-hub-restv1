@@ -7,7 +7,7 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.plugin;
 
-import com.whizzosoftware.hobson.api.plugin.HobsonPlugin;
+import com.whizzosoftware.hobson.api.plugin.HobsonLocalPluginDescriptor;
 import com.whizzosoftware.hobson.api.plugin.PluginContext;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
@@ -70,10 +70,11 @@ public class LocalPluginResource extends SelfInjectingServerResource {
         ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
 
         PluginContext pctx = PluginContext.create(ctx.getHubContext(), getAttribute("pluginId"));
-        HobsonPlugin plugin = pluginManager.getLocalPlugin(pctx);
+        HobsonLocalPluginDescriptor plugin = pluginManager.getLocalPlugin(pctx);
 
         HobsonPluginDTO dto = new HobsonPluginDTO.Builder(
             dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions),
+            ctx.getHubContext(),
             plugin,
             null,
             null,
