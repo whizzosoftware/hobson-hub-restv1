@@ -78,7 +78,7 @@ public class ActionClassesResource extends SelfInjectingServerResource {
                 if (id == null || id.equals(ac.getContext().getContainerClassId())) {
                     ActionClassDTO.Builder builder = new ActionClassDTO.Builder(idProvider.createActionClassId(ac.getContext()), DTOMapper.mapTypedPropertyList(ac.getSupportedProperties()));
                     if (expandItems) {
-                        builder.name(ac.getName()).descriptionTemplate(ac.getDescription()).taskAction(ac.isTaskAction());
+                        builder.name(ac.getName()).descriptionTemplate(ac.getDescription()).taskAction(ac.isTaskAction()).statusProvider(ac.isStatusProvider());
                     }
                     results.add(builder.build());
                 }
