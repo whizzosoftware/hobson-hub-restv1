@@ -556,6 +556,19 @@ public class RestResourceIdProvider implements IdProvider {
     }
 
     @Override
+    public String createDeviceActionClassId(DeviceContext ctx, String actionClassId) {
+        Template t = new Template(apiRoot + DeviceActionClassResource.PATH);
+        Map<String,String> map = createDeviceValues(ctx);
+        map.put(JSONAttributes.ACTION_CLASS_ID, actionClassId);
+        return t.format(map);
+    }
+
+    @Override
+    public String createDeviceActionClassesId(DeviceContext ctx) {
+        return new Template(apiRoot + DeviceActionClassesResource.PATH).format(createDeviceValues(ctx));
+    }
+
+    @Override
     public PresenceEntityContext createPresenceEntityContext(String presenceEntityId) {
         Template t = new Template(apiRoot + PresenceEntityResource.PATH);
         Map<String,Object> vars = new HashMap<>();
