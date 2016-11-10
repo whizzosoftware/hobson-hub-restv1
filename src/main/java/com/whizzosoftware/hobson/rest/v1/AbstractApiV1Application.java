@@ -98,6 +98,8 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
         secureRouter.attach(DataStreamsResource.PATH, DataStreamsResource.class);
         secureRouter.attach(DataStreamResource.PATH, DataStreamResource.class);
         secureRouter.attach(DataStreamDataResource.PATH, DataStreamDataResource.class);
+        secureRouter.attach(DeviceActionClassResource.PATH, DeviceActionClassResource.class);
+        secureRouter.attach(DeviceActionClassesResource.PATH, DeviceActionClassesResource.class);
         secureRouter.attach(DeviceResource.PATH, DeviceResource.class);
         secureRouter.attach(DeviceConfigurationResource.PATH, DeviceConfigurationResource.class);
         secureRouter.attach(DeviceConfigurationClassResource.PATH, DeviceConfigurationClassResource.class);

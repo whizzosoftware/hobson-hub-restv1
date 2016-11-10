@@ -115,8 +115,15 @@ public class RestResourceIdProvider implements IdProvider {
 
     @Override
     public String createActionClassId(PropertyContainerClassContext ctx) {
-        Template t = new Template(apiRoot + LocalPluginActionClassResource.PATH);
-        Map<String,String> values = createPluginValues(ctx.getPluginContext());
+        Template t;
+        Map<String,String> values;
+        if (ctx.hasDeviceContext()) {
+            t = new Template(apiRoot + LocalPluginActionClassResource.PATH);
+            values = createDeviceValues(DeviceContext.create(ctx.getPluginContext(), ctx.getDeviceId()));
+        } else {
+            t = new Template(apiRoot + LocalPluginActionClassResource.PATH);
+            values = createPluginValues(ctx.getPluginContext());
+        }
         values.put(JSONAttributes.ACTION_CLASS_ID, ctx.getContainerClassId());
         return t.format(values);
     }

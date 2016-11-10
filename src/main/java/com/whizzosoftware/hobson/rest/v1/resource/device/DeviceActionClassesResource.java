@@ -7,12 +7,12 @@
  * http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************
 */
-package com.whizzosoftware.hobson.rest.v1.resource.plugin;
+package com.whizzosoftware.hobson.rest.v1.resource.device;
 
 import com.whizzosoftware.hobson.api.action.ActionClass;
 import com.whizzosoftware.hobson.api.action.ActionManager;
+import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
-import com.whizzosoftware.hobson.api.plugin.PluginContext;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.dto.action.ActionClassDTO;
@@ -27,8 +27,8 @@ import org.restlet.resource.ResourceException;
 import javax.inject.Inject;
 import java.util.Collection;
 
-public class LocalPluginActionClassesResource extends SelfInjectingServerResource {
-    public static final String PATH = "/hubs/{hubId}/plugins/local/{pluginId}/actionClasses";
+public class DeviceActionClassesResource extends SelfInjectingServerResource {
+    public static final String PATH = "/hubs/{hubId}/plugins/local/{pluginId}/devices/{deviceId}/actionClasses";
 
     @Inject
     ActionManager actionManager;
@@ -39,10 +39,10 @@ public class LocalPluginActionClassesResource extends SelfInjectingServerResourc
     protected Representation get() throws ResourceException {
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
         ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
-        PluginContext pctx = PluginContext.create(ctx.getHubContext(), getAttribute("pluginId"));
+        DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
         boolean itemExpand = expansions.has("item");
 
-        Collection<ActionClass> actionClasses = actionManager.getActionClasses(pctx);
+        Collection<ActionClass> actionClasses = actionManager.getActionClasses(dctx, true);
         ItemListDTO results = new ItemListDTO(idProvider.createActionClassesId(ctx.getHubContext()));
         for (ActionClass ac : actionClasses) {
             expansions.pushContext(JSONAttributes.ITEM);
