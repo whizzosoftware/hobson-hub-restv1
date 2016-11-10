@@ -184,6 +184,14 @@ public class RestResourceIdProvider implements IdProvider {
     }
 
     @Override
+    public String createLocalPluginActionClassId(PluginContext ctx, String actionClassId) {
+        Template t = new Template(apiRoot + LocalPluginActionClassResource.PATH);
+        Map<String,String> values = createPluginValues(ctx);
+        values.put(JSONAttributes.ACTION_CLASS_ID, actionClassId);
+        return t.format(values);
+    }
+
+    @Override
     public String createHubConfigurationClassId(HubContext ctx) {
         return new Template(apiRoot + HubConfigurationClassResource.PATH).format(createHubValues(ctx));
     }
@@ -320,6 +328,11 @@ public class RestResourceIdProvider implements IdProvider {
     @Override
     public String createDeviceConfigurationClassId(DeviceContext ctx) {
         return new Template(apiRoot + DeviceConfigurationClassResource.PATH).format(createDeviceValues(ctx));
+    }
+
+    @Override
+    public String createLocalPluginActionClassesId(PluginContext ctx) {
+        return new Template(apiRoot + LocalPluginActionClassesResource.PATH).format(createPluginValues(ctx));
     }
 
     @Override

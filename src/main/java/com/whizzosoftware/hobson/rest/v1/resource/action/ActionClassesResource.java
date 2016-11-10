@@ -18,7 +18,6 @@ import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.dto.action.ActionClassDTO;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -76,11 +75,9 @@ public class ActionClassesResource extends SelfInjectingServerResource {
         if (actionClasses != null) {
             for (ActionClass ac : actionClasses) {
                 if (id == null || id.equals(ac.getContext().getContainerClassId())) {
-                    ActionClassDTO.Builder builder = new ActionClassDTO.Builder(idProvider.createActionClassId(ac.getContext()), DTOMapper.mapTypedPropertyList(ac.getSupportedProperties()));
-                    if (expandItems) {
-                        builder.name(ac.getName()).descriptionTemplate(ac.getDescription()).taskAction(ac.isTaskAction()).statusProvider(ac.isStatusProvider());
-                    }
-                    results.add(builder.build());
+                    expansions.pushContext("item");
+                    results.add(new ActionClassDTO.Builder(idProvider.createActionClassId(ac.getContext()), ac, expandItems).build());
+                    expansions.popContext();
                 }
             }
         }

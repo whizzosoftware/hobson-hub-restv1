@@ -40,7 +40,7 @@ public class LocalPluginActionClassResource extends SelfInjectingServerResource 
         final String actionClassId = getAttribute("actionClassId");
 
         ActionClass ac = actionManager.getActionClass(PropertyContainerClassContext.create(pctx, actionClassId));
-        return new JsonRepresentation(new ActionClassDTO.Builder(idProvider.createActionClassId(ac.getContext()), DTOMapper.mapTypedPropertyList(ac.getSupportedProperties())).build().toJSON());
+        return new JsonRepresentation(new ActionClassDTO.Builder(idProvider.createActionClassId(ac.getContext()), ac, true).build().toJSON());
     }
 
     @Override
@@ -59,7 +59,7 @@ public class LocalPluginActionClassResource extends SelfInjectingServerResource 
         AsyncJobHandle result = actionManager.executeAction(DTOMapper.mapPropertyContainerDTO(dto, pccp, idProvider));
         try {
             result.getStartFuture().sync();
-            getResponse().setStatus(Status.SUCCESS_ACCEPTED);
+            getResponse().setStatus(Status.SUCCESS_CREATED);
             getResponse().setLocationRef(idProvider.createJobId(ctx.getHubContext(), result.getJobId()));
             return new EmptyRepresentation();
         } catch (InterruptedException e) {

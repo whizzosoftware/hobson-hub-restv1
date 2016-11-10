@@ -1,10 +1,12 @@
-/*******************************************************************************
+/*
+ *******************************************************************************
  * Copyright (c) 2015 Whizzo Software, LLC.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/
+ *******************************************************************************
+*/
 package com.whizzosoftware.hobson.rest.v1.resource.plugin;
 
 import com.whizzosoftware.hobson.api.persist.IdProvider;
@@ -13,6 +15,7 @@ import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
 import com.whizzosoftware.hobson.dto.plugin.HobsonPluginDTO;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
+import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import org.restlet.data.MediaType;
@@ -66,8 +69,7 @@ public class LocalPluginsResource extends SelfInjectingServerResource {
 
         boolean itemExpand = expansions.has("item");
         for (HobsonLocalPluginDescriptor plugin : pluginManager.getLocalPlugins(ctx.getHubContext())) {
-//            PluginContext pctx = PluginContext.create(ctx.getHubContext(), pd.getId());
-//            final HobsonPlugin plugin = pd.isConfigurable() ? pluginManager.getLocalPlugin(pctx) : null;
+            expansions.pushContext(JSONAttributes.ITEM);
             results.add(new HobsonPluginDTO.Builder(
                 dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions),
                 ctx.getHubContext(),
@@ -76,6 +78,7 @@ public class LocalPluginsResource extends SelfInjectingServerResource {
                 null,
                 itemExpand
             ).build());
+            expansions.popContext();
         }
 
         JsonRepresentation jr = new JsonRepresentation(results.toJSON());

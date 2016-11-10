@@ -1,10 +1,12 @@
-/*******************************************************************************
+/*
+ *******************************************************************************
  * Copyright (c) 2015 Whizzo Software, LLC.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/
+ *******************************************************************************
+*/
 package com.whizzosoftware.hobson.rest.v1.resource.task;
 
 import com.whizzosoftware.hobson.api.persist.IdProvider;
@@ -16,7 +18,6 @@ import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.dto.task.TaskConditionClassDTO;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -72,15 +73,7 @@ public class TaskConditionClassesResource extends SelfInjectingServerResource {
 
         ItemListDTO results = new ItemListDTO(idProvider.createTaskConditionClassesId(ctx.getHubContext()));
         for (TaskConditionClass conditionClass : taskManager.getConditionClasses(ctx.getHubContext(), type, applyConstraints)) {
-            TaskConditionClassDTO.Builder builder = new TaskConditionClassDTO.Builder(
-                    idProvider.createTaskConditionClassId(conditionClass.getContext())
-            );
-            if (expandItems) {
-                builder.type(conditionClass.getConditionClassType().toString()).name(conditionClass.getName())
-                        .descriptionTemplate(conditionClass.getDescriptionTemplate())
-                        .supportedProperties(DTOMapper.mapTypedPropertyList(conditionClass.getSupportedProperties()));
-            }
-            results.add(builder.build());
+            results.add(new TaskConditionClassDTO.Builder(idProvider.createTaskConditionClassId(conditionClass.getContext()), conditionClass, expandItems).build());
         }
         return new JsonRepresentation(results.toJSON());
     }
