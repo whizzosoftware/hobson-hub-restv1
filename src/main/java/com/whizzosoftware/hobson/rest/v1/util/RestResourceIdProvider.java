@@ -1,10 +1,12 @@
-/*******************************************************************************
+/*
+ *******************************************************************************
  * Copyright (c) 2015 Whizzo Software, LLC.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/
+ *******************************************************************************
+*/
 package com.whizzosoftware.hobson.rest.v1.util;
 
 import com.whizzosoftware.hobson.api.HobsonRuntimeException;
@@ -118,7 +120,7 @@ public class RestResourceIdProvider implements IdProvider {
         Template t;
         Map<String,String> values;
         if (ctx.hasDeviceContext()) {
-            t = new Template(apiRoot + LocalPluginActionClassResource.PATH);
+            t = new Template(apiRoot + DeviceActionClassResource.PATH);
             values = createDeviceValues(DeviceContext.create(ctx.getPluginContext(), ctx.getDeviceId()));
         } else {
             t = new Template(apiRoot + LocalPluginActionClassResource.PATH);
@@ -179,23 +181,10 @@ public class RestResourceIdProvider implements IdProvider {
     }
 
     @Override
-    public String createHubUploadCredentialsId(HubContext ctx) {
-        return null;
-    }
-
-    @Override
     public String createJobId(HubContext ctx, String jobId) {
         Map<String,String> values = createHubValues(ctx);
         values.put(JSONAttributes.JOB_ID, jobId);
         return new Template(apiRoot + JobResource.PATH).format(values);
-    }
-
-    @Override
-    public String createLocalPluginActionClassId(PluginContext ctx, String actionClassId) {
-        Template t = new Template(apiRoot + LocalPluginActionClassResource.PATH);
-        Map<String,String> values = createPluginValues(ctx);
-        values.put(JSONAttributes.ACTION_CLASS_ID, actionClassId);
-        return t.format(values);
     }
 
     @Override
