@@ -15,8 +15,10 @@ import com.whizzosoftware.hobson.dto.device.HobsonDeviceDTO;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import org.restlet.data.MediaType;
+import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
+import org.restlet.representation.EmptyRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
 
@@ -81,5 +83,13 @@ public class DeviceResource extends SelfInjectingServerResource {
         JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
         jr.setMediaType(new MediaType(dto.getJSONMediaType()));
         return jr;
+    }
+
+    @Override
+    protected Representation delete() throws ResourceException {
+        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
+        deviceManager.deleteDevice(DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId")));
+        getResponse().setStatus(Status.SUCCESS_ACCEPTED);
+        return new EmptyRepresentation();
     }
 }

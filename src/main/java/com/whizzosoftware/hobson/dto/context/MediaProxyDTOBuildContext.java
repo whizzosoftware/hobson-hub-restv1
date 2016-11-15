@@ -36,7 +36,7 @@ public class MediaProxyDTOBuildContext extends ManagerDTOBuildContext {
     }
 
     private DeviceVariableState createStubVariableIfNecessary(HubContext hctx, DeviceVariableDescriptor v, DeviceVariableState s) {
-        if (v != null && v.hasMediaType()) {
+        if (v != null && v.hasMediaType() && s != null) {
             return new DeviceVariableState(v.getContext(), getProxyValue(hctx, v, s), s.getLastUpdate());
         } else {
             return s;
