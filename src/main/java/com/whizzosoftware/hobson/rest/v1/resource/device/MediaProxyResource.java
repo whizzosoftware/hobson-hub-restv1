@@ -40,6 +40,6 @@ public class MediaProxyResource extends SelfInjectingServerResource {
     public Representation get() {
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
         DeviceVariableDescriptor hvar = deviceManager.getDevice(DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"))).getVariable(getAttribute("mediaId"));
-        return proxyHandler.createRepresentation(ctx.getHubContext(), hvar, pluginManager.getLocalPluginDeviceVariable(hvar.getContext()), getQuery(), getResponse());
+        return proxyHandler.createRepresentation(ctx.getHubContext(), hvar, deviceManager.getDeviceVariable(hvar.getContext()), getQuery(), getResponse());
     }
 }
