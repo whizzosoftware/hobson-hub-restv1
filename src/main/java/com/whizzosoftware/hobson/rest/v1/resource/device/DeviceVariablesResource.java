@@ -11,8 +11,9 @@ package com.whizzosoftware.hobson.rest.v1.resource.device;
 
 import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
 import com.whizzosoftware.hobson.api.device.DeviceManager;
+import com.whizzosoftware.hobson.api.event.EventManager;
+import com.whizzosoftware.hobson.api.event.device.DeviceVariablesUpdateRequestEvent;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
-import com.whizzosoftware.hobson.api.variable.DeviceVariableContext;
 import com.whizzosoftware.hobson.api.variable.DeviceVariableDescriptor;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
@@ -24,7 +25,6 @@ import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
-import io.netty.util.concurrent.Future;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.restlet.Response;
@@ -49,6 +49,8 @@ public class DeviceVariablesResource extends SelfInjectingServerResource {
 
     @Inject
     DeviceManager deviceManager;
+    @Inject
+    EventManager eventManager;
     @Inject
     DTOBuildContextFactory contextFactory;
     @Inject
@@ -124,26 +126,18 @@ public class DeviceVariablesResource extends SelfInjectingServerResource {
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
         Response response = getResponse();
         DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
-        try {
-            Future f = deviceManager.setDeviceVariables(createDeviceVariableValues(dctx, JSONHelper.createJSONFromRepresentation(entity))).await();
-            if (f.isSuccess()) {
-                response.setStatus(Status.SUCCESS_ACCEPTED);
-            } else {
-                response.setStatus(Status.SERVER_ERROR_INTERNAL, f.cause());
-            }
-        } catch (InterruptedException e) {
-            response.setStatus(Status.SERVER_ERROR_INTERNAL, e);
-        }
+        eventManager.postEvent(ctx.getHubContext(), new DeviceVariablesUpdateRequestEvent(System.currentTimeMillis(), dctx, createDeviceVariableValues(JSONHelper.createJSONFromRepresentation(entity))));
+        response.setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();
     }
 
-    private Map<DeviceVariableContext,Object> createDeviceVariableValues(DeviceContext dctx, JSONObject json) {
+    private Map<String,Object> createDeviceVariableValues(JSONObject json) {
         try {
-            Map<DeviceVariableContext,Object> map = new HashMap<>();
+            Map<String,Object> map = new HashMap<>();
             JSONObject values = json.getJSONObject("values");
             for (Object o : values.keySet()) {
                 String key = (String)o;
-                map.put(DeviceVariableContext.create(dctx, key), values.get(key));
+                map.put(key, values.get(key));
             }
             return map;
         } catch (JSONException e) {

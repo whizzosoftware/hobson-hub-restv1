@@ -11,6 +11,7 @@ package com.whizzosoftware.hobson.rest.v1.resource.plugin;
 
 import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.api.plugin.*;
+import com.whizzosoftware.hobson.api.util.VersionUtil;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
 import com.whizzosoftware.hobson.dto.plugin.HobsonPluginDTO;
@@ -25,6 +26,7 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
 
 import javax.inject.Inject;
+import java.util.Map;
 
 public class LocalPluginsResource extends SelfInjectingServerResource {
     public static final String PATH = "/hubs/{hubId}/plugins/local";
@@ -67,17 +69,24 @@ public class LocalPluginsResource extends SelfInjectingServerResource {
 
         ItemListDTO results = new ItemListDTO(idProvider.createLocalPluginsId(ctx.getHubContext()));
 
+        Map<String,String> remoteVersions = pluginManager.getRemotePluginVersions(ctx.getHubContext());
+
         boolean itemExpand = expansions.has("item");
         for (HobsonLocalPluginDescriptor plugin : pluginManager.getLocalPlugins(ctx.getHubContext())) {
             expansions.pushContext(JSONAttributes.ITEM);
-            results.add(new HobsonPluginDTO.Builder(
-                dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions),
-                ctx.getHubContext(),
-                plugin,
-                plugin.getDescription(),
-                null,
-                itemExpand
-            ).build());
+            HobsonPluginDTO.Builder builder = new HobsonPluginDTO.Builder(
+                    dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions),
+                    ctx.getHubContext(),
+                    plugin,
+                    plugin.getDescription(),
+                    null,
+                    itemExpand
+            );
+            String rv = remoteVersions.get(plugin.getId());
+            if (rv != null && VersionUtil.versionCompare(rv, plugin.getVersion()) > 0) {
+                builder.addLink("update", idProvider.createRemotePluginInstallId(ctx.getHubContext(), plugin.getId(), rv));
+            }
+            results.add(builder.build());
             expansions.popContext();
         }
 

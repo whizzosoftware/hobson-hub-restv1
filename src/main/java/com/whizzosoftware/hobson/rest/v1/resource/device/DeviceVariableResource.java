@@ -13,8 +13,8 @@ import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
 import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.api.event.EventManager;
+import com.whizzosoftware.hobson.api.event.device.DeviceVariablesUpdateRequestEvent;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
-import com.whizzosoftware.hobson.api.variable.DeviceVariableContext;
 import com.whizzosoftware.hobson.api.variable.DeviceVariableDescriptor;
 import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
 import com.whizzosoftware.hobson.dto.variable.HobsonVariableDTO;
@@ -23,7 +23,6 @@ import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import com.whizzosoftware.hobson.rest.v1.util.MapUtil;
-import io.netty.util.concurrent.Future;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.restlet.Response;
@@ -115,23 +114,14 @@ public class DeviceVariableResource extends SelfInjectingServerResource {
 
         Response response = getResponse();
 
-        try {
-            Future f = deviceManager.setDeviceVariable(DeviceVariableContext.create(dctx, variableName), value).await();
-            if (f.isSuccess()) {
-                response.setStatus(Status.SUCCESS_ACCEPTED);
-
-                // TODO: is there a better way to do this? The Restlet request reference scheme is always HTTP for some reason...
-                Reference requestRef = getRequest().getResourceRef();
-                if (Boolean.getBoolean(System.getProperty("useSSL"))) {
-                    response.setLocationRef(new Reference("https", requestRef.getHostDomain(), requestRef.getHostPort(), ctx.getApiRoot() + new Template(DeviceVariableResource.PATH).format(MapUtil.createTripleEntryMap(ctx, "pluginId", pluginId, "deviceId", deviceId, "variableName", variableName)), null, null));
-                } else {
-                    response.setLocationRef(requestRef);
-                }
-            } else {
-                response.setStatus(Status.SERVER_ERROR_INTERNAL, f.cause());
-            }
-        } catch (InterruptedException e) {
-            response.setStatus(Status.SERVER_ERROR_INTERNAL, e);
+        eventManager.postEvent(ctx.getHubContext(), new DeviceVariablesUpdateRequestEvent(System.currentTimeMillis(), dctx, variableName, value));
+        response.setStatus(Status.SUCCESS_ACCEPTED);
+        // TODO: is there a better way to do this? The Restlet request reference scheme is always HTTP for some reason...
+        Reference requestRef = getRequest().getResourceRef();
+        if (Boolean.getBoolean(System.getProperty("useSSL"))) {
+            response.setLocationRef(new Reference("https", requestRef.getHostDomain(), requestRef.getHostPort(), ctx.getApiRoot() + new Template(DeviceVariableResource.PATH).format(MapUtil.createTripleEntryMap(ctx, "pluginId", pluginId, "deviceId", deviceId, "variableName", variableName)), null, null));
+        } else {
+            response.setLocationRef(requestRef);
         }
 
         return new EmptyRepresentation();
