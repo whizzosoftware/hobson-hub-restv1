@@ -15,9 +15,9 @@ import org.restlet.security.Role;
  * @author Dan Noguerol
  */
 public enum HobsonRole {
-    ADMIN (new Role("hobsonAdmin")),
-    USER (new Role("hobsonUser")),
-    PROXY_USER (new Role("hobsonProxyUser"));
+    ADMIN (new Role("hobsonAdmin")), // represents an administrator
+    USER (new Role("hobsonUser")), // represents a normal user
+    PROXY_USER (new Role("hobsonProxyUser")); // represents an impersonated user
 
     private Role value;
 

@@ -31,7 +31,7 @@ public class HobsonRestContext {
         String apiRoot = ((HobsonApiApplication)application).getApiRoot();
         path = path.replace(apiRoot, "");
         String[] parts = StringUtils.split(path, '/');
-        String userId = clientInfo.getUser().getIdentifier();
+        String userId = (clientInfo != null && clientInfo.getUser() != null) ? clientInfo.getUser().getIdentifier() : null;
         String hubId = null;
         if (parts.length > 1 && parts[0].equals("hubs")) {
             hubId = parts[1];
