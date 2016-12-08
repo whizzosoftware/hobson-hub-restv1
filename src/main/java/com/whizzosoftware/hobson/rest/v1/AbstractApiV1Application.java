@@ -10,6 +10,7 @@
 package com.whizzosoftware.hobson.rest.v1;
 
 import com.google.inject.Inject;
+import com.whizzosoftware.hobson.api.user.HobsonRole;
 import com.whizzosoftware.hobson.rest.*;
 import com.whizzosoftware.hobson.rest.oidc.OIDCConfigProvider;
 import com.whizzosoftware.hobson.rest.v1.resource.action.ActionClassesResource;
@@ -35,8 +36,10 @@ import com.whizzosoftware.hobson.rest.v1.resource.data.DataStreamResource;
 import com.whizzosoftware.hobson.rest.v1.resource.data.DataStreamsResource;
 import com.whizzosoftware.hobson.rest.v1.resource.user.UserInfoResource;
 import com.whizzosoftware.hobson.rest.v1.resource.user.UserResource;
+import com.whizzosoftware.hobson.rest.v1.resource.user.UsersResource;
 import com.whizzosoftware.hobson.rest.v1.resource.variable.GlobalVariableResource;
 import com.whizzosoftware.hobson.rest.v1.resource.variable.GlobalVariablesResource;
+import com.whizzosoftware.hobson.rest.v1.util.RoleUtil;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.Restlet;
@@ -49,6 +52,7 @@ import org.restlet.routing.Filter;
 import org.restlet.routing.Router;
 import org.restlet.security.Authorizer;
 import org.restlet.security.ChallengeAuthenticator;
+import org.restlet.security.Role;
 import org.restlet.util.Series;
 
 import java.util.ArrayList;
@@ -84,7 +88,7 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
 
         // set up application roles
         for (HobsonRole r : HobsonRole.values()) {
-            getRoles().add(r.value());
+            getRoles().add(RoleUtil.getRoleForName(this, r.name()));
         }
     }
 
@@ -148,6 +152,7 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
         secureRouter.attach(TaskResource.PATH, TaskResource.class);
         secureRouter.attach(TasksResource.PATH, TasksResource.class);
         secureRouter.attach(UserResource.PATH, UserResource.class);
+        secureRouter.attach(UsersResource.PATH, UsersResource.class);
 
         // create the authorizer
         authorizer.setNext(secureRouter);

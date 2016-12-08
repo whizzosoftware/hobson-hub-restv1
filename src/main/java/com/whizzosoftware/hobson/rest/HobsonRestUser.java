@@ -14,29 +14,19 @@ import java.util.Collection;
 
 public class HobsonRestUser extends User {
     private HobsonUser user;
+    private Collection<String> hubs;
 
-    HobsonRestUser(HobsonUser user, String token) {
+    HobsonRestUser(HobsonUser user, String token, Collection<String> hubs) {
         super(user.getId(), token != null ? token.toCharArray() : null, user.getGivenName(), user.getFamilyName(), user.getEmail());
         this.user = user;
+        this.hubs = hubs;
     }
 
     public HobsonUser getUser() {
         return user;
     }
 
-    public Long getExpiration() {
-        return user.getAccount().getExpiration();
-    }
-
-    public boolean isExpired(long now) {
-        return (user.getAccount().getExpiration() != null && now >= user.getAccount().getExpiration());
-    }
-
     public Collection<String> getHubs() {
-        return user.getAccount().getHubs();
-    }
-
-    public boolean hasHub(String hubId) {
-        return user.getAccount().getHubs().contains(hubId);
+        return hubs;
     }
 }

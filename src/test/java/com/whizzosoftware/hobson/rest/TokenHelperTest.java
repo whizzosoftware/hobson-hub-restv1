@@ -7,6 +7,7 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest;
 
+import com.whizzosoftware.hobson.api.user.HobsonRole;
 import com.whizzosoftware.hobson.api.user.HobsonUser;
 import com.whizzosoftware.hobson.rest.oidc.OIDCConfig;
 import com.whizzosoftware.hobson.rest.oidc.OIDCConfigProvider;
@@ -15,7 +16,8 @@ import org.jose4j.jwk.RsaJwkGenerator;
 import org.jose4j.jwt.consumer.JwtConsumer;
 import org.jose4j.jwt.consumer.JwtConsumerBuilder;
 import org.junit.Test;
-import org.restlet.security.Role;
+
+import java.util.Collections;
 
 import static org.junit.Assert.*;
 
@@ -29,7 +31,7 @@ public class TokenHelperTest {
             public OIDCConfig getConfig() {
                 return cfg;
             }
-        }, new HobsonUser("user1"), new Role(HobsonRole.ADMIN.name()), null);
+        }, new HobsonUser("user1"), Collections.singletonList(HobsonRole.administrator), null);
 
         JwtConsumer jwtConsumer = new JwtConsumerBuilder()
                 .setRequireExpirationTime()
@@ -43,6 +45,6 @@ public class TokenHelperTest {
 
         TokenVerification tc = TokenHelper.verifyToken(jwtConsumer, token);
         assertEquals("user1", tc.getUser().getId());
-        assertTrue(tc.hasRole(HobsonRole.ADMIN.name()));
+        assertTrue(tc.hasRole(HobsonRole.administrator));
     }
 }

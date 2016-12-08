@@ -19,14 +19,9 @@ import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.data.ChallengeScheme;
 import org.restlet.data.Cookie;
-import org.restlet.security.Role;
 import org.restlet.security.Verifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 public class BearerTokenVerifier implements Verifier {
     private Logger logger = LoggerFactory.getLogger(BearerTokenVerifier.class);
@@ -61,8 +56,8 @@ public class BearerTokenVerifier implements Verifier {
                 TokenVerification tc = TokenHelper.verifyToken(getJwtConsumer(), token);
                 if (tc.hasUser()) {
                     result = RESULT_VALID;
-                    request.getClientInfo().setUser(new HobsonRestUser(tc.getUser(), token));
-                    request.getClientInfo().setRoles(createRoles(application, tc.getRoles()));
+                    request.getClientInfo().setUser(new HobsonRestUser(tc.getUser(), token, tc.getHubs()));
+                    request.getClientInfo().setRoles(tc.getRestletRoles(application));
                 }
             } catch (HobsonAuthenticationException hae) {
                 logger.debug("Error verifying token: " + hae);
@@ -91,15 +86,5 @@ public class BearerTokenVerifier implements Verifier {
             }
         }
         return jwtConsumer;
-    }
-
-    private List<Role> createRoles(Application application, Collection<String> scope) {
-        List<Role> roles = new ArrayList<>();
-        if (scope != null) {
-            for (String s : scope) {
-                roles.add(application.getRole(s));
-            }
-        }
-        return roles;
     }
 }
