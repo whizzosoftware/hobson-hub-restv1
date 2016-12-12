@@ -10,9 +10,9 @@
 package com.whizzosoftware.hobson.rest.v1;
 
 import com.google.inject.Inject;
+import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.api.user.HobsonRole;
 import com.whizzosoftware.hobson.rest.*;
-import com.whizzosoftware.hobson.rest.oidc.OIDCConfigProvider;
 import com.whizzosoftware.hobson.rest.v1.resource.action.ActionClassesResource;
 import com.whizzosoftware.hobson.rest.v1.resource.action.ActionSetsResource;
 import com.whizzosoftware.hobson.rest.v1.resource.hub.HubLogResource;
@@ -52,7 +52,6 @@ import org.restlet.routing.Filter;
 import org.restlet.routing.Router;
 import org.restlet.security.Authorizer;
 import org.restlet.security.ChallengeAuthenticator;
-import org.restlet.security.Role;
 import org.restlet.util.Series;
 
 import java.util.ArrayList;
@@ -68,7 +67,7 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
     @Inject
     Authorizer authorizer;
     @Inject
-    OIDCConfigProvider oidcConfigProvider;
+    HubManager hubManager;
 
     /**
      * Constructor that creates an challenge-based authenticator using the fully-qualified class name specified in
@@ -159,7 +158,7 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
 
         // create bearer token challenge authenticator
         ChallengeAuthenticator auth = new ChallengeAuthenticator(getContext(), ChallengeScheme.HTTP_OAUTH_BEARER, getRealmName());
-        auth.setVerifier(new BearerTokenVerifier(this, oidcConfigProvider));
+        auth.setVerifier(new BearerTokenVerifier(this, hubManager));
         auth.setNext(authorizer);
 
         // create the insecure router

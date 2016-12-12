@@ -10,29 +10,33 @@
 package com.whizzosoftware.hobson.rest;
 
 import com.whizzosoftware.hobson.api.HobsonAuthenticationException;
-import com.whizzosoftware.hobson.rest.oidc.OIDCConfig;
-import com.whizzosoftware.hobson.rest.oidc.OIDCConfigProvider;
-import org.jose4j.jwt.consumer.JwtConsumer;
-import org.jose4j.jwt.consumer.JwtConsumerBuilder;
+import com.whizzosoftware.hobson.api.hub.HubManager;
+import com.whizzosoftware.hobson.api.user.HobsonRole;
+import com.whizzosoftware.hobson.api.user.HobsonUser;
+import com.whizzosoftware.hobson.rest.v1.util.RoleUtil;
 import org.restlet.Application;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.data.ChallengeScheme;
 import org.restlet.data.Cookie;
+import org.restlet.security.Role;
 import org.restlet.security.Verifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 public class BearerTokenVerifier implements Verifier {
     private Logger logger = LoggerFactory.getLogger(BearerTokenVerifier.class);
 
     private Application application;
-    private OIDCConfigProvider oidcConfigProvider;
-    private JwtConsumer jwtConsumer;
+    private HubManager hubManager;
 
-    public BearerTokenVerifier(Application application, OIDCConfigProvider oidcConfigProvider) {
+    public BearerTokenVerifier(Application application, HubManager hubManager) {
         this.application = application;
-        this.oidcConfigProvider = oidcConfigProvider;
+        this.hubManager = hubManager;
     }
 
     public int verify(Request request, Response response) {
@@ -53,11 +57,11 @@ public class BearerTokenVerifier implements Verifier {
 
         if (token != null) {
             try {
-                TokenVerification tc = TokenHelper.verifyToken(getJwtConsumer(), token);
-                if (tc.hasUser()) {
+                HobsonUser user = hubManager.convertTokenToUser(token);
+                if (user != null) {
                     result = RESULT_VALID;
-                    request.getClientInfo().setUser(new HobsonRestUser(tc.getUser(), token, tc.getHubs()));
-                    request.getClientInfo().setRoles(tc.getRestletRoles(application));
+                    request.getClientInfo().setUser(new HobsonRestUser(user, token));
+                    request.getClientInfo().setRoles(getRestletRoles(application, user.getRoles()));
                 }
             } catch (HobsonAuthenticationException hae) {
                 logger.debug("Error verifying token: " + hae);
@@ -71,20 +75,11 @@ public class BearerTokenVerifier implements Verifier {
         return result;
     }
 
-    private JwtConsumer getJwtConsumer() throws Exception {
-        if (jwtConsumer == null) {
-            OIDCConfig cfg = oidcConfigProvider.getConfig();
-            if (cfg != null) {
-                jwtConsumer = new JwtConsumerBuilder()
-                    .setRequireExpirationTime()
-                    .setAllowedClockSkewInSeconds(30)
-                    .setRequireSubject()
-                    .setExpectedIssuer(cfg.getIssuer())
-                    .setVerificationKey(cfg.getSigningKey().getKey())
-                    .setExpectedAudience("hobson-webconsole")
-                    .build();
-            }
+    private List<Role> getRestletRoles(Application a, Collection<HobsonRole> roles) {
+        List<Role> r = new ArrayList<>();
+        for (HobsonRole role : roles) {
+            r.add(RoleUtil.getRoleForName(a, role.name()));
         }
-        return jwtConsumer;
+        return r;
     }
 }

@@ -93,6 +93,18 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>org.bitbucket.b_c</groupId>
+            <artifactId>jose4j</artifactId>
+            <version>0.4.1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.11</version>
@@ -105,15 +117,10 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.bitbucket.b_c</groupId>
-            <artifactId>jose4j</artifactId>
-            <version>0.4.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>3.1</version>
-            <scope>provided</scope>
+            <groupId>com.whizzosoftware.hobson.hub</groupId>
+            <artifactId>hobson-hub-api-mock</artifactId>
+            <version>0.10.0-SNAPSHOT</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
     <build>
@@ -139,7 +146,7 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Import-Package>com.whizzosoftware.hobson.api.*,net.sf.dozer.*,org.apache.commons.*</Import-Package>
+                        <Import-Package>com.whizzosoftware.hobson.api.*,org.apache.commons.*</Import-Package>
                         <Export-Package>com.whizzosoftware.hobson.rest.v1.*</Export-Package>
                     </instructions>
                 </configuration>

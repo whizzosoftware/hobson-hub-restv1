@@ -14,19 +14,13 @@ import java.util.Collection;
 
 public class HobsonRestUser extends User {
     private HobsonUser user;
-    private Collection<String> hubs;
 
-    HobsonRestUser(HobsonUser user, String token, Collection<String> hubs) {
+    HobsonRestUser(HobsonUser user, String token) {
         super(user.getId(), token != null ? token.toCharArray() : null, user.getGivenName(), user.getFamilyName(), user.getEmail());
         this.user = user;
-        this.hubs = hubs;
     }
 
     public HobsonUser getUser() {
         return user;
-    }
-
-    public Collection<String> getHubs() {
-        return hubs;
     }
 }

@@ -10,18 +10,17 @@
 package com.whizzosoftware.hobson.rest;
 
 import com.whizzosoftware.hobson.api.HobsonAuthenticationException;
+import com.whizzosoftware.hobson.api.hub.OIDCConfig;
 import com.whizzosoftware.hobson.api.user.HobsonRole;
 import com.whizzosoftware.hobson.api.user.HobsonUser;
-import com.whizzosoftware.hobson.rest.oidc.OIDCConfig;
-import com.whizzosoftware.hobson.rest.oidc.OIDCConfigProvider;
 import org.apache.commons.lang3.StringUtils;
+import org.jose4j.jwk.RsaJsonWebKey;
 import org.jose4j.jws.AlgorithmIdentifiers;
 import org.jose4j.jws.JsonWebSignature;
 import org.jose4j.jwt.JwtClaims;
-import org.jose4j.jwt.MalformedClaimException;
 import org.jose4j.jwt.NumericDate;
-import org.jose4j.jwt.consumer.InvalidJwtException;
 import org.jose4j.jwt.consumer.JwtConsumer;
+import org.jose4j.jwt.consumer.JwtConsumerBuilder;
 import org.jose4j.lang.JoseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,14 +35,14 @@ public class TokenHelper {
     private static final String PROP_HUBS = "hubs";
     private static final int DEFAULT_EXPIRATION_MINUTES = 60;
 
-    static public String createToken(OIDCConfigProvider provider, HobsonUser user, Collection<HobsonRole> roles, Collection<String> hubs) {
-        return createToken(provider, user, roles, hubs, DEFAULT_EXPIRATION_MINUTES);
+    private static JwtConsumer jwtConsumer;
+
+    static public String createToken(OIDCConfig config, HobsonUser user, Collection<HobsonRole> roles, Collection<String> hubs) {
+        return createToken(config, user, roles, hubs, DEFAULT_EXPIRATION_MINUTES);
     }
 
-    static private String createToken(OIDCConfigProvider provider, HobsonUser user, Collection<HobsonRole> roles, Collection<String> hubs, int expirationInMinutes) {
+    static private String createToken(OIDCConfig config, HobsonUser user, Collection<HobsonRole> roles, Collection<String> hubs, int expirationInMinutes) {
         try {
-            OIDCConfig config = provider.getConfig();
-
             List<String> r = new ArrayList<>();
             for (HobsonRole hr : roles) {
                 r.add(hr.name());
@@ -63,8 +62,8 @@ public class TokenHelper {
 
             JsonWebSignature jws = new JsonWebSignature();
             jws.setPayload(claims.toJson());
-            jws.setKey(config.getSigningKey().getPrivateKey());
-            jws.setKeyIdHeaderValue(config.getSigningKey().getKeyType());
+            jws.setKey(((RsaJsonWebKey)config.getSigningKey()).getPrivateKey());
+            jws.setKeyIdHeaderValue(((RsaJsonWebKey)config.getSigningKey()).getKeyType());
             jws.setAlgorithmHeaderValue(AlgorithmIdentifiers.RSA_USING_SHA256);
 
             return jws.getCompactSerialization();
@@ -74,33 +73,50 @@ public class TokenHelper {
         }
     }
 
-    static TokenVerification verifyToken(JwtConsumer jwtConsumer, String token) {
+    static public HobsonUser verifyToken(OIDCConfig config, String token) {
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(TokenHelper.class.getClassLoader());
         try {
             // extract the claims from the token
-            JwtClaims claims = jwtConsumer.processToClaims(token);
+            JwtClaims claims = getJwtConsumer(config).processToClaims(token);
 
             // make sure the token hasn't expired
             if (claims.getExpirationTime().isAfter(NumericDate.now())) {
-                List<HobsonRole> roles = new ArrayList<>();
+                List<String> roles = null;
                 Map realmAccess = claims.getClaimValue("realm_access", Map.class);
                 if (realmAccess != null && realmAccess.containsKey("roles")) {
-                    for (String role : (List<String>)realmAccess.get("roles")) {
-                        roles.add(HobsonRole.valueOf(role));
-                    }
+                    roles = (List<String>)realmAccess.get("roles");
                 }
-                return new TokenVerification(
-                    new HobsonUser.Builder(claims.getSubject())
-                        .givenName(claims.getStringClaimValue(PROP_FIRST_NAME))
-                        .familyName(claims.getStringClaimValue(PROP_LAST_NAME))
-                        .build(),
-                    Collections.singletonList(claims.getClaimValue("hubs", String.class)),
-                    roles
-                );
+                return new HobsonUser.Builder(claims.getSubject())
+                    .givenName(claims.getStringClaimValue(PROP_FIRST_NAME))
+                    .familyName(claims.getStringClaimValue(PROP_LAST_NAME))
+                    .roles(roles != null ? roles : new ArrayList<String>())
+                    .hubs(Collections.singletonList(claims.getClaimValue("hubs", String.class)))
+                    .build();
             } else {
                 throw new HobsonAuthenticationException("Token has expired");
             }
-        } catch (InvalidJwtException | MalformedClaimException e) {
+        } catch (Exception e) {
             throw new HobsonAuthenticationException("Error validating bearer token: " + e.getMessage());
+        } finally {
+            Thread.currentThread().setContextClassLoader(classLoader);
         }
     }
+
+    static private JwtConsumer getJwtConsumer(OIDCConfig oidcConfig) throws Exception {
+        if (jwtConsumer == null) {
+            if (oidcConfig != null) {
+                jwtConsumer = new JwtConsumerBuilder()
+                        .setRequireExpirationTime()
+                        .setAllowedClockSkewInSeconds(30)
+                        .setRequireSubject()
+                        .setExpectedIssuer(oidcConfig.getIssuer())
+                        .setVerificationKey(((RsaJsonWebKey)oidcConfig.getSigningKey()).getKey())
+                        .setExpectedAudience("hobson-webconsole")
+                        .build();
+            }
+        }
+        return jwtConsumer;
+    }
+
 }
