@@ -24,7 +24,7 @@ import org.restlet.representation.Representation;
 import javax.inject.Inject;
 
 public class GlobalVariableResource extends SelfInjectingServerResource {
-    public static final String PATH = "/hubs/{hubId}/plugins/{pluginId}/globalVariables/{variableName}";
+    public static final String PATH = "/hubs/{hubId}/plugins/{pluginId}/globalVariables/{name}";
 
     @Inject
     HubManager hubManager;
@@ -50,7 +50,7 @@ public class GlobalVariableResource extends SelfInjectingServerResource {
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
         String pluginId = getAttribute(JSONAttributes.PLUGIN_ID);
-        String varName = getAttribute(JSONAttributes.VARIABLE_NAME);
+        String varName = getAttribute(JSONAttributes.NAME);
 
         GlobalVariableContext gctx = GlobalVariableContext.create(PluginContext.create(ctx.getHubContext(), pluginId), varName);
         GlobalVariable v = hubManager.getGlobalVariable(gctx);

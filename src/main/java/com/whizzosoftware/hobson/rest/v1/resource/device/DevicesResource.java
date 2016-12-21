@@ -17,7 +17,7 @@ import com.whizzosoftware.hobson.dto.device.HobsonDeviceDTO;
 import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import org.restlet.data.MediaType;
+import com.whizzosoftware.hobson.rest.v1.util.MediaTypeHelper;
 import org.restlet.data.Status;
 import org.restlet.data.Tag;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -124,7 +124,7 @@ public class DevicesResource extends SelfInjectingServerResource {
         }
 
         r.setTag(etag);
-        r.setMediaType(new MediaType(results.getJSONMediaType()));
+        r.setMediaType(MediaTypeHelper.createMediaType(getRequest(), results));
         return r;
     }
 }

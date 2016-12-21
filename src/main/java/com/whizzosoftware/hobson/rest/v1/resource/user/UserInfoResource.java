@@ -15,7 +15,7 @@ import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.HobsonRestUser;
-import org.restlet.data.MediaType;
+import com.whizzosoftware.hobson.rest.v1.util.MediaTypeHelper;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -62,7 +62,7 @@ public class UserInfoResource extends SelfInjectingServerResource {
             ).build();
 
             JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
-            jr.setMediaType(new MediaType(dto.getMediaType() + "+json"));
+            jr.setMediaType(MediaTypeHelper.createMediaType(getRequest(), dto));
             return jr;
         } else {
             throw new HobsonRuntimeException("No user information could be located");

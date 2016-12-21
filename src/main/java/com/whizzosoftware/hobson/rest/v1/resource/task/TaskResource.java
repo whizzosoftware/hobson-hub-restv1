@@ -20,6 +20,7 @@ import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
+import com.whizzosoftware.hobson.rest.v1.util.MediaTypeHelper;
 import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -92,7 +93,7 @@ public class TaskResource extends SelfInjectingServerResource {
         ).build();
 
         JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
-        jr.setMediaType(new MediaType(dto.getJSONMediaType()));
+        jr.setMediaType(MediaTypeHelper.createMediaType(getRequest(), dto));
         return jr;
     }
 

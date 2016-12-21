@@ -18,6 +18,7 @@ import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.dto.action.ActionClassDTO;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.v1.util.MediaTypeHelper;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -70,18 +71,20 @@ public class ActionClassesResource extends SelfInjectingServerResource {
         boolean applyConstraints = Boolean.parseBoolean(getQueryValue("constraints"));
         String id = getQueryValue("id");
 
-        ItemListDTO results = new ItemListDTO(idProvider.createActionClassesId(ctx.getHubContext()));
+        ItemListDTO dto = new ItemListDTO(idProvider.createActionClassesId(ctx.getHubContext()));
         Collection<ActionClass> actionClasses = actionManager.getActionClasses(ctx.getHubContext(), applyConstraints);
         if (actionClasses != null) {
             for (ActionClass ac : actionClasses) {
                 if (id == null || id.equals(ac.getContext().getContainerClassId())) {
                     expansions.pushContext("item");
-                    results.add(new ActionClassDTO.Builder(idProvider.createActionClassId(ac.getContext()), ac, expandItems).build());
+                    dto.add(new ActionClassDTO.Builder(idProvider.createActionClassId(ac.getContext()), ac, expandItems).build());
                     expansions.popContext();
                 }
             }
         }
 
-        return new JsonRepresentation(results.toJSON());
+        JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
+        jr.setMediaType(MediaTypeHelper.createMediaType(getRequest(), dto));
+        return jr;
     }
 }

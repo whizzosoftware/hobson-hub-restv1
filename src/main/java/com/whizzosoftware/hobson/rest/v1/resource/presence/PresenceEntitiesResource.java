@@ -19,6 +19,7 @@ import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
+import com.whizzosoftware.hobson.rest.v1.util.MediaTypeHelper;
 import org.json.JSONObject;
 import org.restlet.data.MediaType;
 import org.restlet.data.Status;
@@ -86,7 +87,7 @@ public class PresenceEntitiesResource extends SelfInjectingServerResource {
         expansions.popContext();
 
         JsonRepresentation jr = new JsonRepresentation(results.toJSON());
-        jr.setMediaType(new MediaType(results.getJSONMediaType()));
+        jr.setMediaType(MediaTypeHelper.createMediaType(getRequest(), results));
         return jr;
     }
 

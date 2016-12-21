@@ -18,6 +18,7 @@ import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.dto.task.TaskConditionClassDTO;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.v1.util.MediaTypeHelper;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -75,6 +76,8 @@ public class TaskConditionClassesResource extends SelfInjectingServerResource {
         for (TaskConditionClass conditionClass : taskManager.getConditionClasses(ctx.getHubContext(), type, applyConstraints)) {
             results.add(new TaskConditionClassDTO.Builder(idProvider.createTaskConditionClassId(conditionClass.getContext()), conditionClass, expandItems).build());
         }
-        return new JsonRepresentation(results.toJSON());
+        JsonRepresentation jr = new JsonRepresentation(results.toJSON());
+        jr.setMediaType(MediaTypeHelper.createMediaType(getRequest(), results));
+        return jr;
     }
 }

@@ -17,6 +17,7 @@ import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
+import com.whizzosoftware.hobson.rest.v1.util.MediaTypeHelper;
 import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -72,7 +73,7 @@ public class HubRemoteRepositoriesResource extends SelfInjectingServerResource {
             }
 
             JsonRepresentation jr = new JsonRepresentation(results.toJSON());
-            jr.setMediaType(new MediaType(results.getJSONMediaType()));
+            jr.setMediaType(MediaTypeHelper.createMediaType(getRequest(), results));
             return jr;
         } else {
             throw new HobsonRuntimeException("No plugin manager found");

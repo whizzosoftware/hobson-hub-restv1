@@ -19,6 +19,7 @@ import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.v1.util.MediaTypeHelper;
 import org.restlet.data.MediaType;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -91,7 +92,7 @@ public class LocalPluginsResource extends SelfInjectingServerResource {
         }
 
         JsonRepresentation jr = new JsonRepresentation(results.toJSON());
-        jr.setMediaType(new MediaType(results.getJSONMediaType()));
+        jr.setMediaType(MediaTypeHelper.createMediaType(getRequest(), results));
         return jr;
     }
 }
