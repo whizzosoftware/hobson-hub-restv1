@@ -108,6 +108,7 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
         secureRouter.attach(DeviceConfigurationClassResource.PATH, DeviceConfigurationClassResource.class);
         secureRouter.attach(DeviceNameResource.PATH, DeviceNameResource.class);
         secureRouter.attach(DevicesResource.PATH, DevicesResource.class);
+        secureRouter.attach(DeviceTagsResource.PATH, DeviceTagsResource.class);
         secureRouter.attach(DeviceVariableResource.PATH, DeviceVariableResource.class);
         secureRouter.attach(DeviceVariablesResource.PATH, DeviceVariablesResource.class);
         secureRouter.attach(ExecuteTaskResource.PATH, ExecuteTaskResource.class);

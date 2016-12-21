@@ -327,6 +327,11 @@ public class RestResourceIdProvider implements IdProvider {
     }
 
     @Override
+    public String createDeviceTagsId(DeviceContext ctx) {
+        return null;
+    }
+
+    @Override
     public String createLocalPluginActionClassesId(PluginContext ctx) {
         return new Template(apiRoot + LocalPluginActionClassesResource.PATH).format(createPluginValues(ctx));
     }
