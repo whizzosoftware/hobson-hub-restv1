@@ -15,8 +15,8 @@ import com.whizzosoftware.hobson.api.hub.LineRange;
 import com.whizzosoftware.hobson.dto.MediaTypes;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.v1.util.MediaTypeHelper;
 import org.restlet.data.Header;
-import org.restlet.data.MediaType;
 import org.restlet.data.Range;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -35,47 +35,17 @@ import java.io.IOException;
  */
 public class HubLogResource extends SelfInjectingServerResource {
     public static final String PATH = "/hubs/{hubId}/log";
+    public static final String TEMPLATE = "/hubs/{hubId}/{entity}";
 
     @Inject
     HubManager hubManager;
 
-    /**
-     * @api {get} /api/v1/users/local/hubs/local/log Get Hub log
-     * @apiHeader {String} Range the byte range to return in RFC 7233 format
-     * @apiVersion 0.1.7
-     * @apiName GetHubLog
-     * @apiDescription Retrieves content from the Hub log file.
-     * @apiGroup Hub
-     * @apiExample Example request:
-     * GET /api/v1/users/local/hubs/local/log HTTP/1.1
-     * Range: lines=0-100
-     * @apiSuccessExample Success Response:
-     * {
-     *   "numberOfItems": "24",
-     *   "itemListElement": [
-     *     {
-     *       "item": {
-     *         "time": "1434537854597",
-     *         "thread": "qtp2146976730-31",
-     *         "level": "INFO",
-     *         "message": "Initialized jose4j in 205ms"
-     *       }
-     *     },
-     *     {
-     *       "item": {
-     *         "time": "1434537854597",
-     *         "thread": "qtp2146976730-31",
-     *         "level": "INFO",
-     *         "message": "JWE compression algorithms: [DEF]"
-     *       }
-     *     }
-     *   ]
-     * }
-     */
     @Override
     protected Representation get() throws ResourceException {
         long startLine = 0;
         long endLine = 24;
+
+        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
         // since we are using a custom range, we can't use the standard Restlet range mechanism
         Series<Header> headers = getRequest().getHeaders();
@@ -86,13 +56,11 @@ public class HubLogResource extends SelfInjectingServerResource {
             endLine = range.hasEndLine() ? range.getEndLine() : Long.MAX_VALUE - 1;
         }
 
-        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
-
         AppendableRepresentation ar = new AppendableRepresentation();
-        ar.setMediaType(new MediaType(MediaTypes.ITEM_LIST));
+        ar.setMediaType(MediaTypeHelper.createMediaType(getRequest(), MediaTypes.ITEM_LIST));
 
         try {
-            ar.append("{\"itemListElement\":");
+            ar.append("{\"@id\":\"").append(ctx.getApiRoot()).append(HubLogResource.PATH).append("\",\"itemListElement\":");
 
             LineRange lineRange = hubManager.getLog(ctx.getHubContext(), startLine, endLine, ar);
 

@@ -7,11 +7,17 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.presence;
 
+import com.whizzosoftware.hobson.api.HobsonAuthorizationException;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.api.presence.PresenceLocation;
 import com.whizzosoftware.hobson.api.presence.PresenceLocationContext;
 import com.whizzosoftware.hobson.api.presence.PresenceManager;
+import com.whizzosoftware.hobson.api.user.HobsonRole;
+import com.whizzosoftware.hobson.dto.ExpansionFields;
+import com.whizzosoftware.hobson.dto.context.DTOBuildContext;
+import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
 import com.whizzosoftware.hobson.dto.presence.PresenceLocationDTO;
+import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.MediaTypeHelper;
@@ -30,48 +36,33 @@ public class PresenceLocationResource extends SelfInjectingServerResource {
     @Inject
     PresenceManager presenceManager;
     @Inject
+    DTOBuildContextFactory dtoBuildContextFactory;
+    @Inject
     IdProvider idProvider;
 
-    /**
-     * @api {get} /api/v1/users/:userId/hubs/:hubId/presence/locations/:locationId Get location
-     * @apiVersion 0.7.0
-     * @apiName GetLocation
-     * @apiDescription Retrieves details about a specific location.
-     * @apiGroup Presence
-     *
-     * @apiSuccessExample {json} Success Response:
-     * {
-     *   "@id": "/api/v1/users/local/hubs/local/presence/locations/beef-cafe-beeeef-cafe",
-     *   "name": "My Home",
-     *   "latitude": 0.000,
-     *   "longitude": 0.000,
-     *   "radius": 100
-     * }
-     */
     @Override
     protected Representation get() {
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
+        ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
+        DTOBuildContext bctx = dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions);
 
         PresenceLocation location = presenceManager.getPresenceLocation(PresenceLocationContext.create(ctx.getHubContext(), getAttribute("locationId")));
 
-        PresenceLocationDTO dto = new PresenceLocationDTO.Builder(location, idProvider, true).build();
+        PresenceLocationDTO dto = new PresenceLocationDTO.Builder(bctx, location, idProvider, true).build();
+
+        dto.addContext(JSONAttributes.AIDT, bctx.getIdTemplateMap());
+
         JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
         jr.setMediaType(MediaTypeHelper.createMediaType(getRequest(), dto));
         return jr;
     }
 
-    /**
-     * @api {delete} /api/v1/users/:userId/hubs/:hubId/presence/locations/:locationId Delete location
-     * @apiVersion 0.7.0
-     * @apiName DeleteLocation
-     * @apiDescription Deletes a specific presence location.
-     * @apiGroup Presence
-     *
-     * @apiSuccessExample Success Response:
-     * HTTP/1.1 202 Accepted
-     */
     @Override
     protected Representation delete() {
+        if (!isInRole(HobsonRole.administrator.name())) {
+            throw new HobsonAuthorizationException("Forbidden");
+        }
+
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
         PresenceLocationContext pec = PresenceLocationContext.create(ctx.getHubContext(), getAttribute("locationId"));

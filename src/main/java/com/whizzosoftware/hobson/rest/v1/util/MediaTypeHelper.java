@@ -16,11 +16,15 @@ import org.restlet.data.Preference;
 
 public class MediaTypeHelper {
     static public MediaType createMediaType(Request request, EntityDTO dto) {
+        return createMediaType(request, dto.getJSONMediaType());
+    }
+
+    static public MediaType createMediaType(Request request, String mediaType) {
         for (Preference<MediaType> p : request.getClientInfo().getAcceptedMediaTypes()) {
             if (p.getMetadata().equals(MediaType.APPLICATION_JSON)) {
                 return MediaType.APPLICATION_JSON;
             }
         }
-        return new MediaType(dto.getJSONMediaType());
+        return new MediaType(mediaType);
     }
 }

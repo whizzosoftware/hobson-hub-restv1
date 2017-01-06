@@ -1,76 +1,67 @@
 /*
  *******************************************************************************
- * Copyright (c) 2015 Whizzo Software, LLC.
+ * Copyright (c) 2016 Whizzo Software, LLC.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************
 */
-package com.whizzosoftware.hobson.rest.v1.resource.activity;
+package com.whizzosoftware.hobson.rest.v1.resource.user;
 
-import com.whizzosoftware.hobson.api.activity.ActivityLogEntry;
-import com.whizzosoftware.hobson.api.activity.ActivityLogManager;
+import com.whizzosoftware.hobson.api.HobsonAuthorizationException;
+import com.whizzosoftware.hobson.api.user.HobsonRole;
+import com.whizzosoftware.hobson.api.user.HobsonUser;
+import com.whizzosoftware.hobson.api.user.UserStore;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
-import com.whizzosoftware.hobson.dto.activity.ActivityEventDTO;
+import com.whizzosoftware.hobson.dto.HobsonUserDTO;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.dto.context.DTOBuildContext;
 import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
 import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import com.whizzosoftware.hobson.rest.v1.util.MediaTypeHelper;
+import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
+import org.restlet.representation.EmptyRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
 
 import javax.inject.Inject;
+import java.util.Collection;
 
-/**
- * A REST resource that manages a the hub activity log.
- *
- * @author Dan Noguerol
- */
-public class ActivityLogResource extends SelfInjectingServerResource {
-    public static final String PATH = "/hubs/{hubId}/activityLog";
+public class UsersResource extends SelfInjectingServerResource {
+    public static final String PATH = "/users";
 
     @Inject
-    ActivityLogManager activityManager;
+    UserStore userStore;
     @Inject
     DTOBuildContextFactory dtoBuildContextFactory;
 
-    /**
-     * @api {get} /api/v1/users/:userId/hubs/:hubId/activityLog Get activity log
-     * @apiVersion 0.1.3
-     * @apiName GetActivityLog
-     * @apiDescription Retrieves the most recent entries from the hub activity log.
-     * @apiGroup Activities
-     * @apiSuccessExample {json} Success Response:
-     * {
-     *   "numberOfItems": 2,
-     *   "itemListElement": [
-     *     {
-     *       "item": {
-     *         "timestamp": 1234,
-     *         "name": "Thermostat temperature changed to 70",
-     *     },
-     *     {
-     *       "timestamp": 1234,
-     *       "name": "Light has turned on",
-     *     }
-     *   ]
-     * }
-     */
     @Override
     protected Representation get() throws ResourceException {
+        if (!isInRole(HobsonRole.administrator.name())) {
+            throw new HobsonAuthorizationException("Forbidden");
+        }
+
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
         ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
         DTOBuildContext bctx = dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions);
 
-        ItemListDTO dto = new ItemListDTO(bctx, bctx.getIdProvider().createActivityLogId(ctx.getHubContext()));
-        for (ActivityLogEntry event : activityManager.getActivityLog(25)) {
-            dto.add(new ActivityEventDTO(event.getName(), event.getTimestamp()));
+        ItemListDTO dto = new ItemListDTO(bctx, bctx.getIdProvider().createUsersId());
+        Collection<HobsonUser> users = userStore.getUsers();
+        for (HobsonUser user : users) {
+            dto.add(
+                new HobsonUserDTO.Builder(
+                    bctx,
+                    user,
+                    null,
+                    expansions.has("item")
+                ).build()
+            );
         }
 
         dto.addContext(JSONAttributes.AIDT, bctx.getIdTemplateMap());
@@ -78,5 +69,18 @@ public class ActivityLogResource extends SelfInjectingServerResource {
         JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
         jr.setMediaType(MediaTypeHelper.createMediaType(getRequest(), dto));
         return jr;
+    }
+
+    @Override
+    protected Representation post(Representation entity) throws ResourceException {
+        if (!isInRole(HobsonRole.administrator.name())) {
+            throw new HobsonAuthorizationException("Forbidden");
+        }
+
+        HobsonUserDTO dto = new HobsonUserDTO.Builder(JSONHelper.createJSONFromRepresentation(entity)).build();
+        userStore.addUser(dto.getId(), dto.getPassword(), dto.getGivenName(), dto.getFamilyName(), dto.getRoles());
+
+        getResponse().setStatus(Status.SUCCESS_CREATED);
+        return new EmptyRepresentation();
     }
 }

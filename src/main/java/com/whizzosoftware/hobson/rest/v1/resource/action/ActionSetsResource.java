@@ -15,7 +15,10 @@ import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.api.property.*;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
+import com.whizzosoftware.hobson.dto.context.DTOBuildContext;
+import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
 import com.whizzosoftware.hobson.dto.property.PropertyContainerSetDTO;
+import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
@@ -36,33 +39,16 @@ public class ActionSetsResource extends SelfInjectingServerResource {
     HubManager hubManager;
     @Inject
     IdProvider idProvider;
+    @Inject
+    DTOBuildContextFactory dtoBuildContextFactory;
 
-    /**
-     * @api {get} /api/v1/users/:userId/hubs/:hubId/actionSets Get all action sets
-     * @apiVersion 0.5.0
-     * @apiName GetAllActionSets
-     * @apiDescription Retrieves a summary list of all available action sets (regardless of plugin).
-     * @apiGroup Tasks
-     * @apiParam (Query Parameters) {String} expand A comma-separated list of attributes to expand (the only supported value is "item").
-     * @apiSuccessExample {json} Success Response:
-     * {
-     *   "@id": "/api/v1/users/local/hubs/local/actionSets",
-     *   "numberOfItems": 1,
-     *   "itemListElement": [
-     *     {
-     *       "item": {
-     *         "@id": "/api/v1/users/local/hubs/local/actionSets/dc419994-987f-4bff-81f9-e5bce53733f3"
-     *       }
-     *     }
-     *   ]
-     * }
-     */
     @Override
     protected Representation get() throws ResourceException {
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
         ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
+        DTOBuildContext bctx = dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions);
 
-        ItemListDTO dto = new ItemListDTO(idProvider.createTaskActionSetsId(ctx.getHubContext()));
+        ItemListDTO dto = new ItemListDTO(bctx, idProvider.createTaskActionSetsId(ctx.getHubContext()));
         boolean expandItems = expansions.has("item");
 
         PropertyContainerClassProvider pccp = new PropertyContainerClassProvider() {
@@ -74,13 +60,15 @@ public class ActionSetsResource extends SelfInjectingServerResource {
 
         for (PropertyContainerSet actionSet : actionManager.getActionSets(ctx.getHubContext())) {
             PropertyContainerSetDTO.Builder builder = new PropertyContainerSetDTO.Builder(
-                idProvider.createTaskActionSetId(ctx.getHubContext(), actionSet.getId())
+                bctx, idProvider.createTaskActionSetId(ctx.getHubContext(), actionSet.getId())
             );
             if (expandItems) {
-                builder.containers(DTOMapper.mapPropertyContainerList(actionSet.getProperties(), PropertyContainerClassType.ACTION, false, pccp, idProvider));
+                builder.containers(DTOMapper.mapPropertyContainerList(bctx, actionSet.getProperties(), PropertyContainerClassType.ACTION, false, pccp));
             }
             dto.add(builder.build());
         }
+
+        dto.addContext(JSONAttributes.AIDT, bctx.getIdTemplateMap());
 
         JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
         jr.setMediaType(MediaTypeHelper.createMediaType(getRequest(), dto));

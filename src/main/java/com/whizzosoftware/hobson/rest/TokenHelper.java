@@ -50,7 +50,7 @@ public class TokenHelper {
 
             JwtClaims claims = new JwtClaims();
             claims.setIssuer(config.getIssuer());
-            claims.setAudience("hobson-webconsole");
+            claims.setAudience(System.getenv("OIDC_AUDIENCE") != null ? System.getenv("OIDC_AUDIENCE") : System.getProperty("OIDC_AUDIENCE", "hobson-webconsole"));
             claims.setSubject(user.getId());
             claims.setStringClaim(PROP_FIRST_NAME, user.getGivenName());
             claims.setStringClaim(PROP_LAST_NAME, user.getFamilyName());
@@ -112,7 +112,7 @@ public class TokenHelper {
                         .setRequireSubject()
                         .setExpectedIssuer(oidcConfig.getIssuer())
                         .setVerificationKey(((RsaJsonWebKey)oidcConfig.getSigningKey()).getKey())
-                        .setExpectedAudience("hobson-webconsole")
+                        .setExpectedAudience(System.getenv("OIDC_AUDIENCE") != null ? System.getenv("OIDC_AUDIENCE") : System.getProperty("OIDC_AUDIENCE", "hobson-webconsole"))
                         .build();
             }
         }

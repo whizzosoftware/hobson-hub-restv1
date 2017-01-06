@@ -13,6 +13,7 @@ import com.google.inject.Inject;
 import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.api.user.HobsonRole;
 import com.whizzosoftware.hobson.rest.*;
+import com.whizzosoftware.hobson.rest.v1.resource.SwaggerResource;
 import com.whizzosoftware.hobson.rest.v1.resource.action.ActionClassesResource;
 import com.whizzosoftware.hobson.rest.v1.resource.action.ActionSetsResource;
 import com.whizzosoftware.hobson.rest.v1.resource.hub.HubLogResource;
@@ -111,7 +112,6 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
         secureRouter.attach(DeviceTagsResource.PATH, DeviceTagsResource.class);
         secureRouter.attach(DeviceVariableResource.PATH, DeviceVariableResource.class);
         secureRouter.attach(DeviceVariablesResource.PATH, DeviceVariablesResource.class);
-        secureRouter.attach(ExecuteTaskResource.PATH, ExecuteTaskResource.class);
         secureRouter.attach(GlobalVariableResource.PATH, GlobalVariableResource.class);
         secureRouter.attach(GlobalVariablesResource.PATH, GlobalVariablesResource.class);
         secureRouter.attach(ActionClassesResource.PATH, ActionClassesResource.class);
@@ -165,6 +165,7 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
         // create the insecure router
         Router insecureRouter = newRouter();
         insecureRouter.attachDefault(auth);
+        insecureRouter.attach(SwaggerResource.PATH, SwaggerResource.class);
 
         // allow subclasses to create any additional resources they need to
         createAdditionalResources(secureRouter, insecureRouter);

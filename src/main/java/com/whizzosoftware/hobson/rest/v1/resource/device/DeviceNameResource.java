@@ -9,8 +9,10 @@
 */
 package com.whizzosoftware.hobson.rest.v1.resource.device;
 
+import com.whizzosoftware.hobson.api.HobsonAuthorizationException;
 import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.device.DeviceManager;
+import com.whizzosoftware.hobson.api.user.HobsonRole;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
@@ -23,7 +25,7 @@ import org.restlet.representation.Representation;
 import javax.inject.Inject;
 
 public class DeviceNameResource extends SelfInjectingServerResource {
-    public static final String PATH = "/hubs/{hubId}/plugins/{pluginId}/devices/{deviceId}/name";
+    public static final String PATH = "/hubs/{hubId}/plugins/local/{pluginId}/devices/{deviceId}/name";
 
     @Inject
     private DeviceManager deviceManager;
@@ -43,6 +45,10 @@ public class DeviceNameResource extends SelfInjectingServerResource {
      */
     @Override
     protected Representation put(Representation entity) {
+        if (!isInRole(HobsonRole.administrator.name()) && !isInRole(HobsonRole.userWrite.name())) {
+            throw new HobsonAuthorizationException("Forbidden");
+        }
+
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
         JSONObject json = JSONHelper.createJSONFromRepresentation(entity);
 
