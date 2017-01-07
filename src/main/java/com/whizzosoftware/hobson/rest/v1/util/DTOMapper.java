@@ -1,10 +1,12 @@
-/*******************************************************************************
+/*
+ *******************************************************************************
  * Copyright (c) 2015 Whizzo Software, LLC.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/
+ *******************************************************************************
+*/
 package com.whizzosoftware.hobson.rest.v1.util;
 
 import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
@@ -16,6 +18,7 @@ import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.api.presence.*;
 import com.whizzosoftware.hobson.api.property.*;
 import com.whizzosoftware.hobson.dto.*;
+import com.whizzosoftware.hobson.dto.context.DTOBuildContext;
 import com.whizzosoftware.hobson.dto.presence.PresenceLocationDTO;
 import com.whizzosoftware.hobson.dto.property.PropertyContainerClassDTO;
 import com.whizzosoftware.hobson.dto.property.PropertyContainerDTO;
@@ -205,24 +208,23 @@ public class DTOMapper {
     /**
      * Maps a list of PropertyContainer objects to a list of PropertyContainerDTO objects.
      *
+     * @param ctx the build context
      * @param containers the PropertyContainers to map
      * @param showDetails whether to include details for the items in the list
      * @param ccProvider a PropertyContainerClass provider
-     * @param idProvider a link provider
      *
      * @return a List of PropertyContainerDTO objects
      */
-    static public List<PropertyContainerDTO> mapPropertyContainerList(List<PropertyContainer> containers, PropertyContainerClassType type, boolean showDetails, PropertyContainerClassProvider ccProvider, IdProvider idProvider) {
+    static public List<PropertyContainerDTO> mapPropertyContainerList(DTOBuildContext ctx, List<PropertyContainer> containers, PropertyContainerClassType type, boolean showDetails, PropertyContainerClassProvider ccProvider) {
         List<PropertyContainerDTO> results = new ArrayList<>();
         if (containers != null) {
             for (PropertyContainer c : containers) {
                 results.add(new PropertyContainerDTO.Builder(
+                    ctx,
                     c,
                     ccProvider,
                     type,
-                    showDetails,
-                    null,
-                    idProvider
+                    showDetails
                 ).build());
             }
         }

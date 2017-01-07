@@ -9,13 +9,15 @@
 */
 package com.whizzosoftware.hobson.rest.v1.resource.task;
 
-import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.api.task.TaskManager;
 import com.whizzosoftware.hobson.api.task.condition.ConditionClassType;
 import com.whizzosoftware.hobson.api.task.condition.TaskConditionClass;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
+import com.whizzosoftware.hobson.dto.context.DTOBuildContext;
+import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
 import com.whizzosoftware.hobson.dto.task.TaskConditionClassDTO;
+import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.MediaTypeHelper;
@@ -32,37 +34,13 @@ public class TaskConditionClassesResource extends SelfInjectingServerResource {
     @Inject
     TaskManager taskManager;
     @Inject
-    IdProvider idProvider;
+    DTOBuildContextFactory dtoBuildContextFactory;
 
-    /**
-     * @api {get} /api/v1/users/:userId/hubs/:hubId/tasks/conditionClasses Get all condition classes
-     * @apiVersion 0.5.0
-     * @apiName GetAllConditionClasses
-     * @apiDescription Retrieves a list of all available condition classes (regardless of plugin).
-     * @apiGroup Tasks
-     * @apiParam (Query Parameters) {String} expand A comma-separated list of attributes to expand (the only supported value is "item").
-     * @apiSuccessExample {json} Success Response:
-     * {
-     *   "@id": "/api/v1/users/local/hubs/local/tasks/conditionClasses",
-     *   "numberOfItems": 2,
-     *   "itemListElement": [
-     *     {
-     *       "item": {
-     *         "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-rules/conditionClasses/turnOff"
-     *       }
-     *     },
-     *     {
-     *       "item": {
-     *         "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-scheduler/conditionClasses/schedule"
-     *       }
-     *     }
-     *   ]
-     * }
-     */
     @Override
     protected Representation get() throws ResourceException {
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
         ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
+        DTOBuildContext bctx = dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions);
 
         boolean expandItems = expansions.has("item");
         boolean applyConstraints = Boolean.parseBoolean(getQueryValue("constraints"));
@@ -72,12 +50,15 @@ public class TaskConditionClassesResource extends SelfInjectingServerResource {
             type = ConditionClassType.valueOf(s);
         }
 
-        ItemListDTO results = new ItemListDTO(idProvider.createTaskConditionClassesId(ctx.getHubContext()));
+        ItemListDTO dto = new ItemListDTO(bctx, bctx.getIdProvider().createTaskConditionClassesId(ctx.getHubContext()));
         for (TaskConditionClass conditionClass : taskManager.getConditionClasses(ctx.getHubContext(), type, applyConstraints)) {
-            results.add(new TaskConditionClassDTO.Builder(idProvider.createTaskConditionClassId(conditionClass.getContext()), conditionClass, expandItems).build());
+            dto.add(new TaskConditionClassDTO.Builder(bctx, bctx.getIdProvider().createTaskConditionClassId(conditionClass.getContext()), conditionClass, expandItems).build());
         }
-        JsonRepresentation jr = new JsonRepresentation(results.toJSON());
-        jr.setMediaType(MediaTypeHelper.createMediaType(getRequest(), results));
+
+        dto.addContext(JSONAttributes.AIDT, bctx.getIdTemplateMap());
+
+        JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
+        jr.setMediaType(MediaTypeHelper.createMediaType(getRequest(), dto));
         return jr;
     }
 }

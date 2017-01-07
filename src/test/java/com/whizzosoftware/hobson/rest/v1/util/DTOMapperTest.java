@@ -1,18 +1,23 @@
-/*******************************************************************************
+/*
+ *******************************************************************************
  * Copyright (c) 2015 Whizzo Software, LLC.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/
+ *******************************************************************************
+*/
 package com.whizzosoftware.hobson.rest.v1.util;
 
 import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.hub.HubConfigurationClass;
 import com.whizzosoftware.hobson.api.hub.HubContext;
+import com.whizzosoftware.hobson.api.persist.ContextPathIdProvider;
+import com.whizzosoftware.hobson.api.persist.TemplatedId;
 import com.whizzosoftware.hobson.api.plugin.*;
 import com.whizzosoftware.hobson.api.presence.PresenceLocation;
 import com.whizzosoftware.hobson.api.property.*;
+import com.whizzosoftware.hobson.dto.context.ManagerDTOBuildContext;
 import com.whizzosoftware.hobson.dto.presence.PresenceLocationDTO;
 import com.whizzosoftware.hobson.dto.property.*;
 import org.json.JSONArray;
@@ -72,13 +77,13 @@ public class DTOMapperTest {
         Map<String,Object> values = new HashMap<>();
         values.put("name", "Hello");
         JSONObject deviceJson = new JSONObject();
-        deviceJson.put("@id", "/api/v1/hubs/local/plugins/plugin2/devices/device1");
+        deviceJson.put("@id", "/api/v1/hubs/local/plugins/local/plugin2/devices/device1");
         values.put("device", deviceJson);
 
         // create the DTO to map
         PropertyContainerDTO dto = new PropertyContainerDTO.Builder("pcid").
             containerClass(
-                new PropertyContainerClassDTO.Builder("/api/v1/hubs/local/plugins/plugin/conditionClasses/ccid").
+                new PropertyContainerClassDTO.Builder(new ManagerDTOBuildContext(), new TemplatedId("/api/v1/hubs/local/plugins/local/plugin/conditionClasses/ccid", null)).
                     build()
             ).
             values(values).
@@ -122,12 +127,12 @@ public class DTOMapperTest {
         Map<String,Object> values = new HashMap<>();
         values.put("name", "Hello");
         JSONObject deviceJson = new JSONObject();
-        deviceJson.put("@id", "/api/v1/hubs/local/plugins/plugin1/devices/device2");
+        deviceJson.put("@id", "/api/v1/hubs/local/plugins/local/plugin1/devices/device2");
         values.put("device", deviceJson);
 
         // create the DTO to map
         PropertyContainerDTO dto = new PropertyContainerDTO.Builder("pcid").
-            containerClass(new PropertyContainerClassDTO.Builder("/api/v1/hubs/local/plugins/plugin/actionClasses/ccid").build()).
+            containerClass(new PropertyContainerClassDTO.Builder(new ManagerDTOBuildContext(), new TemplatedId("/api/v1/hubs/local/plugins/local/plugin/actionClasses/ccid", null)).build()).
             values(values).
             build();
 
@@ -160,17 +165,13 @@ public class DTOMapperTest {
 
     @Test
     public void testMapPropertyContainerDTOWithHubConfigContainerClass() {
-        // define the properties the condition class will support
-        final List<TypedProperty> properties = new ArrayList<>();
-        properties.add(new TypedProperty.Builder("name", "name", "Name", TypedProperty.Type.STRING).build());
-
         // create the property values
         Map<String,Object> values = new HashMap<>();
         values.put("name", "Home");
 
         // create the DTO to map
         PropertyContainerDTO dto = new PropertyContainerDTO.Builder("pcid").
-            containerClass(new PropertyContainerClassDTO.Builder("/api/v1/users/local/hubs/local/configurationClass").build()).
+            containerClass(new PropertyContainerClassDTO.Builder(new ManagerDTOBuildContext(), new TemplatedId("/api/v1/users/local/hubs/local/configurationClass", null)).build()).
             values(values).
             build();
 
@@ -204,13 +205,13 @@ public class DTOMapperTest {
         Map<String,Object> values = new HashMap<>();
         values.put("name", "Hello");
         JSONObject deviceJson = new JSONObject();
-        deviceJson.put("@id", "/api/v1/hubs/local/plugins/plugin2/devices/device1");
+        deviceJson.put("@id", "/api/v1/hubs/local/plugins/local/plugin2/devices/device1");
         values.put("device", deviceJson);
 
         // create the DTO to map
         PropertyContainerDTO dto = new PropertyContainerDTO.Builder("pcid").
             containerClass(
-                new PropertyContainerClassDTO.Builder("/api/v1/hubs/local/plugins/local/plugin1/configurationClass").
+                new PropertyContainerClassDTO.Builder(new ManagerDTOBuildContext(), new TemplatedId("/api/v1/hubs/local/plugins/local/plugin1/configurationClass", null)).
                     build()
             ).
             values(values).
@@ -251,13 +252,13 @@ public class DTOMapperTest {
         values.put("time", "10:00:00");
         JSONArray jda = new JSONArray();
         JSONObject jd = new JSONObject();
-        jd.put("@id", "/api/v1/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-sample/devices/bulb");
+        jd.put("@id", "/api/v1/hubs/local/plugins/local/com.whizzosoftware.hobson.hub.hobson-hub-sample/devices/bulb");
         jda.put(jd);
         values.put("devices", jda);
         List<PropertyContainerDTO> dtos = new ArrayList<>();
         dtos.add(
             new PropertyContainerDTO.Builder()
-                .containerClass(new PropertyContainerClassDTO.Builder("/api/v1/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-scheduler/conditionClasses/schedule")
+                .containerClass(new PropertyContainerClassDTO.Builder(new ManagerDTOBuildContext(), new TemplatedId("/api/v1/hubs/local/plugins/local/com.whizzosoftware.hobson.hub.hobson-hub-scheduler/conditionClasses/schedule", null))
                     .build()
                 )
                 .values(values)
@@ -302,7 +303,10 @@ public class DTOMapperTest {
         assertEquals("bulb", dc.getDeviceId());
 
         // perform reverse mapping
-        List<PropertyContainerDTO> pdtos = DTOMapper.mapPropertyContainerList(pcs, PropertyContainerClassType.DEVICE_CONFIG, false, pccp, new RestResourceIdProvider());
+        List<PropertyContainerDTO> pdtos = DTOMapper.mapPropertyContainerList(
+            new ManagerDTOBuildContext.Builder().idProvider(new ContextPathIdProvider()).build(),
+            pcs, PropertyContainerClassType.DEVICE_CONFIG, false, pccp
+        );
 
         // verify results
         assertEquals(1, pdtos.size());
@@ -313,20 +317,21 @@ public class DTOMapperTest {
     @Test
     public void testMapPresenceLocationDTO() {
         // test map location
-        PresenceLocation loc = DTOMapper.mapPresenceLocationDTO(new PresenceLocationDTO.Builder("foo").name("name").latitude(1.0).longitude(2.0).radius(3.0).build());
+        ManagerDTOBuildContext bctx = new ManagerDTOBuildContext();
+        PresenceLocation loc = DTOMapper.mapPresenceLocationDTO(new PresenceLocationDTO.Builder(bctx, new TemplatedId("foo", null)).name("name").latitude(1.0).longitude(2.0).radius(3.0).build());
         assertEquals("name", loc.getName());
         assertEquals(1.0, loc.getLatitude(), 0.0);
         assertEquals(2.0, loc.getLongitude(), 0.0);
         assertEquals(3.0, loc.getRadius(), 0.0);
 
         // test beacon location
-        loc = DTOMapper.mapPresenceLocationDTO(new PresenceLocationDTO.Builder("foo").name("name").beaconMajor(1).beaconMinor(2).build());
+        loc = DTOMapper.mapPresenceLocationDTO(new PresenceLocationDTO.Builder(bctx, new TemplatedId("foo", null)).name("name").beaconMajor(1).beaconMinor(2).build());
         assertEquals("name", loc.getName());
         assertEquals((Integer)1, loc.getBeaconMajor());
         assertEquals((Integer)2, loc.getBeaconMinor());
 
         // test empty location
-        assertNull(DTOMapper.mapPresenceLocationDTO(new PresenceLocationDTO.Builder((String)null).build()));
+        assertNull(DTOMapper.mapPresenceLocationDTO(new PresenceLocationDTO.Builder(bctx, new TemplatedId(null, null)).build()));
     }
 
     @Test

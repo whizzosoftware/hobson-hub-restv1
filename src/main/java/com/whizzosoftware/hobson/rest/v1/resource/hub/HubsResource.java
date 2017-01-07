@@ -10,7 +10,6 @@
 package com.whizzosoftware.hobson.rest.v1.resource.hub;
 
 import com.whizzosoftware.hobson.api.hub.HubContext;
-import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.dto.context.DTOBuildContext;
@@ -31,49 +30,28 @@ import java.util.Collection;
 
 public class HubsResource extends SelfInjectingServerResource {
     public static final String PATH = "/users/{userId}/hubs";
+    public static final String TEMPLATE = "/users/{userId}/{entity}";
 
     @Inject
     DTOBuildContextFactory dtoBuildContextFactory;
-    @Inject
-    IdProvider idProvider;
 
-    /**
-     * @api {get} /api/v1/users/:userId/hubs Get Hubs
-     * @apiVersion 0.5.0
-     * @apiParam (Query Parameters) {String} expand A comma-separated list of fields to expand in the response. Valid field values are "item".
-     * @apiName GetHubs
-     * @apiDescription Retrieves the list of Hubs associated with a user.
-     * @apiGroup User
-     * @apiSuccessExample Success Response:
-     * {
-     *   "@id": "/api/v1/users/local/hubs"
-     *   "numberOfItems": 1,
-     *   "itemListElement": [
-     *     {
-     *       "item": {
-     *         "@id": "/api/v1/users/local/hubs/local"
-     *       }
-     *     }
-     *   ]
-     * }
-     */
     @Override
     protected Representation get() throws ResourceException {
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
         ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
+        DTOBuildContext bctx = dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions);
         String userId = getAttribute("userId");
 
-        DTOBuildContext bctx = dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions);
-        ItemListDTO itemList = new ItemListDTO(idProvider.createUserHubsId(userId));
+        ItemListDTO dto = new ItemListDTO(bctx, bctx.getIdProvider().createUserHubsId(userId));
         HobsonRestUser user = (HobsonRestUser)getClientInfo().getUser();
-        Collection<String> hubs = user.getHubs();
+        Collection<String> hubs = user.getUser().getHubs();
 
         if (hubs != null) {
             boolean showDetails = expansions.has(JSONAttributes.ITEM);
             expansions.pushContext(JSONAttributes.ITEM);
 
             for (String hubId : hubs) {
-                itemList.add(new HobsonHubDTO.Builder(
+                dto.add(new HobsonHubDTO.Builder(
                     bctx,
                     bctx.getHub(HubContext.create(hubId)),
                     showDetails
@@ -83,8 +61,10 @@ public class HubsResource extends SelfInjectingServerResource {
             expansions.popContext();
         }
 
-        JsonRepresentation jr = new JsonRepresentation(itemList.toJSON());
-        jr.setMediaType(MediaTypeHelper.createMediaType(getRequest(), itemList));
+        dto.addContext(JSONAttributes.AIDT, bctx.getIdTemplateMap());
+
+        JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
+        jr.setMediaType(MediaTypeHelper.createMediaType(getRequest(), dto));
         return jr;
     }
 }

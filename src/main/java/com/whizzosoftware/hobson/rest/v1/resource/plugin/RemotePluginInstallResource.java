@@ -1,15 +1,19 @@
-/*******************************************************************************
+/*
+ *******************************************************************************
  * Copyright (c) 2014 Whizzo Software, LLC.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/
+ *******************************************************************************
+*/
 package com.whizzosoftware.hobson.rest.v1.resource.plugin;
 
+import com.whizzosoftware.hobson.api.HobsonAuthorizationException;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.api.plugin.PluginContext;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
+import com.whizzosoftware.hobson.api.user.HobsonRole;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.MapUtil;
@@ -34,21 +38,12 @@ public class RemotePluginInstallResource extends SelfInjectingServerResource {
     @Inject
     IdProvider idProvider;
 
-    /**
-     * @api {post} /api/v1/users/:userId/hubs/:hubId/plugins/remote/:pluginId/:pluginVersion/install Install remote plugin
-     * @apiVersion 0.1.6
-     * @apiName InstallRemotePlugin
-     * @apiDescription Install a plugin from the Hobson plugin repository.
-     *
-     * The response header Location provides a polling URI to determine when a local version for the plugin becomes
-     * available.
-     * @apiGroup Plugin
-     * @apiSuccessExample {json} Success Response:
-     * HTTP/1.1 202 Accepted
-     * Location: http://localhost:8080/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-radiora
-     */
     @Override
     protected Representation post(Representation entity) {
+        if (!isInRole(HobsonRole.administrator.name())) {
+            throw new HobsonAuthorizationException("Forbidden");
+        }
+
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
         String pluginId = getAttribute("pluginId");
