@@ -919,24 +919,54 @@
               "$ref": "#/definitions/propertyContainer"
             }
           }
+        }
+      },
+      "put": {
+        "tags": [
+          "Plugin"
+        ],
+        "operationId": "getLocalPluginConfiguration",
+        "summary": "Get local plugin configuration",
+        "description": "Returns configuration for a local plugin.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.propertyContainer+json"
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/propertyContainer"
+            }
+          }
         },
         "parameters": [
           {
-            "name": "hub",
-            "in": "path",
-            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "name": "body",
+            "in": "body",
+            "description": "The new plugin configuration (only the \"values\" attribute is needed in the request).",
             "required": true,
-            "type": "string"
-          },
-          {
-            "name": "plugin",
-            "in": "path",
-            "description": "ID of the plugin that owns the device",
-            "required": true,
-            "type": "string"
+            "schema": {
+              "$ref": "#/definitions/propertyContainer"
+            }
           }
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "hub",
+          "in": "path",
+          "description": "ID of a hub (\"local\" is the default for local hubs)",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "plugin",
+          "in": "path",
+          "description": "ID of the plugin that owns the device",
+          "required": true,
+          "type": "string"
+        }
+      ]
     },
     "/hubs/{hub}/plugins/local/{plugin}/configurationClass": {
       "get": {
