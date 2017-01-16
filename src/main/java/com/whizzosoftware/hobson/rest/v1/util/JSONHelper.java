@@ -8,6 +8,7 @@
 package com.whizzosoftware.hobson.rest.v1.util;
 
 import com.whizzosoftware.hobson.api.HobsonRuntimeException;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.restlet.representation.Representation;
@@ -34,6 +35,23 @@ public class JSONHelper {
                 }
             } else {
                 return new JSONObject();
+            }
+        } catch (IOException e) {
+            throw new HobsonRuntimeException("Error reading JSON", e);
+        }
+    }
+
+    public static JSONArray createJSONArrayFromRepresentation(Representation r) {
+        try {
+            InputStream is = r.getStream();
+            if (is != null) {
+                try {
+                    return new JSONArray(new JSONTokener(is));
+                } finally {
+                    is.close();
+                }
+            } else {
+                return new JSONArray();
             }
         } catch (IOException e) {
             throw new HobsonRuntimeException("Error reading JSON", e);

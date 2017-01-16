@@ -7,15 +7,15 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.plugin;
 
+import com.whizzosoftware.hobson.api.plugin.HobsonPluginDescriptor;
 import com.whizzosoftware.hobson.api.plugin.PluginContext;
-import com.whizzosoftware.hobson.api.plugin.PluginDescriptor;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
 import com.whizzosoftware.hobson.dto.plugin.HobsonPluginDTO;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import com.whizzosoftware.hobson.rest.v1.util.PluginDescriptorAdaptor;
+import com.whizzosoftware.hobson.rest.v1.util.MediaTypeHelper;
 import org.restlet.data.MediaType;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -56,18 +56,19 @@ public class RemotePluginResource extends SelfInjectingServerResource {
 
         String version = getQueryValue("pluginVersion");
         PluginContext pctx = PluginContext.create(ctx.getHubContext(), getQueryValue("pluginId"));
-        PluginDescriptor pd = pluginManager.getRemotePluginDescriptor(pctx, version);
+        HobsonPluginDescriptor pd = pluginManager.getRemotePlugin(pctx, version);
 
         HobsonPluginDTO dto = new HobsonPluginDTO.Builder(
             dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions),
-            new PluginDescriptorAdaptor(pd, null),
+            ctx.getHubContext(),
+            pd,
             pd.getDescription(),
-            pd.getVersionString(),
+            pd.getVersion(),
             true
         ).build();
 
         JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
-        jr.setMediaType(new MediaType(dto.getJSONMediaType()));
+        jr.setMediaType(MediaTypeHelper.createMediaType(getRequest(), dto));
         return jr;
     }
 }

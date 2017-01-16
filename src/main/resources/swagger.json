@@ -1,0 +1,3053 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Hobson Hub API",
+    "description": "This API is used to interact with the Hobson hub for purposes of configuration and management.",
+    "version": "0.10.0"
+  },
+  "host": "localhost:8182",
+  "basePath": "/api/v1",
+  "securityDefinitions": {
+    "hobson_auth": {
+      "type": "oauth2",
+      "authorizationUrl": "http://localhost:8182/authorize",
+      "tokenUrl": "http://localhost:8182/token",
+      "flow": "implicit",
+      "scopes": {
+        "read:all": "read all"
+      }
+    }
+  },
+  "security": {
+    "hobson_auth": [
+      "read:all"
+    ]
+  },
+  "paths": {
+    "/hubs/{hub}": {
+      "get": {
+        "tags": [
+          "Hub"
+        ],
+        "operationId": "getHub",
+        "summary": "Get hub",
+        "description": "Returns details of a hub.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.hub+json; charset=UTF-8"
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/hub"
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "hub",
+          "in": "path",
+          "description": "ID of a hub (\"local\" is the default for local hubs)",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "expand",
+          "in": "query",
+          "description": "Attributes to expand in-line (optional)",
+          "required": false,
+          "type": "string"
+        }
+      ]
+    },
+    "/hubs/{hub}/actionClasses": {
+      "get": {
+        "tags": [
+          "Hub"
+        ],
+        "operationId": "getHubActionClasses",
+        "summary": "Get hub action classes",
+        "description": "Returns the action classes associated with a hub.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.itemList+json"
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/itemList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "expand",
+            "in": "query",
+            "description": "Attributes to expand in-line (optional)",
+            "required": false,
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "/hubs/{hub}/actionSets": {
+      "get": {
+        "tags": [
+          "Hub"
+        ],
+        "operationId": "getHubActionSets",
+        "summary": "Get hub action sets",
+        "description": "Returns the action sets associated with a hub.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.itemList+json"
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/itemList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "expand",
+            "in": "query",
+            "description": "Attributes to expand in-line (optional)",
+            "required": false,
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "/hubs/{hub}/activityLog": {
+      "get": {
+        "tags": [
+          "Hub"
+        ],
+        "operationId": "getHubActivityLog",
+        "summary": "Get hub activity log",
+        "description": "Returns the activity log associated with a hub.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.itemList+json"
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/itemList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "/hubs/{hub}/configuration": {
+      "get": {
+        "tags": [
+          "Hub"
+        ],
+        "operationId": "getHubConfiguration",
+        "summary": "Get hub configuration",
+        "description": "Returns the configuration associated with a hub.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.propertyContainer+json"
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/propertyContainer"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Hub"
+        ],
+        "operationId": "setHubConfiguration",
+        "summary": "Set hub configuration",
+        "description": "Sets the configuration associated with a hub.",
+        "consumes": [
+          "application/json",
+          "application/vnd.hobson.propertyContainer+json"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "The configuration values (note that only the 'values' property is needed).",
+            "schema": {
+              "$ref": "#/definitions/propertyContainer"
+            }
+          }
+        ]
+      },
+      "patch": {
+        "tags": [
+          "Hub"
+        ],
+        "operationId": "updateHubConfiguration",
+        "summary": "Update hub configuration",
+        "description": "Partially updates the configuration associated with a hub.",
+        "consumes": [
+          "application/json",
+          "application/vnd.hobson.propertyContainer+json"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "The configuration value(s) (note that only the 'values' property is needed).",
+            "schema": {
+              "$ref": "#/definitions/propertyContainer"
+            }
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Hub"
+        ],
+        "operationId": "deleteHubConfiguration",
+        "summary": "Delete hub configuration",
+        "description": "Deletes the current configuration of the hub (setting it back to defaults).",
+        "responses": {
+          "202": {
+          }
+        },
+        "consumes": [
+          "application/json",
+          "application/vnd.hobson.propertyContainer+json"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "hub",
+          "in": "path",
+          "description": "ID of a hub (\"local\" is the default for local hubs)",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/hubs/{hub}/configuration/sendTestEmail": {
+      "post": {
+        "tags": [
+          "Hub"
+        ],
+        "operationId": "sendTestEmail",
+        "summary": "Send test e-mail",
+        "description": "Sends a test e-mail using current hub e-mail configuration settings.",
+        "responses": {
+          "202": {
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "values": {
+                  "type": "object",
+                  "properties": {
+                    "emailServer": {
+                      "type": "string"
+                    },
+                    "emailSecure": {
+                      "type": "boolean"
+                    },
+                    "emailSender": {
+                      "type": "string"
+                    },
+                    "emailUsername": {
+                      "type": "string"
+                    },
+                    "emailPassword": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "/hubs/{hub}/configurationClass": {
+      "get": {
+        "tags": [
+          "Hub"
+        ],
+        "operationId": "getHubConfigurationClass",
+        "summary": "Get hub configuration class",
+        "description": "Returns the configuration class associated with a hub.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.propertyContainerClass+json"
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/propertyContainerClass"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "/hubs/{hub}/dataStreams": {
+      "get": {
+        "tags": [
+          "Data Stream"
+        ],
+        "operationId": "getDataStreams",
+        "summary": "Get data streams",
+        "description": "Returns all data stream associated with the hub.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.itemList+json; charset=UTF-8"
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/itemList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "expand",
+            "in": "query",
+            "description": "Attributes to expand in-line (optional)",
+            "required": false,
+            "type": "string"
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Data Stream"
+        ],
+        "operationId": "addDataStream",
+        "summary": "Add data stream",
+        "description": "Adds a new data stream to the hub.",
+        "consumes": [
+          "application/json"
+        ],
+        "responses": {
+          "202": {}
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "dataStream",
+            "in": "body",
+            "description": "The data stream to add",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/dataStream"
+            }
+          }
+        ]
+      }
+    },
+    "/hubs/{hub}/dataStreams/{dataStream}": {
+      "get": {
+        "tags": [
+          "Data Stream"
+        ],
+        "operationId": "getDataStream",
+        "summary": "Get data stream",
+        "description": "Returns details for a data stream.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.dataStream+json; charset=UTF-8"
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/dataStream"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Data Stream"
+        ],
+        "operationId": "deleteDataStream",
+        "summary": "Delete data stream",
+        "description": "Deletes the specified data stream.",
+        "responses": {
+          "202": {}
+        }
+      },
+      "parameters": [
+        {
+          "name": "hub",
+          "in": "path",
+          "description": "ID of a hub (\"local\" is the default for local hubs)",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "dataStream",
+          "in": "path",
+          "description": "ID of a data stream",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/hubs/{hub}/dataStreams/{dataStream}/data": {
+      "get": {
+        "tags": [
+          "Data Stream"
+        ],
+        "operationId": "getDataStreamData",
+        "summary": "Get data stream data",
+        "description": "Returns data for a data stream.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.dataStreamData+json; charset=UTF-8"
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/dataStreamData"
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "hub",
+          "in": "path",
+          "description": "ID of a hub (\"local\" is the default for local hubs)",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "dataStream",
+          "in": "path",
+          "description": "ID of a data stream",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "endTime",
+          "in": "query",
+          "description": "The end time of the data to retrieve",
+          "required": false,
+          "type": "number"
+        },
+        {
+          "name": "inr",
+          "in": "query",
+          "description": "The interval for the data (can be one of HOURS_1, HOURS_4, HOURS_24, DAYS_7, DAYS_30)",
+          "required": false,
+          "type": "string"
+        }
+      ]
+    },
+    "/hubs/{hub}/devices": {
+      "get": {
+        "tags": [
+          "Device"
+        ],
+        "operationId": "getHubDevices",
+        "summary": "Get hub devices",
+        "description": "Returns the devices associated with a hub.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.itemList+json"
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/itemList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "expand",
+            "in": "query",
+            "description": "Attributes to expand in-line (optional)",
+            "required": false,
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "/hubs/{hub}/globalVariables": {
+      "get": {
+        "tags": [
+          "Hub"
+        ],
+        "operationId": "getGlobalVariables",
+        "summary": "Get global variables",
+        "description": "Returns global variables.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.itemList+json"
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/itemList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "expand",
+            "in": "query",
+            "description": "Attributes to expand in-line (optional)",
+            "required": false,
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "/hubs/{hub}/jobs/{job}": {
+      "get": {
+        "tags": [
+          "Hub"
+        ],
+        "operationId": "getJob",
+        "summary": "Get job",
+        "description": "Returns the details of a job.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.job+json"
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/job"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "job",
+            "in": "path",
+            "description": "ID of a job",
+            "required": true,
+            "type": "string"
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Hub"
+        ],
+        "operationId": "deleteJob",
+        "summary": "Delete job",
+        "description": "Deletes a job.",
+        "responses": {
+          "202": {
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "job",
+            "in": "path",
+            "description": "ID of a job",
+            "required": true,
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "/hubs/{hub}/log": {
+      "get": {
+        "tags": [
+          "Hub"
+        ],
+        "operationId": "getHubLog",
+        "summary": "Get hub log",
+        "description": "Returns the log entries associated with a hub.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.itemList+json"
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/itemList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "Range",
+            "in": "header",
+            "description": "Range of log entries to return (e.g. lines=0-100)",
+            "required": false,
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "/hubs/{hub}/password": {
+      "post": {
+        "tags": [
+          "Hub"
+        ],
+        "operationId": "setHubPassword",
+        "summary": "Set hub password",
+        "description": "Sets the administrator password for the hub.",
+        "responses": {
+          "202": {
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "currentPassword": {
+                  "type": "string"
+                },
+                "newPassword": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "/hubs/{hub}/plugins/local": {
+      "get": {
+        "tags": [
+          "Plugin"
+        ],
+        "operationId": "getLocalPlugins",
+        "summary": "Get local plugins",
+        "description": "Returns locally installed plugins.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.itemList+json"
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/itemList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "expand",
+            "in": "query",
+            "description": "Attributes to expand in-line (optional)",
+            "required": false,
+            "type": "string"
+          }
+
+        ]
+      }
+    },
+    "/hubs/{hub}/plugins/local/{plugin}": {
+      "get": {
+        "tags": [
+          "Plugin"
+        ],
+        "operationId": "getLocalPlugin",
+        "summary": "Get local plugin",
+        "description": "Returns details about a local plugin.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.plugin+json"
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/localPlugin"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "plugin",
+            "in": "path",
+            "description": "ID of the plugin that owns the device",
+            "required": true,
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "/hubs/{hub}/plugins/local/{plugin}/actionClasses": {
+      "get": {
+        "tags": [
+          "Plugin"
+        ],
+        "operationId": "getLocalPluginActionClasses",
+        "summary": "Get local plugin action classes",
+        "description": "Returns action classes published by a local plugin.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.itemList+json"
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/itemList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "plugin",
+            "in": "path",
+            "description": "ID of the plugin that owns the device",
+            "required": true,
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "/hubs/{hub}/plugins/local/{plugin}/actionClasses/{actionClass}": {
+      "get": {
+        "tags": [
+          "Plugin"
+        ],
+        "operationId": "getLocalPluginActionClass",
+        "summary": "Get local plugin action class",
+        "description": "Returns action class published by a local plugin.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.propertyContainerClass+json"
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/propertyContainerClass"
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Plugin"
+        ],
+        "operationId": "executeActionClass",
+        "summary": "Execute local plugin action class",
+        "description": "Executes an action class published by a local plugin.",
+        "responses": {
+          "202": {}
+        },
+        "consumes": [
+          "application/json",
+          "application/vnd.hobson.propertyContainer+json"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/propertyContainer"
+            }
+          }
+        ]
+      },
+      "parameters": [
+        {
+          "name": "hub",
+          "in": "path",
+          "description": "ID of a hub (\"local\" is the default for local hubs)",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "plugin",
+          "in": "path",
+          "description": "ID of the plugin that owns the device",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "actionClass",
+          "in": "path",
+          "description": "ID of an action class",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/hubs/{hub}/plugins/local/{plugin}/configuration": {
+      "get": {
+        "tags": [
+          "Plugin"
+        ],
+        "operationId": "getLocalPluginConfiguration",
+        "summary": "Get local plugin configuration",
+        "description": "Returns configuration for a local plugin.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.propertyContainer+json"
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/propertyContainer"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Plugin"
+        ],
+        "operationId": "getLocalPluginConfiguration",
+        "summary": "Get local plugin configuration",
+        "description": "Returns configuration for a local plugin.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.propertyContainer+json"
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/propertyContainer"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "The new plugin configuration (only the \"values\" attribute is needed in the request).",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/propertyContainer"
+            }
+          }
+        ]
+      },
+      "parameters": [
+        {
+          "name": "hub",
+          "in": "path",
+          "description": "ID of a hub (\"local\" is the default for local hubs)",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "plugin",
+          "in": "path",
+          "description": "ID of the plugin that owns the device",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/hubs/{hub}/plugins/local/{plugin}/configurationClass": {
+      "get": {
+        "tags": [
+          "Plugin"
+        ],
+        "operationId": "getLocalPluginConfigurationClass",
+        "summary": "Get local plugin configuration class",
+        "description": "Returns configuration class for a local plugin.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.propertyContainerClass+json"
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/propertyContainerClass"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "plugin",
+            "in": "path",
+            "description": "ID of the plugin that owns the device",
+            "required": true,
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "/hubs/{hub}/plugins/local/{plugin}/reload": {
+      "post": {
+        "tags": [
+          "Plugin"
+        ],
+        "operationId": "reloadLocalPlugin",
+        "summary": "Reload local plugin",
+        "description": "Reload a running local plugin.",
+        "responses": {
+          "202": {
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "plugin",
+            "in": "path",
+            "description": "ID of the plugin that owns the device",
+            "required": true,
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "/hubs/{hub}/plugins/local/{plugin}/globalVariables/{variable}": {
+      "get": {
+        "tags": [
+          "Hub"
+        ],
+        "operationId": "getGlobalVariable",
+        "summary": "Get global variable",
+        "description": "Returns details of a global variable.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.variable+json"
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/variable"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "plugin",
+            "in": "path",
+            "description": "ID of the plugin that owns the variable",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "variable",
+            "in": "path",
+            "description": "Name of the variable",
+            "required": true,
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "/hubs/{hub}/plugins/local/{plugin}/devices": {
+      "get": {
+        "tags": [
+          "Device"
+        ],
+        "operationId": "getLocalPluginDevices",
+        "summary": "Get local plugin devices",
+        "description": "Returns the devices published by a local plugin.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.itemList+json"
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/itemList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "plugin",
+            "in": "path",
+            "description": "ID of the plugin that owns the device",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "expand",
+            "in": "query",
+            "description": "Attributes to expand in-line (optional)",
+            "required": false,
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "/hubs/{hub}/plugins/local/{plugin}/devices/{device}": {
+      "get": {
+        "tags": [
+          "Device"
+        ],
+        "operationId": "getDevice",
+        "summary": "Get device",
+        "description": "Returns details of a device.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.device+json"
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/device"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "expand",
+            "in": "query",
+            "description": "Attributes to expand in-line (optional)",
+            "required": false,
+            "type": "string"
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Device"
+        ],
+        "operationId": "deleteDevice",
+        "summary": "Delete device",
+        "description": "Deletes an existing device.",
+        "responses": {
+          "202": {
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "hub",
+          "in": "path",
+          "description": "ID of a hub (\"local\" is the default for local hubs)",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "plugin",
+          "in": "path",
+          "description": "ID of the plugin that owns the device",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "device",
+          "in": "path",
+          "description": "ID of the device",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/hubs/{hub}/plugins/local/{plugin}/devices/{device}/actionClasses": {
+      "get": {
+        "tags": [
+          "Device"
+        ],
+        "operationId": "getDeviceActionClasses",
+        "summary": "Get device action classes",
+        "description": "Returns action classes published by a device.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.itemList+json"
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/itemList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "plugin",
+            "in": "path",
+            "description": "ID of the plugin that owns the device",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "device",
+            "in": "path",
+            "description": "ID of the device",
+            "required": true,
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "/hubs/{hub}/plugins/local/{plugin}/devices/{device}/actionClasses/{actionClass}": {
+      "get": {
+        "tags": [
+          "Device"
+        ],
+        "operationId": "getDeviceActionClass",
+        "summary": "Get device action class",
+        "description": "Returns details of an action classes published by a device.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.actionClass+json"
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/actionClass"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "plugin",
+            "in": "path",
+            "description": "ID of the plugin that owns the device",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "device",
+            "in": "path",
+            "description": "ID of the device",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "actionClass",
+            "in": "path",
+            "description": "ID of the action class",
+            "required": true,
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "/hubs/{hub}/plugins/local/{plugin}/devices/{device}/configuration": {
+      "get": {
+        "tags": [
+          "Device"
+        ],
+        "operationId": "getDeviceConfiguration",
+        "summary": "Get device configuration",
+        "description": "Returns configuration of a device.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.propertyContainer+json"
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/propertyContainer"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Device"
+        ],
+        "operationId": "setDeviceConfiguration",
+        "summary": "Set device configuration",
+        "description": "Sets the current configuration of a device.",
+        "consumes": [
+          "application/json",
+          "application/vnd.hobson.propertyContainer+json"
+        ],
+        "responses": {
+          "202": {}
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "The device configuration",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/propertyContainer"
+            }
+          }
+        ]
+      },
+      "parameters": [
+        {
+          "name": "hub",
+          "in": "path",
+          "description": "ID of a hub (\"local\" is the default for local hubs)",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "plugin",
+          "in": "path",
+          "description": "ID of the plugin that owns the device",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "device",
+          "in": "path",
+          "description": "ID of the device",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/hubs/{hub}/plugins/local/{plugin}/devices/{device}/configurationClass": {
+      "get": {
+        "tags": [
+          "Device"
+        ],
+        "operationId": "getDeviceConfigurationClass",
+        "summary": "Get device configuration class",
+        "description": "Returns configuration class of a device.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.propertyContainerClass+json"
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/propertyContainerClass"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "plugin",
+            "in": "path",
+            "description": "ID of the plugin that owns the device",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "device",
+            "in": "path",
+            "description": "ID of the device",
+            "required": true,
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "/hubs/{hub}/plugins/local/{plugin}/devices/{device}/name": {
+      "put": {
+        "tags": [
+          "Device"
+        ],
+        "operationId": "setDeviceName",
+        "summary": "Set device name",
+        "description": "Sets the name of a device.",
+        "responses": {
+          "202": {
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "plugin",
+            "in": "path",
+            "description": "ID of the plugin that owns the device",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "device",
+            "in": "path",
+            "description": "ID of the device",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "The device name value",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "/hubs/{hub}/plugins/local/{plugin}/devices/{device}/variables": {
+      "get": {
+        "tags": [
+          "Device"
+        ],
+        "operationId": "getDeviceVariables",
+        "summary": "Get device variables",
+        "description": "Gets variables published by a device.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.itemList+json"
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/itemList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "expand",
+            "in": "query",
+            "description": "Attributes to expand in-line (optional)",
+            "required": false,
+            "type": "string"
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Device"
+        ],
+        "operationId": "setDeviceVariables",
+        "summary": "Set device variables",
+        "description": "Sets multiple device variables for a device.",
+        "consumes": [
+          "application/json"
+        ],
+        "responses": {
+          "202": {
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "The variables to set (each name/value pair in the \"values\" object represents a variable name/value).",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "values": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "parameters": [
+        {
+          "name": "hub",
+          "in": "path",
+          "description": "ID of a hub (\"local\" is the default for local hubs)",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "plugin",
+          "in": "path",
+          "description": "ID of the plugin that owns the device",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "device",
+          "in": "path",
+          "description": "ID of the device",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "expand",
+          "in": "query",
+          "description": "Attributes to expand in-line (optional)",
+          "required": false,
+          "type": "string"
+        }
+      ]
+    },
+    "/hubs/{hub}/plugins/local/{plugin}/devices/{device}/variables/{variable}": {
+      "get": {
+        "tags": [
+          "Device"
+        ],
+        "operationId": "getDeviceVariable",
+        "summary": "Get device variable",
+        "description": "Gets details of a device variable.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.variable+json"
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/variable"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Device"
+        ],
+        "operationId": "setDeviceVariable",
+        "summary": "Set device variable",
+        "description": "Sets the value of a device variable.",
+        "consumes": [
+          "application/json"
+        ],
+        "responses": {
+          "202": {
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "description": "The variable value to set (note that only the \"value\" attribute is needed in the request)",
+            "schema": {
+              "$ref": "#/definitions/variable"
+            }
+          }
+        ]
+      },
+      "parameters": [
+        {
+          "name": "hub",
+          "in": "path",
+          "description": "ID of a hub (\"local\" is the default for local hubs)",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "plugin",
+          "in": "path",
+          "description": "ID of the plugin that owns the device",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "device",
+          "in": "path",
+          "description": "ID of the device",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "variable",
+          "in": "path",
+          "description": "Name of the variable",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/hubs/{hub}/plugins/local/{plugin}/conditionClasses/{conditionClass}": {
+      "get": {
+        "tags": [
+          "Plugin"
+        ],
+        "operationId": "getConditionClass",
+        "summary": "Get condition class",
+        "description": "Returns details of condition class.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.propertyContainerClass+json"
+        ],
+        "responses": {
+          "202": {
+            "schema": {
+              "$ref": "#/definitions/propertyContainerClass"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "plugin",
+            "in": "path",
+            "description": "ID of the plugin that owns the device",
+            "required": true,
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "/hubs/{hub}/plugins/remote": {
+      "get": {
+        "tags": [
+          "Plugin"
+        ],
+        "operationId": "getRemotePlugins",
+        "summary": "Get remote plugins",
+        "description": "Returns remote plugins available for the hub version.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.itemList+json"
+        ],
+        "responses": {
+          "202": {
+            "schema": {
+              "$ref": "#/definitions/itemList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "/hubs/{hub}/plugins/remote/{plugin}/{pluginVersion}": {
+      "get": {
+        "tags": [
+          "Plugin"
+        ],
+        "operationId": "getRemotePlugin",
+        "summary": "Get remote plugin",
+        "description": "Returns details of a remote plugin.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.plugin+json"
+        ],
+        "responses": {
+          "202": {
+            "schema": {
+              "$ref": "#/definitions/plugin"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "plugin",
+            "in": "path",
+            "description": "ID of the plugin that owns the device",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "pluginVersion",
+            "in": "path",
+            "description": "Version of the plugin to install",
+            "required": true,
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "/hubs/{hub}/plugins/remote/{plugin}/{pluginVersion}/install": {
+      "post": {
+        "tags": [
+          "Plugin"
+        ],
+        "operationId": "installRemotePlugin",
+        "summary": "Install remote plugin",
+        "description": "Installs a remote plugin to the hub.",
+        "responses": {
+          "202": {
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "plugin",
+            "in": "path",
+            "description": "ID of the plugin that owns the device",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "pluginVersion",
+            "in": "path",
+            "description": "Version of the plugin to install",
+            "required": true,
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "/hubs/{hub}/presence/entities": {
+      "get": {
+        "tags": [
+          "Presence"
+        ],
+        "operationId": "getPresenceEntities",
+        "summary": "Get presence entities",
+        "description": "Returns a list of all presence entities associated with a hub.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.itemList+json"
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/itemList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "expand",
+            "in": "query",
+            "description": "Attributes to expand in-line (optional)",
+            "required": false,
+            "type": "string"
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Presence"
+        ],
+        "operationId": "addPresenceEntity",
+        "summary": "Adds presence entity",
+        "description": "Adds a new presence entity to a hub.",
+        "consumes": [
+          "application/json",
+          "application/vnd.hobson.presenceEntity+json"
+        ],
+        "responses": {
+          "202": {
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "entity",
+            "in": "body",
+            "description": "The presence entity to add (note that only the \"name\" property is needed in the request body.",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/presenceEntity"
+            }
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Presence"
+        ],
+        "operationId": "deletePresenceEntities",
+        "summary": "Deletes presence entities",
+        "description": "Deletes all presence entities from a hub.",
+        "responses": {
+          "202": {
+
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "/hubs/{hub}/presence/entities/{entity}": {
+      "get": {
+        "tags": [
+          "Presence"
+        ],
+        "operationId": "getPresenceEntity",
+        "summary": "Get presence entity",
+        "description": "Returns details of a presence entity.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.presenceEntity"
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/presenceEntity"
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Presence"
+        ],
+        "operationId": "updatePresenceEntity",
+        "summary": "Update presence entity",
+        "description": "Updates a presence entity.",
+        "parameters": [
+          {
+            "name": "entityBody",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/presenceEntity"
+            }
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Presence"
+        ],
+        "operationId": "deletePresenceEntity",
+        "summary": "Delete presence entity",
+        "description": "Deletes a presence entity from a hub.",
+        "responses": {
+          "200": {}
+        }
+      },
+      "parameters": [
+        {
+          "name": "hub",
+          "in": "path",
+          "description": "ID of a hub (\"local\" is the default for local hubs)",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "entity",
+          "in": "path",
+          "description": "ID of a presence entity",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/hubs/{hub}/presence/locations": {
+      "get": {
+        "tags": [
+          "Presence"
+        ],
+        "operationId": "getPresenceLocations",
+        "summary": "Get presence locations",
+        "description": "Returns a list of all presence locations associated with a hub.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.itemList+json"
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/itemList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "expand",
+            "in": "query",
+            "description": "Attributes to expand in-line (optional)",
+            "required": false,
+            "type": "string"
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Presence"
+        ],
+        "operationId": "addPresenceLocation",
+        "summary": "Add presence location",
+        "description": "Adds a new presence location to a hub.",
+        "consumes": [
+          "application/json",
+          "application/vnd.hobson.presenceLocation+json"
+        ],
+        "responses": {
+          "202": {
+          }
+        },
+        "parameters": [
+          {
+            "name": "entity",
+            "in": "body",
+            "description": "The presence entity to add",
+            "requires": true,
+            "schema": {
+              "$ref": "#/definitions/presenceLocation"
+            }
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Presence"
+        ],
+        "operationId": "deletePresenceLocations",
+        "summary": "Deletes presence locations",
+        "description": "Deletes all presence locations from a hub.",
+        "responses": {
+          "202": {
+
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "hub",
+          "in": "path",
+          "description": "ID of a hub (\"local\" is the default for local hubs)",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/hubs/{hub}/presence/locations/{location}": {
+      "get": {
+        "tags": [
+          "Presence"
+        ],
+        "operationId": "getPresenceLocation",
+        "summary": "Get presence location",
+        "description": "Returns details of a presence location.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.presenceLocation"
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/presenceLocation"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Presence"
+        ],
+        "operationId": "deletePresenceLocation",
+        "summary": "Delete presence location",
+        "description": "Deletes a presence location from a hub.",
+        "responses": {
+          "200": {}
+        }
+      },
+      "parameters": [
+        {
+          "name": "hub",
+          "in": "path",
+          "description": "ID of a hub (\"local\" is the default for local hubs)",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "location",
+          "in": "path",
+          "description": "ID of a presence location",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/hubs/{hub}/repositories": {
+      "get": {
+        "tags": [
+          "Hub"
+        ],
+        "operationId": "getHubRemoteRepositories",
+        "summary": "Get hub remote repositories",
+        "description": "Returns a list of hub remote repositories.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.itemList+json"
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/itemList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "expand",
+            "in": "query",
+            "description": "Attributes to expand in-line (optional)",
+            "required": false,
+            "type": "string"
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Hub"
+        ],
+        "operationId": "addHubRemoteRepository",
+        "summary": "Add hub remote repository",
+        "description": "Adds a new hub remote repository.",
+        "consumes": [
+          "application/json",
+          "application/vnd.hobson.repository+json"
+        ],
+        "responses": {
+          "202": {
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "repository",
+            "in": "body",
+            "description": "The URI of the repository to add (@id attribute is not necessary)",
+            "type": "object",
+            "schema": {
+              "$ref": "#/definitions/repository"
+            }
+          }
+        ]
+      }
+    },
+    "/hubs/{hub}/repositories/{repository}": {
+      "get": {
+        "tags": [
+          "Hub"
+        ],
+        "operationId": "getHubRepositories",
+        "summary": "Get hub remote repository",
+        "description": "Returns details of a hub remote repository.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.repository"
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/repository"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "repository",
+            "in": "path",
+            "description": "ID of a remote repository",
+            "required": true,
+            "type": "string"
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Hub"
+        ],
+        "operationId": "deleteHubRemoteRepository",
+        "summary": "Delete hub remote repository",
+        "description": "Enable a hub remote repository.",
+        "responses": {
+          "202": {
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "repository",
+            "in": "path",
+            "description": "ID of a remote repository",
+            "required": true,
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "/hubs/{hub}/serialPorts": {
+      "get": {
+        "tags": [
+          "Hub"
+        ],
+        "operationId": "getHubSerialPorts",
+        "summary": "Get hub serial ports",
+        "description": "Returns a list of hub serial ports.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.itemList+json"
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/itemList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "/hubs/{hub}/shutdown": {
+      "post": {
+        "tags": [
+          "Hub"
+        ],
+        "operationId": "shutdownHub",
+        "summary": "Shutdown hub",
+        "description": "Shuts down the hub.",
+        "responses": {
+          "202": {
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "/hubs/{hub}/tasks": {
+      "get": {
+        "tags": [
+          "Task"
+        ],
+        "operationId": "getTasks",
+        "summary": "Get tasks",
+        "description": "Returns tasks created on a hub.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.itemList+json"
+        ],
+        "responses": {
+          "202": {
+            "schema": {
+              "$ref": "#/definitions/itemList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Task"
+        ],
+        "operationId": "createTask",
+        "summary": "Create task",
+        "description": "Creates a new task.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.task+json"
+        ],
+        "responses": {
+          "202": {
+            "schema": {
+              "$ref": "#/definitions/task"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Task"
+        ],
+        "operationId": "deleteAllTasks",
+        "summary": "Delete all tasks",
+        "description": "Deletes all tasks on the hub.",
+        "responses": {
+          "202": {
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "/hubs/{hub}/tasks/conditionClasses": {
+      "get": {
+        "tags": [
+          "Task"
+        ],
+        "operationId": "getConditionClasses",
+        "summary": "Get condition classes",
+        "description": "Get all condition classes published to hub.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.itemList+json"
+        ],
+        "responses": {
+          "202": {
+            "schema": {
+              "$ref": "#/definitions/itemList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "expand",
+            "in": "query",
+            "description": "Attributes to expand in-line (optional)",
+            "required": false,
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "/hubs/{hub}/tasks/{task}": {
+      "get": {
+        "tags": [
+          "Task"
+        ],
+        "operationId": "getTask",
+        "summary": "Get task",
+        "description": "Returns details of a task.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.task+json"
+        ],
+        "responses": {
+          "202": {
+            "schema": {
+              "$ref": "#/definitions/task"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "task",
+            "in": "path",
+            "description": "ID of task to execute",
+            "required": true,
+            "type": "string"
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Task"
+        ],
+        "operationId": "updateTask",
+        "summary": "Update task",
+        "description": "Updates a task.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.task+json"
+        ],
+        "responses": {
+          "202": {
+            "schema": {
+              "$ref": "#/definitions/task"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "task",
+            "in": "path",
+            "description": "ID of task to execute",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "The task details to update",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/task"
+            }
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Task"
+        ],
+        "operationId": "executeTask",
+        "summary": "Execute task",
+        "description": "Executes a task.",
+        "responses": {
+          "202": {
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "task",
+            "in": "path",
+            "description": "ID of task to execute",
+            "required": true,
+            "type": "string"
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Task"
+        ],
+        "operationId": "deleteTask",
+        "summary": "Delete task",
+        "description": "Deletes a task.",
+        "responses": {
+          "202": {
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "task",
+            "in": "path",
+            "description": "ID of task to execute",
+            "required": true,
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "/userInfo": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "operationId": "getAuthenticatedUser",
+        "summary": "Get authenticated user",
+        "description": "Returns details of the currently authenticated user.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.person+json"
+        ],
+        "responses": {
+          "202": {
+            "schema": {
+              "$ref": "#/definitions/person"
+            }
+          }
+        },
+        "parameters": [
+        ]
+      }
+    },
+    "/users": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "operationId": "getUsers",
+        "summary": "Get users",
+        "description": "Returns users available on the hub.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.itemList+json"
+        ],
+        "responses": {
+          "202": {
+            "schema": {
+              "$ref": "#/definitions/itemList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "expand",
+            "in": "query",
+            "description": "Attributes to expand in-line (optional)",
+            "required": false,
+            "type": "string"
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "operationId": "createUser",
+        "summary": "Create user",
+        "description": "Creates a new user on the hub.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.person+json"
+        ],
+        "responses": {
+          "202": {
+            "schema": {
+              "$ref": "#/definitions/person"
+            }
+          }
+        },
+        "parameters": [
+        ]
+      }
+    },
+    "/users/{user}": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "operationId": "getUser",
+        "summary": "Get user",
+        "description": "Returns details of a user.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.person+json"
+        ],
+        "responses": {
+          "202": {
+            "schema": {
+              "$ref": "#/definitions/person"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "user",
+            "in": "path",
+            "description": "ID of a user (\"admin\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "/users/{user}/hubs": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "operationId": "getHubs",
+        "summary": "Get user hubs",
+        "description": "Returns a list of all hubs associated with a user.",
+        "produces": [
+          "application/json",
+          "application/vnd.hobson.itemList+json"
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/itemList"
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "user",
+          "in": "path",
+          "description": "ID of a user (\"admin\" is the default for local hubs)",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    }
+  },
+  "definitions": {
+    "actionClass": {
+      "type": "object",
+      "properties": {
+        "@id": {
+          "type": "string"
+        }
+      }
+    },
+    "entityRef": {
+      "type": "object",
+      "properties": {
+        "@id": {
+          "type": "string"
+        }
+      }
+    },
+    "itemList": {
+      "type": "object",
+      "properties": {
+        "@id": {
+          "type": "string"
+        },
+        "numberOfItems": {
+          "type": "number"
+        },
+        "itemListElement": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/listItem"
+          }
+        }
+      }
+    },
+    "listItem": {
+      "type": "object",
+      "properties": {
+        "item": {
+          "$ref": "#/definitions/entityRef"
+        }
+      }
+    },
+    "hub": {
+      "type": "object",
+      "properties": {
+        "@id": {
+          "type": "string"
+        },
+        "actionClasses": {
+          "$ref": "#/definitions/itemList"
+        },
+        "cclass": {
+          "$ref": "#/definitions/entityRef"
+        },
+        "conditionClasses": {
+          "$ref": "#/definitions/itemList"
+        },
+        "configuration": {
+          "$ref": "#/definitions/entityRef"
+        },
+        "devices": {
+          "$ref": "#/definitions/itemList"
+        },
+        "globalVariables": {
+          "$ref": "#/definitions/itemList"
+        },
+        "links": {
+          "type": "object"
+        },
+        "localPlugins": {
+          "$ref": "#/definitions/itemList"
+        },
+        "log": {
+          "$ref": "#/definitions/entityRef"
+        },
+        "name": {
+          "type": "string"
+        },
+        "presenceEntities": {
+          "$ref": "#/definitions/itemList"
+        },
+        "presenceLocations": {
+          "$ref": "#/definitions/itemList"
+        },
+        "serialPorts": {
+          "$ref": "#/definitions/itemList"
+        },
+        "tasks": {
+          "$ref": "#/definitions/itemList"
+        },
+        "version": {
+          "type": "string"
+        },
+        "remotePlugins": {
+          "$ref": "#/definitions/itemList"
+        },
+        "repositories": {
+          "$ref": "#/definitions/itemList"
+        }
+      }
+    },
+    "dataStream": {
+      "type": "object",
+      "properties": {
+        "@id": {
+          "type": "string"
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/dataStreamField"
+          }
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "dataStreamField": {
+      "type": "object",
+      "properties": {
+        "timestamp": {
+          "type": "number"
+        },
+        "values": {
+          "type": "object"
+        }
+      }
+    },
+    "dataStreamData": {
+      "type": "object",
+      "properties": {
+        "@id": {
+          "type": "string"
+        },
+        "interval": {
+          "type": "string"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/dataStreamValueSet"
+          }
+        },
+        "endTime": {
+          "type": "number"
+        },
+        "fields": {
+          "type": "object"
+        }
+      }
+    },
+    "dataStreamValueSet": {
+      "type": "object",
+      "properties": {
+        "timestamp": {
+          "type": "number"
+        },
+        "values": {
+          "type": "object"
+        }
+      }
+    },
+    "device": {
+      "type": "object",
+      "properties": {
+        "@id": {
+          "type": "string"
+        },
+        "actionClasses": {
+          "$ref": "#/definitions/itemList"
+        },
+        "available": {
+          "type": "boolean"
+        },
+        "cclass": {
+          "$ref": "#/definitions/entityRef"
+        },
+        "configuration": {
+          "$ref": "#/definitions/entityRef"
+        },
+        "lastCheckIn": {
+          "type": "number"
+        },
+        "links": {
+          "type": "object"
+        },
+        "manufacturerName": {
+          "type": "string"
+        },
+        "manufacturerVersion": {
+          "type": "string"
+        },
+        "modelName": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "preferredVariable": {
+          "$ref": "#/definitions/entityRef"
+        },
+        "type": {
+          "type": "string"
+        },
+        "variables": {
+          "$ref": "#/definitions/itemList"
+        }
+      }
+    },
+    "variable": {
+      "type": "object",
+      "properties": {
+        "@id": {
+          "type": "string"
+        },
+        "lastUpdate": {
+          "type": "number"
+        },
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "object"
+        },
+        "mask": {
+          "type": "string"
+        }
+      }
+    },
+    "localPlugin": {
+      "type": "object",
+      "properties": {
+        "configurable": {
+          "type": "boolean"
+        },
+        "cclass": {
+          "$ref": "#/definitions/entityRef"
+        },
+        "status": {
+          "$ref": "#/definitions/pluginStatus"
+        },
+        "name": {
+          "type": "string"
+        },
+        "image": {
+          "$ref": "#/definitions/entityRef"
+        },
+        "configuration": {
+          "$ref": "#/definitions/entityRef"
+        },
+        "type": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      }
+    },
+    "presenceEntity": {
+      "type": "object",
+      "properties": {
+        "@id": {
+          "type": "string"
+        },
+        "location": {
+          "$ref": "#/definitions/entityRef"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "presenceLocation": {
+      "type": "object",
+      "properties": {
+        "@id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "latitude": {
+          "type": "number"
+        },
+        "longitude": {
+          "type": "number"
+        },
+        "radius": {
+          "type": "number"
+        },
+        "beaconMajor": {
+          "type": "number"
+        },
+        "beaconMinor": {
+          "type": "number"
+        }
+      }
+    },
+    "propertyContainer": {
+      "type": "object",
+      "properties": {
+        "@id": {
+          "type": "string"
+        },
+        "cclass": {
+          "$ref": "#/definitions/entityRef"
+        },
+        "values": {
+          "type": "object"
+        }
+      }
+    },
+    "propertyContainerClass": {
+      "type": "object",
+      "properties": {
+        "@id": {
+          "type": "string"
+        },
+        "supportedProperties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/typedProperty"
+          }
+        }
+      }
+    },
+    "repository": {
+      "type": "object",
+      "properties": {
+        "@id": {
+          "type": "string",
+          "required": false
+        },
+        "uri": {
+          "type": "string"
+        }
+      }
+    },
+    "task": {
+      "type": "object",
+      "properties": {
+        "@id": {
+          "type": "string"
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/entityRef"
+          }
+        },
+        "name": {
+          "type": "string"
+        },
+        "actionSet": {
+          "$ref": "#/definitions/entityRef"
+        },
+        "properties": {
+          "type": "object"
+        }
+      }
+    },
+    "typedProperty": {
+      "type": "object",
+      "properties": {
+        "@id": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      }
+    },
+    "job": {
+      "type": "object",
+      "properties": {
+        "@id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "messages": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "person": {
+      "type": "object",
+      "properties": {
+        "@id": {
+          "type": "string"
+        },
+        "roles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "userId": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "familyName": {
+          "type": "string"
+        },
+        "givenName": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

@@ -7,7 +7,7 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.plugin;
 
-import com.whizzosoftware.hobson.api.plugin.HobsonPlugin;
+import com.whizzosoftware.hobson.api.plugin.HobsonLocalPluginDescriptor;
 import com.whizzosoftware.hobson.api.plugin.PluginContext;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
@@ -15,6 +15,7 @@ import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
 import com.whizzosoftware.hobson.dto.plugin.HobsonPluginDTO;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.v1.util.MediaTypeHelper;
 import org.restlet.data.MediaType;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -70,17 +71,18 @@ public class LocalPluginResource extends SelfInjectingServerResource {
         ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
 
         PluginContext pctx = PluginContext.create(ctx.getHubContext(), getAttribute("pluginId"));
-        HobsonPlugin plugin = pluginManager.getLocalPlugin(pctx);
+        HobsonLocalPluginDescriptor plugin = pluginManager.getLocalPlugin(pctx);
 
         HobsonPluginDTO dto = new HobsonPluginDTO.Builder(
             dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions),
+            ctx.getHubContext(),
             plugin,
             null,
             null,
             true
         ).build();
         JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
-        jr.setMediaType(new MediaType(dto.getJSONMediaType()));
+        jr.setMediaType(MediaTypeHelper.createMediaType(getRequest(), dto));
         return jr;
     }
 }

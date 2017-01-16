@@ -7,22 +7,25 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.presence;
 
+import com.whizzosoftware.hobson.api.HobsonAuthorizationException;
 import com.whizzosoftware.hobson.api.event.EventManager;
-import com.whizzosoftware.hobson.api.event.PresenceUpdateRequestEvent;
-import com.whizzosoftware.hobson.api.persist.IdProvider;
+import com.whizzosoftware.hobson.api.event.presence.PresenceUpdateRequestEvent;
 import com.whizzosoftware.hobson.api.presence.PresenceEntity;
 import com.whizzosoftware.hobson.api.presence.PresenceEntityContext;
 import com.whizzosoftware.hobson.api.presence.PresenceLocation;
 import com.whizzosoftware.hobson.api.presence.PresenceManager;
-import com.whizzosoftware.hobson.dto.context.DTOBuildContext;
+import com.whizzosoftware.hobson.api.user.HobsonRole;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
+import com.whizzosoftware.hobson.dto.context.DTOBuildContext;
 import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
 import com.whizzosoftware.hobson.dto.presence.PresenceEntityDTO;
 import com.whizzosoftware.hobson.dto.presence.PresenceLocationDTO;
+import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
+import com.whizzosoftware.hobson.rest.v1.util.MediaTypeHelper;
 import org.json.JSONObject;
 import org.restlet.data.MediaType;
 import org.restlet.data.Status;
@@ -48,62 +51,34 @@ public class PresenceEntityResource extends SelfInjectingServerResource {
     @Inject
     DTOBuildContextFactory dtoBuildContextFactory;
 
-    /**
-     * @api {get} /api/v1/users/:userId/hubs/:hubId/presence/entities/:entityId Get presence entity
-     * @apiVersion 0.1.3
-     * @apiName GetPresenceEntity
-     * @apiDescription Retrieves details of a presence entity.
-     * @apiGroup Presence
-     *
-     * @apiSuccessExample Success Response:
-     * {
-     *   "name": "John's Mobile Phone",
-     *   "location": {
-     *       "@id": "/api/v1/users/local/hubs/local/presence/locations/beef-cafe-beeeef-cafe"
-     *   },
-     *   "lastUpdate": 1416007036
-     * }
-     */
     @Override
     protected Representation get() {
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
         ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
+        DTOBuildContext bctx = dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions);
 
         PresenceEntityContext pctx = PresenceEntityContext.create(ctx.getHubContext(), getAttribute("entityId"));
         PresenceEntity entity = presenceManager.getPresenceEntity(pctx);
 
         PresenceEntityDTO dto = new PresenceEntityDTO.Builder(
-            dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions),
+            bctx,
             entity,
             true
         ).build();
+
+        dto.addContext(JSONAttributes.AIDT, bctx.getIdTemplateMap());
+
         JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
-        jr.setMediaType(new MediaType(dto.getJSONMediaType()));
+        jr.setMediaType(MediaTypeHelper.createMediaType(getRequest(), dto));
         return jr;
     }
 
-    /**
-     * @api {put} /api/v1/users/:userId/hubs/:hubId/presence/entities/:entityId Update presence entity
-     * @apiVersion 0.1.3
-     * @apiName UpdatePresenceEntity
-     * @apiDescription Updates a presence entity.
-     * @apiGroup Presence
-     *
-     * @apiExample {json} Example known location request:
-     * {
-     *   "location": {
-     *      "@id": "/api/v1/users/local/hubs/local/presence/locations/beef-cafe-beeeef-cafe"
-     *   }
-     * }
-     * @apiExample {json} Example unknown location request:
-     * {
-     *   "location": {}
-     * }
-     * @apiSuccessExample Success Response:
-     * HTTP/1.1 202 Accepted
-     */
     @Override
-    protected Representation put(Representation entity) {
+    protected Representation patch(Representation entity) {
+        if (!isInRole(HobsonRole.administrator.name())) {
+            throw new HobsonAuthorizationException("Forbidden");
+        }
+
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
         JSONObject json = JSONHelper.createJSONFromRepresentation(entity);
@@ -118,17 +93,12 @@ public class PresenceEntityResource extends SelfInjectingServerResource {
         return new EmptyRepresentation();
     }
 
-    /**
-     * @api {delete} /api/v1/users/:userId/hubs/:hubId/presence/entities/:entityId Delete presence entity
-     * @apiVersion 0.7.0
-     * @apiName DeletePresenceEntity
-     * @apiDescription Deletes a specific presence entity.
-     * @apiGroup Presence
-     * @apiSuccessExample Success Response:
-     * HTTP/1.1 202 Accepted
-     */
     @Override
     protected Representation delete() {
+        if (!isInRole(HobsonRole.administrator.name())) {
+            throw new HobsonAuthorizationException("Forbidden");
+        }
+
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
         PresenceEntityContext pec = PresenceEntityContext.create(ctx.getHubContext(), getAttribute("entityId"));

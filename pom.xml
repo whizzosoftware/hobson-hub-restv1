@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
 	<groupId>com.whizzosoftware.hobson.hub</groupId>
     <artifactId>hobson-hub-restv1</artifactId>
-    <version>0.9.2-SNAPSHOT</version>
+    <version>0.10.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <name>REST API v1 Plugin</name>
     <description>Provides a RESTful API that can be used to manage the Hobson Hub</description>
@@ -12,6 +12,24 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>1.7.6</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+            <version>1.1.3</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-common</artifactId>
+            <version>4.0.27.Final</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-handler</artifactId>
+            <version>4.0.27.Final</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -65,13 +83,25 @@
         <dependency>
             <groupId>com.whizzosoftware.hobson.hub</groupId>
             <artifactId>hobson-hub-api</artifactId>
-            <version>0.9.1</version>
+            <version>0.10.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.whizzosoftware.hobson.hub</groupId>
             <artifactId>hobson-hub-dto</artifactId>
-            <version>0.9.0</version>
+            <version>0.10.0-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.bitbucket.b_c</groupId>
+            <artifactId>jose4j</artifactId>
+            <version>0.4.1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -82,26 +112,15 @@
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
-            <artifactId>netty-common</artifactId>
-            <version>4.0.21.Final</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.netty</groupId>
             <artifactId>netty-transport</artifactId>
-            <version>4.0.21.Final</version>
+            <version>4.0.27.Final</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.bitbucket.b_c</groupId>
-            <artifactId>jose4j</artifactId>
-            <version>0.4.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>3.1</version>
-            <scope>provided</scope>
+            <groupId>com.whizzosoftware.hobson.hub</groupId>
+            <artifactId>hobson-hub-api-mock</artifactId>
+            <version>0.10.0-SNAPSHOT</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
     <build>
@@ -127,7 +146,7 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Import-Package>com.whizzosoftware.hobson.api.*,net.sf.dozer.*,org.apache.commons.*</Import-Package>
+                        <Import-Package>com.whizzosoftware.hobson.api.*,org.apache.commons.*</Import-Package>
                         <Export-Package>com.whizzosoftware.hobson.rest.v1.*</Export-Package>
                     </instructions>
                 </configuration>

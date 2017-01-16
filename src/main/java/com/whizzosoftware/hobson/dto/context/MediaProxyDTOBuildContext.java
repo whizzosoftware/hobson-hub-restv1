@@ -1,17 +1,16 @@
-/*******************************************************************************
+/*
+ *******************************************************************************
  * Copyright (c) 2015 Whizzo Software, LLC.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/
+ *******************************************************************************
+*/
 package com.whizzosoftware.hobson.dto.context;
 
-import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.hub.HubContext;
-import com.whizzosoftware.hobson.api.variable.HobsonVariable;
-import com.whizzosoftware.hobson.api.variable.ImmutableHobsonVariable;
-import com.whizzosoftware.hobson.api.variable.VariableContext;
+import com.whizzosoftware.hobson.api.variable.*;
 import com.whizzosoftware.hobson.rest.v1.resource.device.MediaProxyResource;
 import org.restlet.routing.Template;
 
@@ -31,41 +30,27 @@ public class MediaProxyDTOBuildContext extends ManagerDTOBuildContext {
     }
 
     @Override
-    public Collection<HobsonVariable> getDeviceVariables(DeviceContext dctx) {
-        List<HobsonVariable> results = new ArrayList<>();
-        for (HobsonVariable v : variableManager.getDeviceVariables(dctx)) {
-            results.add(createStubVariableIfNecessary(dctx.getHubContext(), v));
-        }
-        return results;
+    public DeviceVariableState getDeviceVariableState(DeviceVariableContext vctx) {
+        DeviceVariableState s = super.getDeviceVariableState(vctx);
+        return createStubVariableIfNecessary(vctx.getHubContext(), deviceManager.getDevice(vctx.getDeviceContext()).getVariable(vctx.getName()), s);
     }
 
-    @Override
-    public HobsonVariable getDeviceVariable(DeviceContext dctx, String name) {
-        return createStubVariableIfNecessary(dctx.getHubContext(), variableManager.getVariable(VariableContext.create(dctx, name)));
-    }
-
-    private HobsonVariable createStubVariableIfNecessary(HubContext hctx, HobsonVariable v) {
-        if (v.hasMediaType()) {
-            return new ImmutableHobsonVariable(
-                v.getContext(),
-                v.getMask(),
-                getProxyValue(hctx, v),
-                v.getLastUpdate(),
-                v.getMediaType()
-            );
+    private DeviceVariableState createStubVariableIfNecessary(HubContext hctx, DeviceVariableDescriptor v, DeviceVariableState s) {
+        if (v != null && v.hasMediaType() && s != null) {
+            return new DeviceVariableState(v.getContext(), getProxyValue(hctx, v, s), s.getLastUpdate());
         } else {
-            return v;
+            return s;
         }
     }
 
-    private Object getProxyValue(HubContext hctx, HobsonVariable v) {
+    private Object getProxyValue(HubContext hctx, DeviceVariableDescriptor v, DeviceVariableState s) {
         Object value = null;
 
-        if (v != null) {
-            value = v.getValue();
+        if (v != null && s != null) {
+            value = s.getValue();
             if (v.hasMediaType()) {
                 value = apiRoot + new Template(MediaProxyResource.PATH).format(
-                    createParamMap(hctx, v.getPluginId(), v.getDeviceId(), v.getName())
+                    createParamMap(hctx, v.getContext().getPluginId(), v.getContext().getDeviceId(), v.getContext().getName())
                 );
             }
         }

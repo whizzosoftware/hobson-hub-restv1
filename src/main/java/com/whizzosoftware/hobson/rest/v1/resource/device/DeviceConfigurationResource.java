@@ -7,15 +7,22 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest.v1.resource.device;
 
+import com.whizzosoftware.hobson.api.HobsonAuthorizationException;
 import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.device.DeviceManager;
+import com.whizzosoftware.hobson.api.device.HobsonDeviceDescriptor;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.api.property.*;
+import com.whizzosoftware.hobson.api.user.HobsonRole;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
+import com.whizzosoftware.hobson.dto.context.DTOBuildContext;
+import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
 import com.whizzosoftware.hobson.dto.property.PropertyContainerDTO;
+import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
+import com.whizzosoftware.hobson.rest.v1.util.MediaTypeHelper;
 import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -31,56 +38,40 @@ import javax.inject.Inject;
  * @author Dan Noguerol
  */
 public class DeviceConfigurationResource extends SelfInjectingServerResource {
-    public static final String PATH = "/hubs/{hubId}/plugins/{pluginId}/devices/{deviceId}/configuration";
+    public static final String PATH = "/hubs/{hubId}/plugins/local/{pluginId}/devices/{deviceId}/configuration";
+    public static final String TEMPLATE = "/hubs/{hubId}/plugins/local/{pluginId}/devices/{deviceId}/{entity}";
 
     @Inject
     DeviceManager deviceManager;
     @Inject
-    IdProvider idProvider;
+    DTOBuildContextFactory dtoBuildContextFactory;
 
-    /**
-     * @api {get} /api/v1/users/:userId/hubs/:hubId/plugins/:pluginId/devices/:deviceId/configuration Get device configuration
-     * @apiVersion 0.1.3
-     * @apiName GetDeviceConfig
-     * @apiDescription Retrieves the current configuration for a device.
-     * @apiGroup Devices
-     * @apiSuccess {Object} cclass The configuration class associated with the configuration
-     * @apiSuccess {Object} values The configuration values
-     * @apiSuccessExample {json} Success Response:
-     * {
-     *   "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-radiora/device1/configuration"
-     *   "cclass": {
-     *     "@id": "/api/v1/users/local/hubs/local/plugins/com.whizzosoftware.hobson.hub.hobson-hub-radiora/device1/configurationClass"
-     *   },
-     *   "values": {
-     *     "name": "My Device",
-     *   }
-     * }
-     */
     @Override
     protected Representation get() {
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
         ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
+        DTOBuildContext bctx = dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions);
 
         final DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
         PropertyContainer config = deviceManager.getDeviceConfiguration(dctx);
 
         PropertyContainerDTO dto = new PropertyContainerDTO.Builder(
+                bctx,
                 config,
                 new PropertyContainerClassProvider() {
                     @Override
                     public PropertyContainerClass getPropertyContainerClass(PropertyContainerClassContext ctx) {
-                        return deviceManager.getDeviceConfigurationClass(dctx);
+                        return deviceManager.getDevice(dctx).getConfigurationClass();
                     }
                 },
                 PropertyContainerClassType.DEVICE_CONFIG,
-                true,
-                expansions,
-                idProvider
+                true
         ).build();
 
+        dto.addContext(JSONAttributes.AIDT, bctx.getIdTemplateMap());
+
         JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
-        jr.setMediaType(new MediaType(dto.getJSONMediaType()));
+        jr.setMediaType(MediaTypeHelper.createMediaType(getRequest(), dto));
         return jr;
     }
 
@@ -101,12 +92,17 @@ public class DeviceConfigurationResource extends SelfInjectingServerResource {
      */
     @Override
     protected Representation put(Representation entity) {
+        if (!isInRole(HobsonRole.administrator.name()) && !isInRole(HobsonRole.userWrite.name())) {
+            throw new HobsonAuthorizationException("Forbidden");
+        }
+
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
         DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
         PropertyContainerDTO dto = new PropertyContainerDTO.Builder(JSONHelper.createJSONFromRepresentation(entity)).build();
 
-        deviceManager.setDeviceConfigurationProperties(dctx, dto.getValues(), true);
+        HobsonDeviceDescriptor desc = deviceManager.getDevice(dctx);
+        deviceManager.setDeviceConfiguration(dctx, desc.getConfigurationClass(), dto.getValues());
 
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();

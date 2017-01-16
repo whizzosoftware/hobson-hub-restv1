@@ -23,20 +23,4 @@ public class HobsonRestUser extends User {
     public HobsonUser getUser() {
         return user;
     }
-
-    public Long getExpiration() {
-        return user.getAccount().getExpiration();
-    }
-
-    public boolean isExpired(long now) {
-        return (user.getAccount().getExpiration() != null && now >= user.getAccount().getExpiration());
-    }
-
-    public Collection<String> getHubs() {
-        return user.getAccount().getHubs();
-    }
-
-    public boolean hasHub(String hubId) {
-        return user.getAccount().getHubs().contains(hubId);
-    }
 }

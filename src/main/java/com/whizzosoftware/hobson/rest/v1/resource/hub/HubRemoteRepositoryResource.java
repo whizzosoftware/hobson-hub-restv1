@@ -1,20 +1,27 @@
-/*******************************************************************************
+/*
+ *******************************************************************************
  * Copyright (c) 2015 Whizzo Software, LLC.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/
+ *******************************************************************************
+*/
 package com.whizzosoftware.hobson.rest.v1.resource.hub;
 
+import com.whizzosoftware.hobson.api.HobsonAuthorizationException;
 import com.whizzosoftware.hobson.api.HobsonNotFoundException;
 import com.whizzosoftware.hobson.api.HobsonRuntimeException;
-import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
+import com.whizzosoftware.hobson.api.user.HobsonRole;
+import com.whizzosoftware.hobson.dto.ExpansionFields;
+import com.whizzosoftware.hobson.dto.context.DTOBuildContext;
+import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
 import com.whizzosoftware.hobson.dto.hub.RepositoryDTO;
+import com.whizzosoftware.hobson.json.JSONAttributes;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
-import org.restlet.data.MediaType;
+import com.whizzosoftware.hobson.rest.v1.util.MediaTypeHelper;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -33,26 +40,15 @@ public class HubRemoteRepositoryResource extends SelfInjectingServerResource {
     @Inject
     PluginManager pluginManager;
     @Inject
-    IdProvider idProvider;
+    DTOBuildContextFactory dtoBuildContextFactory;
 
-    /**
-     * @api {get} /api/v1/users/:userId/hubs/:hubId/repositories/:repositoryId Get remote repository details
-     * @apiVersion 0.7.0
-     * @apiName GetRemoteRepository
-     * @apiDescription Retrieves the details of a remote repository.
-     * @apiGroup Hub
-     * @apiSuccessExample {json} Success Response:
-     * {
-     *   "@id": "/api/v1/users/local/hubs/local/repositories/aqsfeeqedfvewfew",
-     *   "uri": "http://your-uri-here",
-     * }
-     */
     @Override
     protected Representation get() throws ResourceException {
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
+        ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
 
         try {
-            String repositoryId = getAttribute("repositoryId");
+            String repositoryId = URLDecoder.decode(getAttribute("repositoryId"), "UTF-8");
             String repositoryUrl = null;
             for (String url : pluginManager.getRemoteRepositories()) {
                 if (repositoryId.equals(URLEncoder.encode(url, "UTF8"))) {
@@ -62,9 +58,11 @@ public class HubRemoteRepositoryResource extends SelfInjectingServerResource {
             }
 
             if (repositoryUrl != null) {
-                RepositoryDTO dto = new RepositoryDTO(idProvider.createRepositoryId(ctx.getHubContext(), repositoryUrl), repositoryUrl);
+                DTOBuildContext bctx = dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions);
+                RepositoryDTO dto = new RepositoryDTO(bctx, bctx.getIdProvider().createRepositoryId(ctx.getHubContext(), repositoryUrl), repositoryUrl);
+                dto.addContext(JSONAttributes.AIDT, bctx.getIdTemplateMap());
                 JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
-                jr.setMediaType(new MediaType(dto.getJSONMediaType()));
+                jr.setMediaType(MediaTypeHelper.createMediaType(getRequest(), dto));
                 return jr;
             } else {
                 throw new HobsonNotFoundException("No repository found");
@@ -74,18 +72,11 @@ public class HubRemoteRepositoryResource extends SelfInjectingServerResource {
         }
     }
 
-    /**
-     * @api {delete} /api/v1/users/:userId/hubs/:hubId/repositories/:repositoryId Delete remote repository
-     * @apiVersion 0.5.0
-     * @apiName DeleteRemoteRepository
-     * @apiDescription Removes a remote repository from the Hub's configuration.
-     * @apiGroup Hub
-     * @apiSuccessExample {json} Success Response:
-     * HTTP/1.1 202 Accepted
-     */
     @Override
     protected Representation delete() throws ResourceException {
-        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
+        if (!isInRole(HobsonRole.administrator.name()) && !isInRole(HobsonRole.userWrite.name())) {
+            throw new HobsonAuthorizationException("Forbidden");
+        }
         if (pluginManager != null) {
             try {
                 pluginManager.removeRemoteRepository(URLDecoder.decode(getAttribute("repositoryId"), "UTF-8"));

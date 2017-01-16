@@ -5,10 +5,10 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
-package com.whizzosoftware.hobson.rest.v1.resource.task;
+package com.whizzosoftware.hobson.rest.v1.resource.action;
 
-public class TaskActionSetResource {
-    public static final String PATH = "/hubs/{hubId}/tasks/actionSets/{actionSetId}";
+public class ActionSetResource {
+    public static final String PATH = "/hubs/{hubId}/actionSets/{actionSetId}";
 
     // TODO
 }
