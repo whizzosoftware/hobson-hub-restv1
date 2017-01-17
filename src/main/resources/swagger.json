@@ -2395,9 +2395,9 @@
         "tags": [
           "Task"
         ],
-        "operationId": "updateTask",
-        "summary": "Update task",
-        "description": "Updates a task.",
+        "operationId": "setTask",
+        "summary": "Sets task",
+        "description": "Sets a task definition.",
         "produces": [
           "application/json",
           "application/vnd.hobson.task+json"
@@ -2442,6 +2442,34 @@
         "operationId": "executeTask",
         "summary": "Execute task",
         "description": "Executes a task.",
+        "responses": {
+          "202": {
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "task",
+            "in": "path",
+            "description": "ID of task to execute",
+            "required": true,
+            "type": "string"
+          }
+        ]
+      },
+      "patch": {
+        "tags": [
+          "Task"
+        ],
+        "operationId": "updateTask",
+        "summary": "Update task",
+        "description": "Partially updates a task definition.",
         "responses": {
           "202": {
           }

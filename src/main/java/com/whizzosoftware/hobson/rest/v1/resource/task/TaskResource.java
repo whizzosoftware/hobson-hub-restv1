@@ -27,6 +27,7 @@ import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import com.whizzosoftware.hobson.rest.v1.util.MediaTypeHelper;
+import org.json.JSONObject;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -95,6 +96,7 @@ public class TaskResource extends SelfInjectingServerResource {
             TaskContext.create(ctx.getHubContext(), getAttribute("taskId")),
             dto.getName(),
             dto.getDescription(),
+            dto.isEnabled(),
             mapper.mapPropertyContainerDTOList(dto.getConditions(), pccp, idProvider),
             mapper.mapPropertyContainerSetDTO(dto.getActionSet(), pccp, idProvider));
 
@@ -106,6 +108,33 @@ public class TaskResource extends SelfInjectingServerResource {
     protected Representation post(Representation entity) {
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
         taskManager.fireTaskTrigger(TaskContext.create(ctx.getHubContext(), getAttribute("taskId")));
+        getResponse().setStatus(Status.SUCCESS_ACCEPTED);
+        return new EmptyRepresentation();
+    }
+
+    @Override
+    protected Representation patch(Representation entity) {
+        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
+
+        HobsonTask task = taskManager.getTask(TaskContext.create(ctx.getHubContext(), getAttribute("taskId")));
+
+        String name = task.getName();
+        String description = task.getDescription();
+        boolean enabled = task.isEnabled();
+
+        JSONObject json = JSONHelper.createJSONFromRepresentation(entity);
+        if (json.has(JSONAttributes.NAME)) {
+            name = json.getString(JSONAttributes.NAME);
+        }
+        if (json.has(JSONAttributes.DESCRIPTION)) {
+            name = json.getString(JSONAttributes.DESCRIPTION);
+        }
+        if (json.has(JSONAttributes.ENABLED)) {
+            enabled = json.getBoolean(JSONAttributes.ENABLED);
+        }
+
+        taskManager.updateTask(task.getContext(), name, description, enabled, task.getConditions(), task.getActionSet());
+
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();
     }
