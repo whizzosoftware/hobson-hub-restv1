@@ -93,6 +93,7 @@ public class TaskResource extends SelfInjectingServerResource {
 
         HobsonTaskDTO dto = new HobsonTaskDTO.Builder(JSONHelper.createJSONFromRepresentation(entity)).build();
         taskManager.updateTask(
+            null,
             TaskContext.create(ctx.getHubContext(), getAttribute("taskId")),
             dto.getName(),
             dto.getDescription(),
@@ -133,7 +134,7 @@ public class TaskResource extends SelfInjectingServerResource {
             enabled = json.getBoolean(JSONAttributes.ENABLED);
         }
 
-        taskManager.updateTask(task.getContext(), name, description, enabled, task.getConditions(), task.getActionSet());
+        taskManager.updateTask(null, task.getContext(), name, description, enabled, task.getConditions(), task.getActionSet());
 
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();
