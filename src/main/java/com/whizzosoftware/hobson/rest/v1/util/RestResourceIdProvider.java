@@ -719,6 +719,11 @@ public class RestResourceIdProvider implements IdProvider {
     }
 
     @Override
+    public TemplatedId createDeviceActionClassSupportedPropertiesId(DeviceContext dctx, String containerClassId) {
+        return null;
+    }
+
+    @Override
     public PresenceEntityContext createPresenceEntityContext(String presenceEntityId) {
         Template t = new Template(apiRoot + PresenceEntityResource.PATH);
         Map<String,Object> vars = new HashMap<>();

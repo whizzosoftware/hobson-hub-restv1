@@ -101,8 +101,7 @@ public class DeviceConfigurationResource extends SelfInjectingServerResource {
         DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
         PropertyContainerDTO dto = new PropertyContainerDTO.Builder(JSONHelper.createJSONFromRepresentation(entity)).build();
 
-        HobsonDeviceDescriptor desc = deviceManager.getDevice(dctx);
-        deviceManager.setDeviceConfiguration(dctx, desc.getConfigurationClass(), dto.getValues());
+        deviceManager.setDeviceConfiguration(dctx, dto.getValues());
 
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();

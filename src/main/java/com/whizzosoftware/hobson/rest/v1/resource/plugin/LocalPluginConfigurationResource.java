@@ -103,7 +103,7 @@ public class LocalPluginConfigurationResource extends SelfInjectingServerResourc
 
         pluginManager.setLocalPluginConfiguration(
             pc,
-            DTOMapper.mapPropertyContainerDTO(dto, pccp, idProvider)
+            DTOMapper.mapPropertyContainerDTO(dto, pccp, idProvider).getPropertyValues()
         );
 
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
