@@ -45,7 +45,7 @@ public class JobResource extends SelfInjectingServerResource {
         DTOBuildContext bctx = dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions);
 
         JobInfo jobInfo = actionManager.getJobInfo(ctx.getHubContext(), getAttribute("jobId"));
-        JobDTO dto = new JobDTO.Builder(bctx, getAttribute("jobId"), jobInfo, true).build();
+        JobDTO dto = new JobDTO.Builder(bctx, ctx.getHubContext(), getAttribute("jobId"), jobInfo, true).build();
 
         JsonRepresentation jr = new JsonRepresentation(dto.toJSON());
         jr.setMediaType(MediaTypeHelper.createMediaType(getRequest(), dto));
