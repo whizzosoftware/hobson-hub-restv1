@@ -405,6 +405,14 @@ public class RestResourceIdProvider implements IdProvider {
 
     @Override
     public TemplatedId createDeviceTagsId(DeviceContext ctx) {
+        return new TemplatedId(
+            new Template(apiRoot + DeviceTagsResource.PATH).format(createDeviceValues(ctx)),
+            apiRoot + DeviceTagsResource.TEMPLATE
+        );
+    }
+
+    @Override
+    public TemplatedId createDeviceTagNameId(HubContext ctx, String tag) {
         return null;
     }
 
