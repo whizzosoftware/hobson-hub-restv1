@@ -56,10 +56,18 @@ public class DevicesResource extends SelfInjectingServerResource {
 
         String varFilter = getQueryValue("var");
         String typeFilter = getQueryValue("type");
+        String tag = getQueryValue("tag");
 
         ItemListDTO dto = new ItemListDTO(bctx, bctx.getIdProvider().createDevicesId(ctx.getHubContext()));
 
-        Collection<HobsonDeviceDescriptor> devices = deviceManager.getDevices(ctx.getHubContext());
+        Collection<HobsonDeviceDescriptor> devices;
+
+        if (tag != null) {
+            devices = deviceManager.getDevices(ctx.getHubContext(), tag);
+        } else {
+            devices = deviceManager.getDevices(ctx.getHubContext());
+        }
+
         TreeMap<String, Long> etagMap = new TreeMap<>();
 
         if (devices != null) {

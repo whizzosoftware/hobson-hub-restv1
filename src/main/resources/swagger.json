@@ -538,6 +538,13 @@
             "description": "Attributes to expand in-line (optional)",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "tag",
+            "in": "query",
+            "description": "A device tag to filter on",
+            "required": false,
+            "type": "string"
           }
         ]
       }
@@ -1441,6 +1448,60 @@
               "properties": {
                 "value": {
                   "type": "string"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "/hubs/{hub}/plugins/local/{plugin}/devices/{device}/tags": {
+      "put": {
+        "tags": [
+          "Device"
+        ],
+        "operationId": "setDeviceTags",
+        "summary": "Set device tags",
+        "description": "Sets the tags associated with a device.",
+        "responses": {
+          "202": {
+          }
+        },
+        "parameters": [
+          {
+            "name": "hub",
+            "in": "path",
+            "description": "ID of a hub (\"local\" is the default for local hubs)",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "plugin",
+            "in": "path",
+            "description": "ID of the plugin that owns the device",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "device",
+            "in": "path",
+            "description": "ID of the device",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "The device name value",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "values": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
                 }
               }
             }

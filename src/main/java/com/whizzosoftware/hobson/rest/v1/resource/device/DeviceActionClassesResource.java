@@ -31,7 +31,7 @@ import java.util.Collection;
 
 public class DeviceActionClassesResource extends SelfInjectingServerResource {
     public static final String PATH = "/hubs/{hubId}/plugins/local/{pluginId}/devices/{deviceId}/actionClasses";
-    public static final String TEMPLATE = "/hubs/{hubId}/plugins/{pluginId}/devices/{deviceId}/{entity}";
+    public static final String TEMPLATE = "/hubs/{hubId}/plugins/local/{pluginId}/devices/{deviceId}/{entity}";
 
     @Inject
     ActionManager actionManager;

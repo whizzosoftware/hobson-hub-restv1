@@ -13,21 +13,21 @@ import com.whizzosoftware.hobson.api.HobsonAuthorizationException;
 import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.api.user.HobsonRole;
+import com.whizzosoftware.hobson.dto.device.TagsDTO;
 import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
-import org.json.JSONArray;
+import org.json.JSONObject;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.representation.EmptyRepresentation;
 import org.restlet.representation.Representation;
 
 import javax.inject.Inject;
-import java.util.HashSet;
-import java.util.Set;
 
 public class DeviceTagsResource extends SelfInjectingServerResource {
-    public static final String PATH = "/hubs/{hubId}/plugins/{pluginId}/devices/{deviceId}/tags";
+    public static final String PATH = "/hubs/{hubId}/plugins/local/{pluginId}/devices/{deviceId}/tags";
+    public static final String TEMPLATE = "/hubs/{hubId}/plugins/local/{pluginId}/devices/{deviceId}/{entity}";
 
     @Inject
     private DeviceManager deviceManager;
@@ -40,14 +40,11 @@ public class DeviceTagsResource extends SelfInjectingServerResource {
 
         HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
-        JSONArray a = JSONHelper.createJSONArrayFromRepresentation(entity);
-        Set<String> tags = new HashSet<>();
-        for (int i=0; i < a.length(); i++) {
-            tags.add(a.getString(i));
-        }
+        JSONObject j = JSONHelper.createJSONFromRepresentation(entity);
+        TagsDTO dto = new TagsDTO(j);
 
         DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
-        deviceManager.setDeviceTags(dctx, tags);
+        deviceManager.setDeviceTags(dctx, dto.getTags());
 
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);
         return new EmptyRepresentation();
