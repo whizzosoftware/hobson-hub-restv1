@@ -9,23 +9,24 @@
 */
 package com.whizzosoftware.hobson.rest.v1.resource.task;
 
-import com.whizzosoftware.hobson.api.HobsonAuthorizationException;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.api.property.PropertyContainerClass;
 import com.whizzosoftware.hobson.api.property.PropertyContainerClassContext;
 import com.whizzosoftware.hobson.api.property.PropertyContainerClassProvider;
 import com.whizzosoftware.hobson.api.hub.HubManager;
+import com.whizzosoftware.hobson.api.security.AccessManager;
 import com.whizzosoftware.hobson.api.task.HobsonTask;
 import com.whizzosoftware.hobson.api.task.TaskManager;
-import com.whizzosoftware.hobson.api.user.HobsonRole;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.dto.context.DTOBuildContext;
 import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
 import com.whizzosoftware.hobson.dto.task.HobsonTaskDTO;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.json.JSONAttributes;
-import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.HobsonRestUser;
+import com.whizzosoftware.hobson.api.security.AuthorizationAction;
+import com.whizzosoftware.hobson.rest.util.PathUtil;
 import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import com.whizzosoftware.hobson.rest.v1.util.MediaTypeHelper;
@@ -48,6 +49,8 @@ public class TasksResource extends SelfInjectingServerResource {
     public static final String TEMPLATE = "/hubs/{hubId}/{entity}";
 
     @Inject
+    AccessManager accessManager;
+    @Inject
     HubManager hubManager;
     @Inject
     TaskManager taskManager;
@@ -58,9 +61,11 @@ public class TasksResource extends SelfInjectingServerResource {
 
     @Override
     protected Representation get() {
-        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
-        ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
-        DTOBuildContext bctx = dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions);
+        final HobsonRestContext ctx = HobsonRestContext.createContext(getApplication(), getRequest().getClientInfo(), getRequest().getResourceRef().getPath());
+        final ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
+        final DTOBuildContext bctx = dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions);
+
+        accessManager.authorize(((HobsonRestUser)getClientInfo().getUser()).getUser(), AuthorizationAction.TASK_READ, PathUtil.convertPath(ctx.getApiRoot(), null));
 
         ItemListDTO dto = new ItemListDTO(bctx, idProvider.createTasksId(ctx.getHubContext()));
         boolean showDetails = expansions.has("item");
@@ -90,11 +95,9 @@ public class TasksResource extends SelfInjectingServerResource {
 
     @Override
     protected Representation post(Representation entity) {
-        if (!isInRole(HobsonRole.administrator.name()) && !isInRole(HobsonRole.userWrite.name())) {
-            throw new HobsonAuthorizationException("Forbidden");
-        }
+        final HobsonRestContext ctx = HobsonRestContext.createContext(getApplication(), getRequest().getClientInfo(), getRequest().getResourceRef().getPath());
 
-        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
+        accessManager.authorize(((HobsonRestUser)getClientInfo().getUser()).getUser(), AuthorizationAction.TASK_CREATE, PathUtil.convertPath(ctx.getApiRoot(), getRequest().getResourceRef().getPath()));
 
         HobsonTaskDTO dto = new HobsonTaskDTO.Builder(JSONHelper.createJSONFromRepresentation(entity)).build();
         dto.validate();
@@ -120,11 +123,9 @@ public class TasksResource extends SelfInjectingServerResource {
 
     @Override
     protected Representation delete() {
-        if (!isInRole(HobsonRole.administrator.name()) && !isInRole(HobsonRole.userWrite.name())) {
-            throw new HobsonAuthorizationException("Forbidden");
-        }
+        final HobsonRestContext ctx = HobsonRestContext.createContext(getApplication(), getRequest().getClientInfo(), getRequest().getResourceRef().getPath());
 
-        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
+        accessManager.authorize(((HobsonRestUser)getClientInfo().getUser()).getUser(), AuthorizationAction.TASK_DELETE, null);
 
         for (HobsonTask task : taskManager.getTasks(ctx.getHubContext())) {
             taskManager.deleteTask(task.getContext());

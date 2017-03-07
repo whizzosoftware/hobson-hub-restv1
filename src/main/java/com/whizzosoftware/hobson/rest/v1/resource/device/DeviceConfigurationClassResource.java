@@ -12,13 +12,16 @@ package com.whizzosoftware.hobson.rest.v1.resource.device;
 import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.api.property.PropertyContainerClass;
+import com.whizzosoftware.hobson.api.security.AccessManager;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.dto.context.DTOBuildContext;
 import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
 import com.whizzosoftware.hobson.dto.property.PropertyContainerClassDTO;
 import com.whizzosoftware.hobson.json.JSONAttributes;
-import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.HobsonRestUser;
+import com.whizzosoftware.hobson.api.security.AuthorizationAction;
+import com.whizzosoftware.hobson.rest.util.PathUtil;
 import com.whizzosoftware.hobson.rest.v1.util.MediaTypeHelper;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -32,18 +35,21 @@ public class DeviceConfigurationClassResource extends SelfInjectingServerResourc
     public static final String TEMPLATE = "/hubs/{hubId}/plugins/local/{pluginId}/devices/{deviceId}/{entity}";
 
     @Inject
+    AccessManager accessManager;
+    @Inject
     DeviceManager deviceManager;
     @Inject
     DTOBuildContextFactory dtoBuildContextFactory;
 
     @Override
     protected Representation get() throws ResourceException {
-        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
-        ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
-        DTOBuildContext bctx = dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions);
+        final HobsonRestContext ctx = HobsonRestContext.createContext(getApplication(), getRequest().getClientInfo(), getRequest().getResourceRef().getPath());
+        final ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
+        final DTOBuildContext bctx = dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions);
+
+        accessManager.authorize(((HobsonRestUser)getClientInfo().getUser()).getUser(), AuthorizationAction.DEVICE_READ, PathUtil.convertPath(ctx.getApiRoot(), getRequest().getResourceRef().getPath()));
 
         DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
-
         PropertyContainerClass pcc = deviceManager.getDevice(dctx).getConfigurationClass();
 
         PropertyContainerClassDTO dto = new PropertyContainerClassDTO.Builder(

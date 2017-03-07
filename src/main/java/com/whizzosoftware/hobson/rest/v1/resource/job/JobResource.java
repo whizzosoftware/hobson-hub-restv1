@@ -9,17 +9,18 @@
 */
 package com.whizzosoftware.hobson.rest.v1.resource.job;
 
-import com.whizzosoftware.hobson.api.HobsonAuthorizationException;
 import com.whizzosoftware.hobson.api.HobsonRuntimeException;
 import com.whizzosoftware.hobson.api.action.ActionManager;
 import com.whizzosoftware.hobson.api.action.job.JobInfo;
-import com.whizzosoftware.hobson.api.user.HobsonRole;
+import com.whizzosoftware.hobson.api.security.AccessManager;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.dto.action.job.JobDTO;
 import com.whizzosoftware.hobson.dto.context.DTOBuildContext;
 import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
-import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.HobsonRestUser;
+import com.whizzosoftware.hobson.api.security.AuthorizationAction;
+import com.whizzosoftware.hobson.rest.util.PathUtil;
 import com.whizzosoftware.hobson.rest.v1.util.MediaTypeHelper;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
@@ -34,15 +35,19 @@ public class JobResource extends SelfInjectingServerResource {
     public static final String PATH = "/hubs/{hubId}/jobs/{jobId}";
 
     @Inject
+    AccessManager accessManager;
+    @Inject
     ActionManager actionManager;
     @Inject
     DTOBuildContextFactory dtoBuildContextFactory;
 
     @Override
     protected Representation get() throws ResourceException {
-        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
-        ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
-        DTOBuildContext bctx = dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions);
+        final HobsonRestContext ctx = HobsonRestContext.createContext(getApplication(), getRequest().getClientInfo(), getRequest().getResourceRef().getPath());
+        final ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
+        final DTOBuildContext bctx = dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions);
+
+        accessManager.authorize(((HobsonRestUser)getClientInfo().getUser()).getUser(), AuthorizationAction.JOB_READ, PathUtil.convertPath(ctx.getApiRoot(), getRequest().getResourceRef().getPath()));
 
         JobInfo jobInfo = actionManager.getJobInfo(ctx.getHubContext(), getAttribute("jobId"));
         JobDTO dto = new JobDTO.Builder(bctx, ctx.getHubContext(), getAttribute("jobId"), jobInfo, true).build();
@@ -54,11 +59,9 @@ public class JobResource extends SelfInjectingServerResource {
 
     @Override
     protected Representation delete() throws ResourceException {
-        if (!isInRole(HobsonRole.administrator.name()) && !isInRole(HobsonRole.userWrite.name())) {
-            throw new HobsonAuthorizationException("Forbidden");
-        }
+        final HobsonRestContext ctx = HobsonRestContext.createContext(getApplication(), getRequest().getClientInfo(), getRequest().getResourceRef().getPath());
 
-        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
+        accessManager.authorize(((HobsonRestUser)getClientInfo().getUser()).getUser(), AuthorizationAction.JOB_DELETE, PathUtil.convertPath(ctx.getApiRoot(), getRequest().getResourceRef().getPath()));
 
         try {
             actionManager.stopJob(ctx.getHubContext(), getAttribute("jobId")).sync();

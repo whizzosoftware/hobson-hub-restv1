@@ -9,18 +9,19 @@
 */
 package com.whizzosoftware.hobson.rest.v1.resource.data;
 
-import com.whizzosoftware.hobson.api.HobsonAuthorizationException;
 import com.whizzosoftware.hobson.api.HobsonInvalidRequestException;
 import com.whizzosoftware.hobson.api.HobsonNotFoundException;
 import com.whizzosoftware.hobson.api.data.DataStreamManager;
-import com.whizzosoftware.hobson.api.user.HobsonRole;
+import com.whizzosoftware.hobson.api.security.AccessManager;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.dto.context.DTOBuildContext;
 import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
 import com.whizzosoftware.hobson.dto.data.DataStreamDTO;
 import com.whizzosoftware.hobson.json.JSONAttributes;
-import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.HobsonRestUser;
+import com.whizzosoftware.hobson.api.security.AuthorizationAction;
+import com.whizzosoftware.hobson.rest.util.PathUtil;
 import com.whizzosoftware.hobson.rest.v1.util.MediaTypeHelper;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.ext.json.JsonRepresentation;
@@ -34,6 +35,8 @@ public class DataStreamResource extends SelfInjectingServerResource {
     public static final String TEMPLATE = "/hubs/{hubId}/dataStreams/{dataStreamId}";
 
     @Inject
+    AccessManager accessManager;
+    @Inject
     DataStreamManager dataStreamManager;
     @Inject
     DTOBuildContextFactory dtoBuildContextFactory;
@@ -41,9 +44,12 @@ public class DataStreamResource extends SelfInjectingServerResource {
     @Override
     protected Representation get() {
         if (dataStreamManager != null && !dataStreamManager.isStub()) {
-            HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
-            ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
-            DTOBuildContext bctx = dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions);
+            final HobsonRestContext ctx = HobsonRestContext.createContext(getApplication(), getRequest().getClientInfo(), getRequest().getResourceRef().getPath());
+            final ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
+            final DTOBuildContext bctx = dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions);
+
+            accessManager.authorize(((HobsonRestUser)getClientInfo().getUser()).getUser(), AuthorizationAction.DATASTREAM_READ, PathUtil.convertPath(ctx.getApiRoot(), getRequest().getResourceRef().getPath()));
+
             DataStreamDTO dto = new DataStreamDTO.Builder(
                 bctx,
                 ctx.getHubContext(),
@@ -63,11 +69,11 @@ public class DataStreamResource extends SelfInjectingServerResource {
 
     @Override
     protected Representation delete() {
-        if (!isInRole(HobsonRole.administrator.name()) && !isInRole(HobsonRole.userWrite.name())) {
-            throw new HobsonAuthorizationException("Forbidden");
-        }
         if (dataStreamManager != null && !dataStreamManager.isStub()) {
-            HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
+            final HobsonRestContext ctx = HobsonRestContext.createContext(getApplication(), getRequest().getClientInfo(), getRequest().getResourceRef().getPath());
+
+            accessManager.authorize(null, AuthorizationAction.DATASTREAM_DELETE, PathUtil.convertPath(ctx.getApiRoot(), getRequest().getResourceRef().getPath()));
+
             dataStreamManager.deleteDataStream(ctx.getHubContext(), getAttribute("dataStreamId"));
             return new EmptyRepresentation();
         } else {

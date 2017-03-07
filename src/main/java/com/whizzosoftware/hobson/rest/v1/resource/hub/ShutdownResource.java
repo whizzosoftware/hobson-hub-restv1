@@ -9,11 +9,12 @@
 */
 package com.whizzosoftware.hobson.rest.v1.resource.hub;
 
-import com.whizzosoftware.hobson.api.HobsonAuthorizationException;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
-import com.whizzosoftware.hobson.api.user.HobsonRole;
-import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
+import com.whizzosoftware.hobson.api.security.AccessManager;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.HobsonRestUser;
+import com.whizzosoftware.hobson.api.security.AuthorizationAction;
+import com.whizzosoftware.hobson.rest.util.PathUtil;
 import com.whizzosoftware.hobson.rest.v1.util.MapUtil;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.representation.EmptyRepresentation;
@@ -31,15 +32,15 @@ public class ShutdownResource extends SelfInjectingServerResource {
     public static final String PATH = "/hubs/{hubId}/shutdown";
 
     @Inject
+    AccessManager accessManager;
+    @Inject
     IdProvider idProvider;
 
     @Override
     public Representation post(Representation entity) {
-        if (!isInRole(HobsonRole.administrator.name())) {
-            throw new HobsonAuthorizationException("Forbidden");
-        }
+        final HobsonRestContext ctx = HobsonRestContext.createContext(getApplication(), getRequest().getClientInfo(), getRequest().getResourceRef().getPath());
 
-        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
+        accessManager.authorize(((HobsonRestUser)getClientInfo().getUser()).getUser(), AuthorizationAction.HUB_EXECUTE, PathUtil.convertPath(ctx.getApiRoot(), getRequest().getResourceRef().getPath()));
 
         getResponse().setLocationRef(new Template(HubResource.PATH).format(MapUtil.createEmptyMap(ctx)));
         Representation result = new EmptyRepresentation();

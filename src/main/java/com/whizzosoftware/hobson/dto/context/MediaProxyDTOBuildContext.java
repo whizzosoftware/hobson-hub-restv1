@@ -11,7 +11,7 @@ package com.whizzosoftware.hobson.dto.context;
 
 import com.whizzosoftware.hobson.api.hub.HubContext;
 import com.whizzosoftware.hobson.api.variable.*;
-import com.whizzosoftware.hobson.rest.v1.resource.device.MediaProxyResource;
+import com.whizzosoftware.hobson.rest.v1.resource.device.DeviceMediaProxyResource;
 import org.restlet.routing.Template;
 
 import java.util.*;
@@ -49,7 +49,7 @@ public class MediaProxyDTOBuildContext extends ManagerDTOBuildContext {
         if (v != null && s != null) {
             value = s.getValue();
             if (v.hasMediaType()) {
-                value = apiRoot + new Template(MediaProxyResource.PATH).format(
+                value = apiRoot + new Template(DeviceMediaProxyResource.PATH).format(
                     createParamMap(hctx, v.getContext().getPluginId(), v.getContext().getDeviceId(), v.getContext().getName())
                 );
             }

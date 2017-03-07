@@ -9,19 +9,20 @@
 */
 package com.whizzosoftware.hobson.rest.v1.resource.presence;
 
-import com.whizzosoftware.hobson.api.HobsonAuthorizationException;
 import com.whizzosoftware.hobson.api.persist.IdProvider;
 import com.whizzosoftware.hobson.api.presence.PresenceLocation;
 import com.whizzosoftware.hobson.api.presence.PresenceManager;
-import com.whizzosoftware.hobson.api.user.HobsonRole;
+import com.whizzosoftware.hobson.api.security.AccessManager;
 import com.whizzosoftware.hobson.dto.ItemListDTO;
 import com.whizzosoftware.hobson.dto.context.DTOBuildContext;
 import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
 import com.whizzosoftware.hobson.dto.presence.PresenceLocationDTO;
 import com.whizzosoftware.hobson.json.JSONAttributes;
-import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.HobsonRestUser;
+import com.whizzosoftware.hobson.api.security.AuthorizationAction;
+import com.whizzosoftware.hobson.rest.util.PathUtil;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import com.whizzosoftware.hobson.rest.v1.util.MediaTypeHelper;
 import org.json.JSONObject;
@@ -38,6 +39,8 @@ public class PresenceLocationsResource extends SelfInjectingServerResource {
     public static final String TEMPLATE = "/hubs/{hubId}/presence/{presenceType}";
 
     @Inject
+    AccessManager accessManager;
+    @Inject
     PresenceManager presenceManager;
     @Inject
     DTOBuildContextFactory dtoBuildContextFactory;
@@ -46,9 +49,11 @@ public class PresenceLocationsResource extends SelfInjectingServerResource {
 
     @Override
     protected Representation get() {
-        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
-        ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
-        DTOBuildContext bctx = dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions);
+        final HobsonRestContext ctx = HobsonRestContext.createContext(getApplication(), getRequest().getClientInfo(), getRequest().getResourceRef().getPath());
+        final ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
+        final DTOBuildContext bctx = dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions);
+
+        accessManager.authorize(((HobsonRestUser)getClientInfo().getUser()).getUser(), AuthorizationAction.PRESENCE_READ, PathUtil.convertPath(ctx.getApiRoot(), getRequest().getResourceRef().getPath()));
 
         ItemListDTO dto = new ItemListDTO(bctx, idProvider.createPresenceLocationsId(ctx.getHubContext()), true);
         for (PresenceLocation location : presenceManager.getAllPresenceLocations(ctx.getHubContext())) {
@@ -64,11 +69,10 @@ public class PresenceLocationsResource extends SelfInjectingServerResource {
 
     @Override
     protected Representation post(Representation entity) {
-        if (!isInRole(HobsonRole.administrator.name())) {
-            throw new HobsonAuthorizationException("Forbidden");
-        }
+        final HobsonRestContext ctx = HobsonRestContext.createContext(getApplication(), getRequest().getClientInfo(), getRequest().getResourceRef().getPath());
 
-        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
+        accessManager.authorize(((HobsonRestUser)getClientInfo().getUser()).getUser(), AuthorizationAction.PRESENCE_UPDATE, PathUtil.convertPath(ctx.getApiRoot(), getRequest().getResourceRef().getPath()));
+
         JSONObject json = JSONHelper.createJSONFromRepresentation(entity);
 
         Double latitude = null;
@@ -101,11 +105,9 @@ public class PresenceLocationsResource extends SelfInjectingServerResource {
 
     @Override
     protected Representation delete() {
-        if (!isInRole(HobsonRole.administrator.name())) {
-            throw new HobsonAuthorizationException("Forbidden");
-        }
+        final HobsonRestContext ctx = HobsonRestContext.createContext(getApplication(), getRequest().getClientInfo(), getRequest().getResourceRef().getPath());
 
-        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
+        accessManager.authorize(((HobsonRestUser)getClientInfo().getUser()).getUser(), AuthorizationAction.PRESENCE_DELETE, PathUtil.convertPath(ctx.getApiRoot(), getRequest().getResourceRef().getPath()));
 
         for (PresenceLocation pl : presenceManager.getAllPresenceLocations(ctx.getHubContext())) {
             presenceManager.deletePresenceLocation(pl.getContext());

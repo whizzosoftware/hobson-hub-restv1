@@ -10,9 +10,8 @@
 package com.whizzosoftware.hobson.rest;
 
 import com.whizzosoftware.hobson.api.HobsonAuthenticationException;
-import com.whizzosoftware.hobson.api.hub.HubManager;
-import com.whizzosoftware.hobson.api.user.HobsonRole;
-import com.whizzosoftware.hobson.api.user.HobsonUser;
+import com.whizzosoftware.hobson.api.security.AccessManager;
+import com.whizzosoftware.hobson.api.security.HobsonUser;
 import com.whizzosoftware.hobson.rest.v1.util.RoleUtil;
 import org.restlet.Application;
 import org.restlet.Request;
@@ -32,11 +31,11 @@ public class BearerTokenVerifier implements Verifier {
     private Logger logger = LoggerFactory.getLogger(BearerTokenVerifier.class);
 
     private Application application;
-    private HubManager hubManager;
+    private AccessManager accessManager;
 
-    public BearerTokenVerifier(Application application, HubManager hubManager) {
+    public BearerTokenVerifier(Application application, AccessManager accessManager) {
         this.application = application;
-        this.hubManager = hubManager;
+        this.accessManager = accessManager;
     }
 
     public int verify(Request request, Response response) {
@@ -57,7 +56,7 @@ public class BearerTokenVerifier implements Verifier {
 
         if (token != null) {
             try {
-                HobsonUser user = hubManager.convertTokenToUser(token);
+                HobsonUser user = accessManager.authenticate(token);
                 if (user != null) {
                     result = RESULT_VALID;
                     request.getClientInfo().setUser(new HobsonRestUser(user, token));
@@ -75,10 +74,10 @@ public class BearerTokenVerifier implements Verifier {
         return result;
     }
 
-    private List<Role> getRestletRoles(Application a, Collection<HobsonRole> roles) {
+    private List<Role> getRestletRoles(Application a, Collection<String> roles) {
         List<Role> r = new ArrayList<>();
-        for (HobsonRole role : roles) {
-            r.add(RoleUtil.getRoleForName(a, role.name()));
+        for (String role : roles) {
+            r.add(RoleUtil.getRoleForName(a, role));
         }
         return r;
     }

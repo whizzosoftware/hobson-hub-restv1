@@ -9,12 +9,13 @@
 */
 package com.whizzosoftware.hobson.rest.v1.resource.plugin;
 
-import com.whizzosoftware.hobson.api.HobsonAuthorizationException;
 import com.whizzosoftware.hobson.api.plugin.PluginContext;
 import com.whizzosoftware.hobson.api.plugin.PluginManager;
-import com.whizzosoftware.hobson.api.user.HobsonRole;
-import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
+import com.whizzosoftware.hobson.api.security.AccessManager;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.HobsonRestUser;
+import com.whizzosoftware.hobson.api.security.AuthorizationAction;
+import com.whizzosoftware.hobson.rest.util.PathUtil;
 import org.restlet.data.Status;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.representation.EmptyRepresentation;
@@ -31,15 +32,16 @@ public class LocalPluginReloadResource extends SelfInjectingServerResource {
     public static final String PATH = "/hubs/{hubId}/plugins/local/{pluginId}/reload";
 
     @Inject
+    AccessManager accessManager;
+    @Inject
     PluginManager pluginManager;
 
     @Override
     protected Representation post(Representation entity) {
-        if (!isInRole(HobsonRole.administrator.name())) {
-            throw new HobsonAuthorizationException("Forbidden");
-        }
+        final HobsonRestContext ctx = HobsonRestContext.createContext(getApplication(), getRequest().getClientInfo(), getRequest().getResourceRef().getPath());
 
-        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
+        accessManager.authorize(((HobsonRestUser)getClientInfo().getUser()).getUser(), AuthorizationAction.PLUGIN_EXECUTE, PathUtil.convertPath(ctx.getApiRoot(), getRequest().getResourceRef().getPath()));
+
         pluginManager.reloadLocalPlugin(PluginContext.create(ctx.getHubContext(), getAttribute("pluginId")));
 
         getResponse().setStatus(Status.SUCCESS_ACCEPTED);

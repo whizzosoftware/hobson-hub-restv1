@@ -10,7 +10,6 @@
 package com.whizzosoftware.hobson.rest.v1.resource.plugin;
 
 import com.google.inject.Inject;
-import com.whizzosoftware.hobson.api.HobsonAuthorizationException;
 import com.whizzosoftware.hobson.api.HobsonRuntimeException;
 import com.whizzosoftware.hobson.api.action.ActionClass;
 import com.whizzosoftware.hobson.api.action.ActionManager;
@@ -20,7 +19,7 @@ import com.whizzosoftware.hobson.api.plugin.PluginContext;
 import com.whizzosoftware.hobson.api.property.PropertyContainerClass;
 import com.whizzosoftware.hobson.api.property.PropertyContainerClassContext;
 import com.whizzosoftware.hobson.api.property.PropertyContainerClassProvider;
-import com.whizzosoftware.hobson.api.user.HobsonRole;
+import com.whizzosoftware.hobson.api.security.AccessManager;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.dto.action.ActionClassDTO;
 import com.whizzosoftware.hobson.dto.context.DTOBuildContext;
@@ -28,8 +27,10 @@ import com.whizzosoftware.hobson.dto.context.DTOBuildContextFactory;
 import com.whizzosoftware.hobson.dto.property.PropertyContainerClassDTO;
 import com.whizzosoftware.hobson.dto.property.PropertyContainerDTO;
 import com.whizzosoftware.hobson.json.JSONAttributes;
-import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.HobsonRestUser;
+import com.whizzosoftware.hobson.api.security.AuthorizationAction;
+import com.whizzosoftware.hobson.rest.util.PathUtil;
 import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import com.whizzosoftware.hobson.rest.v1.util.MediaTypeHelper;
@@ -43,6 +44,8 @@ public class LocalPluginActionClassResource extends SelfInjectingServerResource 
     public static final String PATH = "/hubs/{hubId}/plugins/local/{pluginId}/actionClasses/{actionClassId}";
 
     @Inject
+    AccessManager accessManager;
+    @Inject
     ActionManager actionManager;
     @Inject
     DTOBuildContextFactory dtoBuildContextFactory;
@@ -51,12 +54,13 @@ public class LocalPluginActionClassResource extends SelfInjectingServerResource 
 
     @Override
     protected Representation get() {
-        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
-        ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
-        DTOBuildContext bctx = dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions);
-
+        final HobsonRestContext ctx = HobsonRestContext.createContext(getApplication(), getRequest().getClientInfo(), getRequest().getResourceRef().getPath());
+        final ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
+        final DTOBuildContext bctx = dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions);
         final PluginContext pctx = PluginContext.create(ctx.getHubContext(), getAttribute("pluginId"));
         final String actionClassId = getAttribute("actionClassId");
+
+        accessManager.authorize(((HobsonRestUser)getClientInfo().getUser()).getUser(), AuthorizationAction.PLUGIN_READ, PathUtil.convertPath(ctx.getApiRoot(), getRequest().getResourceRef().getPath()));
 
         ActionClass ac = actionManager.getActionClass(PropertyContainerClassContext.create(pctx, actionClassId));
         PropertyContainerClassDTO dto = new ActionClassDTO.Builder(bctx, bctx.getIdProvider().createActionClassId(ac.getContext()), ac, true).build();
@@ -70,13 +74,11 @@ public class LocalPluginActionClassResource extends SelfInjectingServerResource 
 
     @Override
     protected Representation post(Representation entity) {
-        if (!isInRole(HobsonRole.administrator.name()) && !isInRole(HobsonRole.userWrite.name())) {
-            throw new HobsonAuthorizationException("Forbidden");
-        }
-
-        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
+        final HobsonRestContext ctx = HobsonRestContext.createContext(getApplication(), getRequest().getClientInfo(), getRequest().getResourceRef().getPath());
         final PluginContext pctx = PluginContext.create(ctx.getHubContext(), getAttribute(JSONAttributes.PLUGIN_ID));
         final String actionClassId = getAttribute(JSONAttributes.ACTION_CLASS_ID);
+
+        accessManager.authorize(((HobsonRestUser)getClientInfo().getUser()).getUser(), AuthorizationAction.PLUGIN_EXECUTE, PathUtil.convertPath(ctx.getApiRoot(), getRequest().getResourceRef().getPath()));
 
         PropertyContainerDTO dto = new PropertyContainerDTO.Builder(JSONHelper.createJSONFromRepresentation(entity)).build();
         PropertyContainerClassProvider pccp = new PropertyContainerClassProvider() {

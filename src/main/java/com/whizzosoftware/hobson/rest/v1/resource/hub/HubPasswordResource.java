@@ -9,14 +9,13 @@
 */
 package com.whizzosoftware.hobson.rest.v1.resource.hub;
 
-import com.whizzosoftware.hobson.api.HobsonAuthorizationException;
 import com.whizzosoftware.hobson.api.HobsonRuntimeException;
-import com.whizzosoftware.hobson.api.hub.HubManager;
-import com.whizzosoftware.hobson.api.user.HobsonRole;
-import com.whizzosoftware.hobson.api.user.UserStore;
+import com.whizzosoftware.hobson.api.security.AccessManager;
 import com.whizzosoftware.hobson.dto.PasswordChangeDTO;
-import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.HobsonRestUser;
+import com.whizzosoftware.hobson.api.security.AuthorizationAction;
+import com.whizzosoftware.hobson.rest.util.PathUtil;
 import com.whizzosoftware.hobson.rest.v1.util.DTOMapper;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import org.restlet.data.Status;
@@ -36,17 +35,17 @@ public class HubPasswordResource extends SelfInjectingServerResource {
     public static final String PATH = "/hubs/{hubId}/password";
 
     @Inject
-    UserStore userStore;
+    AccessManager accessManager;
 
     @Override
     protected Representation post(Representation entity) throws ResourceException {
-        if (!isInRole(HobsonRole.administrator.name())) {
-            throw new HobsonAuthorizationException("Forbidden");
-        }
+        final HobsonRestContext ctx = HobsonRestContext.createContext(getApplication(), getRequest().getClientInfo(), getRequest().getResourceRef().getPath());
 
-        if (userStore.supportsUserManagement()) {
+        accessManager.authorize(((HobsonRestUser)getClientInfo().getUser()).getUser(), AuthorizationAction.HUB_CONFIGURE, PathUtil.convertPath(ctx.getApiRoot(), getRequest().getResourceRef().getPath()));
+
+        if (!accessManager.isFederated()) {
             PasswordChangeDTO dto = new PasswordChangeDTO(JSONHelper.createJSONFromRepresentation(entity));
-            userStore.changeUserPassword("admin", DTOMapper.mapPasswordChangeDTO(dto));
+            accessManager.changeUserPassword("admin", DTOMapper.mapPasswordChangeDTO(dto));
             getResponse().setStatus(Status.SUCCESS_ACCEPTED);
             return new EmptyRepresentation();
         } else {

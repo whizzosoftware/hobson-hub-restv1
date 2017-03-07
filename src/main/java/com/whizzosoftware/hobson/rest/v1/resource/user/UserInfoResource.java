@@ -10,8 +10,7 @@
 package com.whizzosoftware.hobson.rest.v1.resource.user;
 
 import com.whizzosoftware.hobson.api.HobsonRuntimeException;
-import com.whizzosoftware.hobson.api.data.DataStreamManager;
-import com.whizzosoftware.hobson.api.user.UserStore;
+import com.whizzosoftware.hobson.api.security.AccessManager;
 import com.whizzosoftware.hobson.dto.ExpansionFields;
 import com.whizzosoftware.hobson.dto.HobsonUserDTO;
 import com.whizzosoftware.hobson.dto.context.DTOBuildContext;
@@ -33,15 +32,13 @@ public class UserInfoResource extends SelfInjectingServerResource {
     public static final String PATH = "/userInfo";
 
     @Inject
-    DataStreamManager dataStreamManager;
+    AccessManager accessManager;
     @Inject
     DTOBuildContextFactory dtoBuildContextFactory;
-    @Inject
-    UserStore userStore;
 
     @Override
     protected Representation get() throws ResourceException {
-        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
+        HobsonRestContext ctx = HobsonRestContext.createContext(getApplication(), getRequest().getClientInfo(), getRequest().getResourceRef().getPath());
         ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
         DTOBuildContext bctx = dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions);
 
@@ -50,7 +47,7 @@ public class UserInfoResource extends SelfInjectingServerResource {
             HobsonUserDTO dto = new HobsonUserDTO.Builder(
                 bctx,
                 ((HobsonRestUser)user).getUser(),
-                userStore.getHubsForUser(user.getIdentifier()),
+                accessManager.getHubsForUser(user.getIdentifier()),
                 true
             ).build();
 

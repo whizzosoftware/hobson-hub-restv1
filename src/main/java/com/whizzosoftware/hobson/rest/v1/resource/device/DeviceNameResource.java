@@ -9,12 +9,13 @@
 */
 package com.whizzosoftware.hobson.rest.v1.resource.device;
 
-import com.whizzosoftware.hobson.api.HobsonAuthorizationException;
 import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.device.DeviceManager;
-import com.whizzosoftware.hobson.api.user.HobsonRole;
-import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
+import com.whizzosoftware.hobson.api.security.AccessManager;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.HobsonRestUser;
+import com.whizzosoftware.hobson.api.security.AuthorizationAction;
+import com.whizzosoftware.hobson.rest.util.PathUtil;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import org.json.JSONObject;
 import org.restlet.data.Status;
@@ -28,29 +29,16 @@ public class DeviceNameResource extends SelfInjectingServerResource {
     public static final String PATH = "/hubs/{hubId}/plugins/local/{pluginId}/devices/{deviceId}/name";
 
     @Inject
-    private DeviceManager deviceManager;
+    AccessManager accessManager;
+    @Inject
+    DeviceManager deviceManager;
 
-    /**
-     * @api {put} /api/v1/users/:userId/hubs/:hubId/devices/:deviceId/name Update device name
-     * @apiVersion 0.10.0
-     * @apiName SetDeviceName
-     * @apiDescription Updates the name of a device.
-     * @apiGroup Devices
-     * @apiExample Example Request:
-     * {
-     *   "value": "My Device Name"
-     * }
-     * @apiSuccessExample Success Response:
-     * HTTP/1.1 202 Accepted
-     */
     @Override
     protected Representation put(Representation entity) {
-        if (!isInRole(HobsonRole.administrator.name()) && !isInRole(HobsonRole.userWrite.name())) {
-            throw new HobsonAuthorizationException("Forbidden");
-        }
-
-        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
+        final HobsonRestContext ctx = HobsonRestContext.createContext(getApplication(), getRequest().getClientInfo(), getRequest().getResourceRef().getPath());
         JSONObject json = JSONHelper.createJSONFromRepresentation(entity);
+
+        accessManager.authorize(((HobsonRestUser)getClientInfo().getUser()).getUser(), AuthorizationAction.DEVICE_CONFIGURE, PathUtil.convertPath(ctx.getApiRoot(), getRequest().getResourceRef().getPath()));
 
         DeviceContext dctx = DeviceContext.create(ctx.getHubContext(), getAttribute("pluginId"), getAttribute("deviceId"));
         deviceManager.setDeviceName(dctx, json.getString("value"));

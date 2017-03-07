@@ -7,10 +7,8 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.rest;
 
-import com.whizzosoftware.hobson.api.user.HobsonUser;
+import com.whizzosoftware.hobson.api.security.HobsonUser;
 import org.restlet.security.User;
-
-import java.util.Collection;
 
 public class HobsonRestUser extends User {
     private HobsonUser user;

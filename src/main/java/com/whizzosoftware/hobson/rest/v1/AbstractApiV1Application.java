@@ -10,8 +10,7 @@
 package com.whizzosoftware.hobson.rest.v1;
 
 import com.google.inject.Inject;
-import com.whizzosoftware.hobson.api.hub.HubManager;
-import com.whizzosoftware.hobson.api.user.HobsonRole;
+import com.whizzosoftware.hobson.api.security.AccessManager;
 import com.whizzosoftware.hobson.rest.*;
 import com.whizzosoftware.hobson.rest.v1.resource.SwaggerResource;
 import com.whizzosoftware.hobson.rest.v1.resource.action.ActionClassesResource;
@@ -51,7 +50,6 @@ import org.restlet.data.Status;
 import org.restlet.ext.guice.ResourceInjectingApplication;
 import org.restlet.routing.Filter;
 import org.restlet.routing.Router;
-import org.restlet.security.Authorizer;
 import org.restlet.security.ChallengeAuthenticator;
 import org.restlet.util.Series;
 
@@ -66,9 +64,7 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
     public static final String API_ROOT = "/api/v1";
 
     @Inject
-    Authorizer authorizer;
-    @Inject
-    HubManager hubManager;
+    AccessManager accessManager;
 
     /**
      * Constructor that creates an challenge-based authenticator using the fully-qualified class name specified in
@@ -87,8 +83,10 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
         }
 
         // set up application roles
-        for (HobsonRole r : HobsonRole.values()) {
-            getRoles().add(RoleUtil.getRoleForName(this, r.name()));
+        if (accessManager != null) {
+            for (String s : accessManager.getRoles()) {
+                getRoles().add(RoleUtil.getRoleForName(this, s));
+            }
         }
     }
 
@@ -138,7 +136,7 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
         secureRouter.attach(LocalPluginImageResource.PATH, LocalPluginImageResource.class);
         secureRouter.attach(LocalPluginReloadResource.PATH, LocalPluginReloadResource.class);
         secureRouter.attach(HubLogResource.PATH, HubLogResource.class);
-        secureRouter.attach(MediaProxyResource.PATH, MediaProxyResource.class);
+        secureRouter.attach(DeviceMediaProxyResource.PATH, DeviceMediaProxyResource.class);
         secureRouter.attach(PluginDevicesResource.PATH, PluginDevicesResource.class);
         secureRouter.attach(PresenceEntitiesResource.PATH, PresenceEntitiesResource.class);
         secureRouter.attach(PresenceEntityResource.PATH, PresenceEntityResource.class);
@@ -154,13 +152,10 @@ abstract public class AbstractApiV1Application extends ResourceInjectingApplicat
         secureRouter.attach(UserResource.PATH, UserResource.class);
         secureRouter.attach(UsersResource.PATH, UsersResource.class);
 
-        // create the authorizer
-        authorizer.setNext(secureRouter);
-
         // create bearer token challenge authenticator
         ChallengeAuthenticator auth = new ChallengeAuthenticator(getContext(), ChallengeScheme.HTTP_OAUTH_BEARER, getRealmName());
-        auth.setVerifier(new BearerTokenVerifier(this, hubManager));
-        auth.setNext(authorizer);
+        auth.setVerifier(new BearerTokenVerifier(this, accessManager));
+        auth.setNext(secureRouter);
 
         // create the insecure router
         Router insecureRouter = newRouter();

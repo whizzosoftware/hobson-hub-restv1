@@ -1,16 +1,21 @@
-/*******************************************************************************
+/*
+ *******************************************************************************
  * Copyright (c) 2015 Whizzo Software, LLC.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/
+ *******************************************************************************
+*/
 package com.whizzosoftware.hobson.rest.v1.resource.image;
 
 import com.whizzosoftware.hobson.api.image.ImageInputStream;
 import com.whizzosoftware.hobson.api.image.ImageManager;
-import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
+import com.whizzosoftware.hobson.api.security.AccessManager;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.HobsonRestUser;
+import com.whizzosoftware.hobson.api.security.AuthorizationAction;
+import com.whizzosoftware.hobson.rest.util.PathUtil;
 import com.whizzosoftware.hobson.rest.v1.util.JSONHelper;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.fileupload.FileItemIterator;
@@ -40,49 +45,25 @@ public class HubImageResource extends SelfInjectingServerResource {
     public static final String PATH = "/hubs/{hubId}/image";
 
     @Inject
+    AccessManager accessManager;
+    @Inject
     ImageManager imageManager;
 
-    /**
-     * @api {get} /api/v1/users/:userId/hubs/:hubId/image Get Hub image
-     * @apiVersion 0.5.0
-     * @apiName GetHubImage
-     * @apiDescription Retrieves the binary image data associated with the hub.
-     * @apiGroup Hub
-     * @apiSuccessExample Success Response:
-     *   HTTP/1.1 200 OK
-     *   Content-Type: image/jpeg
-     *   ...
-     */
     @Override
     protected Representation get() throws ResourceException {
-        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
+        final HobsonRestContext ctx = HobsonRestContext.createContext(getApplication(), getRequest().getClientInfo(), getRequest().getResourceRef().getPath());
+
+        accessManager.authorize(((HobsonRestUser)getClientInfo().getUser()).getUser(), AuthorizationAction.HUB_READ, PathUtil.convertPath(ctx.getApiRoot(), getRequest().getResourceRef().getPath()));
+
         ImageInputStream iis = imageManager.getHubImage(ctx.getHubContext());
         return new InputRepresentation(iis.getInputStream(), MediaType.valueOf(iis.getMediaType()));
     }
 
-    /**
-     * @api {put} /api/v1/users/:userId/hubs/:hubId/image Set Hub image
-     * @apiVersion 0.5.0
-     * @apiName SetHubImage
-     * @apiDescription Sets the image associated with the hub. The request JSON can specify an "imageLibRef" property or an "image" property as shown in the examples below.
-     * @apiGroup Hub
-     * @apiParamExample {json} Example Request (Image library reference):
-     * {
-     *   "imageLibRef": "/api/v1/users/local/hubs/local/imageLibrary/images/light7.png"
-     * }
-     * @apiParamExample {json} Example Request (Image data):
-     * {
-     *   "image": {
-     *     "mediaType": "image/jpeg",
-     *     "data": "Base64-encoded image data string"
-     *   }
-     * }
-     * @apiSuccessExample Success Response:
-     *   HTTP/1.1 202 Accepted
-     */
     @Override
     protected Representation put(Representation entity) throws ResourceException {
-        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
+        final HobsonRestContext ctx = HobsonRestContext.createContext(getApplication(), getRequest().getClientInfo(), getRequest().getResourceRef().getPath());
+
+        accessManager.authorize(((HobsonRestUser)getClientInfo().getUser()).getUser(), AuthorizationAction.HUB_CONFIGURE, PathUtil.convertPath(ctx.getApiRoot(), getRequest().getResourceRef().getPath()));
 
         if (MediaType.APPLICATION_JSON.equals(entity.getMediaType(), true)) {
             JSONObject json = JSONHelper.createJSONFromRepresentation(entity);

@@ -12,9 +12,12 @@ package com.whizzosoftware.hobson.rest.v1.resource.hub;
 import com.whizzosoftware.hobson.api.HobsonRuntimeException;
 import com.whizzosoftware.hobson.api.hub.HubManager;
 import com.whizzosoftware.hobson.api.hub.LineRange;
+import com.whizzosoftware.hobson.api.security.AccessManager;
 import com.whizzosoftware.hobson.dto.MediaTypes;
-import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.HobsonRestUser;
+import com.whizzosoftware.hobson.api.security.AuthorizationAction;
+import com.whizzosoftware.hobson.rest.util.PathUtil;
 import com.whizzosoftware.hobson.rest.v1.util.MediaTypeHelper;
 import org.restlet.data.Header;
 import org.restlet.data.Range;
@@ -38,14 +41,18 @@ public class HubLogResource extends SelfInjectingServerResource {
     public static final String TEMPLATE = "/hubs/{hubId}/{entity}";
 
     @Inject
+    AccessManager accessManager;
+    @Inject
     HubManager hubManager;
 
     @Override
     protected Representation get() throws ResourceException {
+        final HobsonRestContext ctx = HobsonRestContext.createContext(getApplication(), getRequest().getClientInfo(), getRequest().getResourceRef().getPath());
+
+        accessManager.authorize(((HobsonRestUser)getClientInfo().getUser()).getUser(), AuthorizationAction.HUB_READ, PathUtil.convertPath(ctx.getApiRoot(), getRequest().getResourceRef().getPath()));
+
         long startLine = 0;
         long endLine = 24;
-
-        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
 
         // since we are using a custom range, we can't use the standard Restlet range mechanism
         Series<Header> headers = getRequest().getHeaders();

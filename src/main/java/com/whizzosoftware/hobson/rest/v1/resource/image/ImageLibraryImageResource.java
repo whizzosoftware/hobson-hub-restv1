@@ -2,8 +2,11 @@ package com.whizzosoftware.hobson.rest.v1.resource.image;
 
 import com.whizzosoftware.hobson.api.image.ImageInputStream;
 import com.whizzosoftware.hobson.api.image.ImageManager;
-import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
+import com.whizzosoftware.hobson.api.security.AccessManager;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
+import com.whizzosoftware.hobson.rest.HobsonRestUser;
+import com.whizzosoftware.hobson.api.security.AuthorizationAction;
+import com.whizzosoftware.hobson.rest.util.PathUtil;
 import org.restlet.data.MediaType;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.representation.InputRepresentation;
@@ -16,24 +19,19 @@ public class ImageLibraryImageResource extends SelfInjectingServerResource {
     public static final String PATH = "/hubs/{hubId}/imageLibrary/images/{imageId}";
 
     @Inject
+    AccessManager accessManager;
+    @Inject
     ImageManager imageManager;
 
-    /**
-     * @api {get} /api/v1/users/:userId/hubs/:hubId/imageLibrary/images/:imageId Get library image
-     * @apiVersion 0.4.4
-     * @apiName GetImageLibraryImage
-     * @apiDescription Retrieves binary data for an image library image.
-     * @apiGroup Images
-     * @apiSuccessExample {json} Success Response:
-     *   HTTP/1.1 200 OK
-     *   Content-Type: image/png
-     *   ...
-     */
     @Override
     public Representation get() throws ResourceException {
-        HobsonRestContext ctx = (HobsonRestContext)getRequest().getAttributes().get(HobsonAuthorizer.HUB_CONTEXT);
+        final HobsonRestContext ctx = HobsonRestContext.createContext(getApplication(), getRequest().getClientInfo(), getRequest().getResourceRef().getPath());
+
+        accessManager.authorize(((HobsonRestUser)getClientInfo().getUser()).getUser(), AuthorizationAction.HUB_READ, PathUtil.convertPath(ctx.getApiRoot(), getRequest().getResourceRef().getPath()));
+
         ImageInputStream iis = imageManager.getImageLibraryImage(
             ctx.getHubContext(), getAttribute("imageId"));
+
         return new InputRepresentation(iis.getInputStream(), MediaType.valueOf(iis.getMediaType()));
     }
 }
