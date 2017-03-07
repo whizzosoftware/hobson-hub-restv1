@@ -54,7 +54,7 @@ public class HubConfigurationResource extends SelfInjectingServerResource {
         final ExpansionFields expansions = new ExpansionFields(getQueryValue("expand"));
         final DTOBuildContext bctx = dtoBuildContextFactory.createContext(ctx.getApiRoot(), expansions);
 
-        accessManager.authorize(((HobsonRestUser)getClientInfo().getUser()).getUser(), AuthorizationAction.HUB_CONFIGURE, PathUtil.convertPath(ctx.getApiRoot(), getRequest().getResourceRef().getPath()));
+        accessManager.authorize(((HobsonRestUser)getClientInfo().getUser()).getUser(), AuthorizationAction.HUB_READ, PathUtil.convertPath(ctx.getApiRoot(), getRequest().getResourceRef().getPath()));
 
         PropertyContainer pc = hubManager.getConfiguration(ctx.getHubContext());
         PropertyContainerDTO dto = new PropertyContainerDTO.Builder(
