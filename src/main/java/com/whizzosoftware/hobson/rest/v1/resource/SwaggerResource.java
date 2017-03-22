@@ -9,6 +9,7 @@
 */
 package com.whizzosoftware.hobson.rest.v1.resource;
 
+import org.restlet.data.MediaType;
 import org.restlet.ext.guice.SelfInjectingServerResource;
 import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
@@ -24,6 +25,8 @@ public class SwaggerResource extends SelfInjectingServerResource {
 
     @Override
     protected Representation get() throws ResourceException {
-        return new InputRepresentation(getClass().getClassLoader().getResourceAsStream("swagger.json"));
+        InputRepresentation ir = new InputRepresentation(getClass().getClassLoader().getResourceAsStream("swagger.json"));
+        ir.setMediaType(MediaType.APPLICATION_JSON);
+        return ir;
     }
 }

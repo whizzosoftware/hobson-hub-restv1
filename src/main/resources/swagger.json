@@ -2326,6 +2326,13 @@
             "description": "ID of a hub (\"local\" is the default for local hubs)",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "expand",
+            "in": "query",
+            "description": "Attributes to expand in-line (optional)",
+            "required": false,
+            "type": "string"
           }
         ]
       },
