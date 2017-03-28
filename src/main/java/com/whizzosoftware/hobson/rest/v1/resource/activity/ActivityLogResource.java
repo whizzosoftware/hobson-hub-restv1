@@ -45,28 +45,6 @@ public class ActivityLogResource extends SelfInjectingServerResource {
     @Inject
     DTOBuildContextFactory dtoBuildContextFactory;
 
-    /**
-     * @api {get} /api/v1/users/:userId/hubs/:hubId/activityLog Get activity log
-     * @apiVersion 0.1.3
-     * @apiName GetActivityLog
-     * @apiDescription Retrieves the most recent entries from the hub activity log.
-     * @apiGroup Activities
-     * @apiSuccessExample {json} Success Response:
-     * {
-     *   "numberOfItems": 2,
-     *   "itemListElement": [
-     *     {
-     *       "item": {
-     *         "timestamp": 1234,
-     *         "name": "Thermostat temperature changed to 70",
-     *     },
-     *     {
-     *       "timestamp": 1234,
-     *       "name": "Light has turned on",
-     *     }
-     *   ]
-     * }
-     */
     @Override
     protected Representation get() throws ResourceException {
         final HobsonRestContext ctx = HobsonRestContext.createContext(getApplication(), getRequest().getClientInfo(), getRequest().getResourceRef().getPath());

@@ -39,26 +39,6 @@ public class ImageLibraryGroupResource extends SelfInjectingServerResource {
     @Inject
     IdProvider idProvider;
 
-    /**
-     * @api {get} /api/v1/users/:userId/hubs/:hubId/imageLibrary/groups/{groupId} Get library group
-     * @apiVersion 0.4.4
-     * @apiName GetImageLibraryGroup
-     * @apiDescription Retrieves a list of all images in an image library group.
-     * @apiGroup Images
-     * @apiSuccessExample {json} Success Response:
-     * [
-     *   {
-     *     "links": {
-     *       "self": "/api/v1/users/local/hubs/local/imageLibrary/images/surveillance85.png"
-     *     }
-     *   },
-     *   {
-     *     "links": {
-     *       "self": "/api/v1/users/local/hubs/local/imageLibrary/images/camera1.png"
-     *     }
-     *   }
-     * ]
-     */
     @Override
     public Representation get() throws ResourceException {
         final HobsonRestContext ctx = HobsonRestContext.createContext(getApplication(), getRequest().getClientInfo(), getRequest().getResourceRef().getPath());
