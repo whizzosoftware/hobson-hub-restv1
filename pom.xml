@@ -83,13 +83,13 @@
         <dependency>
             <groupId>com.whizzosoftware.hobson.hub</groupId>
             <artifactId>hobson-hub-api</artifactId>
-            <version>0.10.0-SNAPSHOT</version>
+            <version>0.10.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.whizzosoftware.hobson.hub</groupId>
             <artifactId>hobson-hub-dto</artifactId>
-            <version>0.10.0-SNAPSHOT</version>
+            <version>0.10.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -119,7 +119,7 @@
         <dependency>
             <groupId>com.whizzosoftware.hobson.hub</groupId>
             <artifactId>hobson-hub-api-mock</artifactId>
-            <version>0.10.0-SNAPSHOT</version>
+            <version>0.10.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

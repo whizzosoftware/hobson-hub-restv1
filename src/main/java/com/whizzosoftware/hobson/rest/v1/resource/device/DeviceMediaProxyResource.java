@@ -13,7 +13,6 @@ import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.api.security.AccessManager;
 import com.whizzosoftware.hobson.api.variable.DeviceVariableDescriptor;
-import com.whizzosoftware.hobson.rest.HobsonAuthorizer;
 import com.whizzosoftware.hobson.rest.HobsonRestContext;
 import com.whizzosoftware.hobson.rest.HobsonRestUser;
 import com.whizzosoftware.hobson.api.security.AuthorizationAction;
